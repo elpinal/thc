@@ -3,7 +3,8 @@ module Thc.Code.Amd64 where
 import Thc.Asm
 import Thc.Code
 
-type Amd64 a = a
+data Amd64 a = Amd64 a
 
-fromAsm :: Asm -> Amd64 Code
-fromAsm (Ret v) = []
+instance Machine Amd64 where
+  fromAsm :: Asm -> Amd64 Code
+  fromAsm (Ret v) = Amd64 []
