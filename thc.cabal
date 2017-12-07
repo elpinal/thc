@@ -22,6 +22,7 @@ library
                      , Thc.Asm
                      , Thc.Code
                      , FileFormat.Macho
+                     , Thc.Asm.Amd64
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
