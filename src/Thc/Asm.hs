@@ -17,8 +17,10 @@ data Inst = Ret Tac.Val
 data Loc = StringTable Int
          | Static Int
 
-fromTac :: Tac.Tac -> Asm -> Asm
+type AsmTransformer = Asm -> Asm
+
+fromTac :: Tac.Tac -> AsmTransformer
 fromTac (Tac.Ret v) = retv v
 
-retv :: Tac.Val -> Asm -> Asm
+retv :: Tac.Val -> AsmTransformer
 retv v = first (++ [Ret v])
