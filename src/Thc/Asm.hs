@@ -18,4 +18,6 @@ data Loc = StringTable Int
          | Static Int
 
 fromTac :: Tac.Tac -> Asm -> Asm
-fromTac (Tac.Ret v) = first (++ [Ret v])
+fromTac (Tac.Ret v) = retv v
+
+retv v = first (++ [Ret v])
