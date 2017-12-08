@@ -9,4 +9,4 @@ spec :: Spec
 spec = do
   describe "fromTac" $
     it "translates Tac to Asm" $ do
-      fromTac (Tac.Ret $ Var "x") `shouldBe` Ret (Var "x")
+      fromTac (Tac.Ret $ Var "x") [] `shouldBe` [Ret (Var "x")]
