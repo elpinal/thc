@@ -11,11 +11,12 @@ import qualified Thc.Tac as Tac
 
 type Asm = ([Inst], [String])
 
-data Inst = Ret Tac.Val
+data Inst = Ret Loc
   deriving (Eq, Show)
 
 data Loc = StringTable Int
          | Static Int
+  deriving (Eq, Show)
 
 type AsmTransformer = Asm -> Asm
 
@@ -23,4 +24,4 @@ fromTac :: Tac.Tac -> AsmTransformer
 fromTac (Tac.Ret v) = retv v
 
 retv :: Tac.Val -> AsmTransformer
-retv v = first (++ [Ret v])
+retv (Tac.Var i) = bimap (++ [Ret $ StringTable 0]) (const [i])
