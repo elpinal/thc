@@ -6,7 +6,7 @@ module Thc.Asm
 
 import qualified Thc.Tac as Tac
 
-data Asm
+type Asm = [Inst]
 
 data Inst = Ret Tac.Val
   deriving (Eq, Show)
