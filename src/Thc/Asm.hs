@@ -14,5 +14,5 @@ data Inst = Ret Tac.Val
 data Loc = StringTable Int
          | Static Int
 
-fromTac :: Tac.Tac -> Asm
-fromTac (Tac.Ret v) = Ret v
+fromTac :: Tac.Tac -> Asm -> Asm
+fromTac (Tac.Ret v) asm = asm + [Ret v]
