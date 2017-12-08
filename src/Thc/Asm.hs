@@ -5,9 +5,11 @@ module Thc.Asm
   , Tac.Val(..)
   ) where
 
+import Data.Bifunctor
+
 import qualified Thc.Tac as Tac
 
-type Asm = [Inst]
+type Asm = ([Inst], [String])
 
 data Inst = Ret Tac.Val
   deriving (Eq, Show)
@@ -16,4 +18,4 @@ data Loc = StringTable Int
          | Static Int
 
 fromTac :: Tac.Tac -> Asm -> Asm
-fromTac (Tac.Ret v) asm = asm ++ [Ret v]
+fromTac (Tac.Ret v) = first (++ [Ret v])
