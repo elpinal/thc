@@ -1,6 +1,7 @@
 module Thc.Asm
   ( Asm
   , Inst(..)
+  , Loc(..)
   , fromTac
   , Tac.Val(..)
   ) where
