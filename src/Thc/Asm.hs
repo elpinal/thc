@@ -6,7 +6,9 @@ module Thc.Asm
 
 import qualified Thc.Tac as Tac
 
-data Asm = Ret Tac.Val
+data Asm
+
+data Inst = Ret Tac.Val
   deriving (Eq, Show)
 
 data Loc = StringTable Int
