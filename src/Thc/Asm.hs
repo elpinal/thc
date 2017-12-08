@@ -16,7 +16,6 @@ data Inst = Ret Loc
   deriving (Eq, Show)
 
 data Loc = StringTable Int
-         | Static Int
   deriving (Eq, Show)
 
 type AsmTransformer = Asm -> Asm
