@@ -10,7 +10,7 @@ import Data.Bifunctor
 
 import qualified Thc.Tac as Tac
 
-type Asm = ([Inst], [String])
+type Asm = (Inst, String)
 
 data Inst = Ret Loc
   deriving (Eq, Show)
@@ -24,4 +24,4 @@ fromTac :: Tac.Tac -> AsmTransformer
 fromTac (Tac.Ret v) = retv v
 
 retv :: Tac.Val -> AsmTransformer
-retv (Tac.Var i) = bimap (++ [Ret $ StringTable 0]) (const [i])
+retv (Tac.Var i) = bimap (const $ Ret $ StringTable 0) (const i)
