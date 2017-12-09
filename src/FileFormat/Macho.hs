@@ -19,3 +19,5 @@ object = 1
 
 execute :: FileType
 execute = 2
+
+lcSegment64 = 0x19
