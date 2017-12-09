@@ -23,3 +23,5 @@ execute = 2
 lcSegment64 = 0x19
 
 lcSymtab = 0x02
+
+lcDysymtab = 0x0b
