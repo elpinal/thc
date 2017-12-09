@@ -18,10 +18,8 @@ data Inst = Ret Loc
 data Loc = StringTable Int
   deriving (Eq, Show)
 
-type AsmTransformer = Asm -> Asm
-
-fromTac :: Tac.Tac -> AsmTransformer
+fromTac :: Tac.Tac -> Asm
 fromTac (Tac.Ret v) = retv v
 
-retv :: Tac.Val -> AsmTransformer
-retv (Tac.Var i) = bimap (const $ Ret $ StringTable 0) (const i)
+retv :: Tac.Val -> Asm
+retv (Tac.Var i) = (Ret $ StringTable 0, i)
