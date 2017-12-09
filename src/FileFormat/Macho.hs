@@ -11,3 +11,5 @@ amd64 :: Word32
 amd64 = 7 .|. abi64
 
 amd64All = 3
+
+object = 1
