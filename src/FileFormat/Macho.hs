@@ -21,3 +21,5 @@ execute :: FileType
 execute = 2
 
 lcSegment64 = 0x19
+
+lcSymtab = 0x02
