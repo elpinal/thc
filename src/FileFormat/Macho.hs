@@ -12,7 +12,7 @@ amd64 = 7 .|. abi64
 
 amd64All = 3
 
-type FileType = Int
+type FileType = Word32
 
 object :: FileType
 object = 1
