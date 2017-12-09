@@ -6,4 +6,4 @@ import Thc.Code
 data Amd64 a = Amd64 a
 
 instance Machine Amd64 where
-  fromAsm (is, xs) = Amd64 []
+  fromAsm (i, x) = Amd64 []
