@@ -14,5 +14,8 @@ amd64All = 3
 
 type FileType = Int
 
+object :: FileType
 object = 1
+
+execute :: FileType
 execute = 2
