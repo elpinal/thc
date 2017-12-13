@@ -36,7 +36,7 @@ data File = File
 emptyFile :: File
 emptyFile = File
   { header   = header64
-  , segments = []
+  , segments = [segment]
   }
 
 instance Encode File where
