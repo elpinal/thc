@@ -40,7 +40,10 @@ emptyFile = File
   }
 
 instance Encode File where
-  encode File {header = h, segments = ss} = encodeHeader h ++ concatMap encodeSegment ss
+  encode File {header = h, segments = ss} = encodeHeader ss (length bs) h ++ bs
+    where
+      bs :: [Word8]
+      bs = concatMap encodeSegment ss
 
 data Header = Header
   { magic      :: Word32
@@ -59,17 +62,23 @@ header64 = Header
   , hflags     = 0
   }
 
-encodeHeader :: Header -> [Word8]
-encodeHeader Header
+encodeHeader :: [Segment] -> Int -> Header -> [Word8]
+encodeHeader ss l Header
   { magic      = m
   , cputype    = c
   , cpusubtype = cs
   , filetype   = f
   , hflags     = h
-  } = concatMap encodeBits [m, c, cs] ++ encode f ++ encodeBits h ++ reserved
+  } = concatMap encodeBits [m, c, cs] ++ encode f ++ ncmds ++ encodeBits sizeofcmds ++ encodeBits h ++ reserved
   where
     reserved :: [Word8]
     reserved = [0, 0, 0, 0]
+
+    ncmds :: [Word8]
+    ncmds = encodeBits (fromIntegral $ length ss :: Word32)
+
+    sizeofcmds :: Word32
+    sizeofcmds = fromIntegral l
 
 data Segment = Segment
   { segname  :: String
