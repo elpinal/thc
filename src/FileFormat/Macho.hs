@@ -85,6 +85,7 @@ data Section = Section
   , secflags :: Word32
   }
 
+-- TODO: Consider 'offset' field.
 encodeSection :: String -> Section -> [Word8]
 encodeSection segn Section
   { secname  = n
@@ -92,7 +93,10 @@ encodeSection segn Section
   , size     = s
   , align    = al
   , secflags = fs
-  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, fs]
+  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, 0, 0, fs] ++ reserved
+  where
+    reserved :: [Word8]
+    reserved = concatMap encodeBits $ replicate 3 (0x00 :: Word32)
 
 data Prot =
     Readable
