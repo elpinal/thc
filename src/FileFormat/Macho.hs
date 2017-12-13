@@ -18,6 +18,46 @@ instance (FiniteBits a, Integral a) => Encode a where
       shiftR8 :: Bits a => a -> a
       shiftR8 = flip shiftR 8
 
+data File = File
+  { header   :: Header
+  , segments :: [Segment]
+  }
+
+data Header = Header
+  { magic      :: Word32
+  , cputype    :: Word32
+  , cpusubtype :: Word32
+  , filetype   :: FileType
+  , hflags     :: Word32
+  }
+
+data Segment = Segment
+  { segname  :: String
+  , maddr    :: Word64
+  , msize    :: Word64
+  , maxprot  :: [Prot]
+  , initprot :: [Prot]
+  , sections :: [Section]
+  , segflags :: Word32
+  }
+
+data Section = Section
+  { secname    :: String
+  , addr       :: Word64
+  , size       :: Word64
+  , align      :: Word32
+  , secflags   :: Word32
+  }
+
+data Prot =
+    Readable
+  | Writable
+  | Executable
+  deriving Enum
+
+allProt :: [Prot]
+allProt = [Readable, Writable, Executable]
+
 magicNumber64 :: Word32
 magicNumber64 = 0xfeedfacf
 
