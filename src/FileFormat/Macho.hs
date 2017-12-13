@@ -66,6 +66,9 @@ data Segment = Segment
   , segflags :: Word32
   }
 
+segment64 :: Word32
+segment64 = 0x19
+
 encodeSegment :: Segment -> [Word8]
 encodeSegment Segment
   { segname  = n
@@ -75,7 +78,7 @@ encodeSegment Segment
   , initprot = ip
   , sections = ss
   , segflags = fs
-  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap (encodeSection n) ss ++ encodeBits fs
+  } = encodeBits segment64 ++ encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap (encodeSection n) ss ++ encodeBits fs
 
 data Section = Section
   { secname  :: String
