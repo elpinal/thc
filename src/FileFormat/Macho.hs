@@ -33,6 +33,12 @@ data File = File
   , segments :: [Segment]
   }
 
+emptyFile :: File
+emptyFile = File
+  { header   = header64
+  , segments = []
+  }
+
 instance Encode File where
   encode File {header = h, segments = ss} = encodeHeader h ++ concatMap encodeSegment ss
 
@@ -42,6 +48,15 @@ data Header = Header
   , cpusubtype :: Word32
   , filetype   :: FileType
   , hflags     :: Word32
+  }
+
+header64 :: Header
+header64 = Header
+  { magic      = magicNumber64
+  , cputype    = amd64
+  , cpusubtype = amd64All
+  , filetype   = Object
+  , hflags     = 0
   }
 
 encodeHeader :: Header -> [Word8]
@@ -64,6 +79,17 @@ data Segment = Segment
   , initprot :: [Prot]
   , sections :: [Section]
   , segflags :: Word32
+  }
+
+segment :: Segment
+segment = Segment
+  { segname  = ""
+  , maddr    = 0
+  , msize    = 0
+  , maxprot  = allProt
+  , initprot = allProt
+  , sections = []
+  , segflags = 0
   }
 
 segment64 :: Word32
