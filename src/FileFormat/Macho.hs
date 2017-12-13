@@ -11,6 +11,14 @@ import Data.Word
 class Encode a where
   encode :: a -> [Word8]
 
+instance Encode String where
+  encode = fillString16 . B.unpack . C.pack
+
+fillString16 :: [Word8] -> [Word8]
+fillString16 xs
+  | length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (length xs)
+  | otherwise      = xs ++ replicate (16 - length xs) 0x00
+
 encodeBits :: (FiniteBits a, Integral a) => a -> [Word8]
 encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
   where
@@ -67,7 +75,7 @@ encodeSegment Segment
   , initprot = ip
   , sections = ss
   , segflags = fs
-  } = B.unpack (C.pack n) ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap encodeSection ss ++ encodeBits fs
+  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap encodeSection ss ++ encodeBits fs
 
 data Section = Section
   { secname  :: String
@@ -84,7 +92,7 @@ encodeSection Section
   , size     = s
   , align    = al
   , secflags = fs
-  } = B.unpack (C.pack n) ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, fs]
+  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, fs]
 
 data Prot =
     Readable
