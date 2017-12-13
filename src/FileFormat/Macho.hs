@@ -69,6 +69,10 @@ data Segment = Segment
 segment64 :: Word32
 segment64 = 0x19
 
+-- | The size of @segment_command_64@.
+segmentSize :: Word32
+segmentSize = 72
+
 encodeSegment :: Segment -> [Word8]
 encodeSegment Segment
   { segname  = n
@@ -78,7 +82,15 @@ encodeSegment Segment
   , initprot = ip
   , sections = ss
   , segflags = fs
-  } = encodeBits segment64 ++ encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap (encodeSection n) ss ++ encodeBits fs
+  } = concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
+      ++ encode n
+      ++ concatMap encodeBits [a, s]
+      ++ concatMap encode [mp, ip]
+      ++ concatMap (encodeSection n) ss
+      ++ encodeBits fs
+  where
+    nsects :: Word32
+    nsects = fromIntegral $ length ss
 
 data Section = Section
   { secname  :: String
@@ -87,6 +99,10 @@ data Section = Section
   , align    :: Word32
   , secflags :: Word32
   }
+
+-- | The size of @section_64@.
+sectionSize :: Word32
+sectionSize = 80
 
 -- TODO: Consider 'offset' field.
 encodeSection :: String -> Section -> [Word8]
