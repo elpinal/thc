@@ -27,13 +27,13 @@ amd64 = 7 .|. abi64
 
 amd64All = 3
 
-type FileType = Word32
+data FileType =
+    Object
+  | Execute
+  deriving Enum
 
-object :: FileType
-object = 1
-
-execute :: FileType
-execute = 2
+instance Encode FileType where
+  encode f = encode $ (2 :: Word32) ^ fromIntegral (fromEnum f)
 
 lcSegment64 = 0x19
 
