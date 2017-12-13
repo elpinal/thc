@@ -75,7 +75,7 @@ encodeSegment Segment
   , initprot = ip
   , sections = ss
   , segflags = fs
-  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap encodeSection ss ++ encodeBits fs
+  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encode [mp, ip] ++ concatMap (encodeSection n) ss ++ encodeBits fs
 
 data Section = Section
   { secname  :: String
@@ -85,14 +85,14 @@ data Section = Section
   , secflags :: Word32
   }
 
-encodeSection :: Section -> [Word8]
-encodeSection Section
+encodeSection :: String -> Section -> [Word8]
+encodeSection segn Section
   { secname  = n
   , addr     = a
   , size     = s
   , align    = al
   , secflags = fs
-  } = encode n ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, fs]
+  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, fs]
 
 data Prot =
     Readable
