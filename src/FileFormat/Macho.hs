@@ -10,10 +10,10 @@ class Encode a where
   encode :: a -> [Word8]
 
 instance (FiniteBits a, Integral a) => Encode a where
-  encode n = map (fromIntegral . (.&. 0xff)) . take (l `div` 8) $ iterate shiftR8 n
+  encode n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
     where
-      l :: Int
-      l = finiteBitSize n
+      b :: Int
+      b = finiteBitSize n `div` 8
 
       shiftR8 :: Bits a => a -> a
       shiftR8 = flip shiftR 8
