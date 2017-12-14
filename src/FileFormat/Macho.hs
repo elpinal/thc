@@ -101,6 +101,17 @@ segment = Segment
   , segflags = 0
   }
 
+textSegment :: [Word8] -> Segment
+textSegment text = Segment
+  { segname  = "__TEXT"
+  , maddr    = 0
+  , msize    = fromIntegral $ length text
+  , maxprot  = allProt
+  , initprot = [Readable, Executable]
+  , sections = [textSection text]
+  , segflags = 0
+  }
+
 segment64 :: Word32
 segment64 = 0x19
 
