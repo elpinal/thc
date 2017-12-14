@@ -58,7 +58,7 @@ header64 = Header
   { magic      = magicNumber64
   , cputype    = amd64
   , cpusubtype = amd64All
-  , filetype   = Object
+  , filetype   = Execute
   , hflags     = 0
   }
 
