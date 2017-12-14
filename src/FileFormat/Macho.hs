@@ -133,11 +133,11 @@ encodeSegment Segment
       ++ concatMap encodeBits [a, s]
       ++ concatMap encodeBits [0, 0 :: Word64] -- Use zeros for the present
       ++ concatMap encode [mp, ip]
-      ++ encodeBits nsects
+      ++ encodeBits (nsects :: Word32)
       ++ encodeBits fs
       ++ concatMap (encodeSection n) ss
   where
-    nsects :: Word32
+    nsects :: Num a => a
     nsects = fromIntegral $ length ss
 
 sizeOfSection :: Section -> Word32
