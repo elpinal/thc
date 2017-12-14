@@ -119,8 +119,8 @@ segment64 = 0x19
 segmentSize :: Word32
 segmentSize = 72
 
-encodeSegment :: Segment -> [Word8]
-encodeSegment Segment
+encodeSegment :: Word32 -> Word32 -> Segment -> [Word8]
+encodeSegment dataOffset offset Segment
   { segname  = n
   , maddr    = a
   , msize    = s
