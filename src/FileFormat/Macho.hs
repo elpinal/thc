@@ -137,6 +137,15 @@ data Section = Section
   , secflags :: Word32
   }
 
+textSection :: [Word8] -> Section
+textSection text = Section
+  { secname  = "__text"
+  , addr     = 0
+  , size     = fromIntegral $ length text
+  , align    = 0
+  , secflags = 0
+  }
+
 -- | The size of @section_64@.
 sectionSize :: Word32
 sectionSize = 80
