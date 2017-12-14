@@ -43,7 +43,13 @@ instance Encode File where
   encode File {header = h, segments = ss} = encodeHeader ss (length bs) h ++ bs
     where
       bs :: [Word8]
-      bs = concatMap encodeSegment ss
+      bs = foldl f [] ss
+
+      f :: [Word8] -> Segment -> [Word8]
+      f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
+
+      dataOffset :: Word32
+      dataOffset = sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
 
 data Header = Header
   { magic      :: Word32
