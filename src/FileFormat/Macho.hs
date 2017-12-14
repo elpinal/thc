@@ -135,10 +135,19 @@ encodeSegment dataOffset offset Segment
       ++ concatMap encode [mp, ip]
       ++ encodeBits (nsects :: Word32)
       ++ encodeBits fs
-      ++ concatMap (encodeSection n) ss
+      ++ ffu
   where
     nsects :: Num a => a
     nsects = fromIntegral $ length ss
+
+    ffu :: [Word8]
+    ffu = fst $ foldl f ([], dataOffset) ss
+
+    f :: ([Word8], Word32) -> Section -> ([Word8], Word32)
+    f (acc, off) s = (acc ++ encodeSection n (fromIntegral $ length acc) s, sizeOfSection s)
+
+    -- offsets :: [Word32]
+    -- offsets = take nsects . iterate (+ sectionSize) $ offset + segmentSize
 
 sizeOfSection :: Section -> Word32
 sizeOfSection Section {size = s} = fromIntegral s
