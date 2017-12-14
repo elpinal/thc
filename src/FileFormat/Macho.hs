@@ -165,14 +165,14 @@ sectionSize :: Word32
 sectionSize = 80
 
 -- TODO: Consider 'offset' field.
-encodeSection :: String -> Section -> [Word8]
-encodeSection segn Section
+encodeSection :: String -> Word32 -> Section -> [Word8]
+encodeSection segn dataOffset Section
   { secname  = n
   , addr     = a
   , size     = s
   , align    = al
   , secflags = fs
-  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [al, 0, 0, fs] ++ reserved
+  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [dataOffset, al, 0, 0, fs] ++ reserved
   where
     reserved :: [Word8]
     reserved = concatMap encodeBits $ replicate 3 (0x00 :: Word32)
