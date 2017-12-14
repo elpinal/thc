@@ -161,7 +161,7 @@ data Prot =
   deriving Enum
 
 instance Encode [Prot] where
-  encode = encodeBits . foldr (.&.) 0 . map (\p -> (2 :: Word32) ^ fromEnum p)
+  encode = encodeBits . foldr (.|.) 0 . map (\p -> (2 :: Word32) ^ fromEnum p)
 
 allProt :: [Prot]
 allProt = [Readable, Writable, Executable]
