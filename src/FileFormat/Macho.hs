@@ -140,6 +140,9 @@ encodeSegment Segment
     nsects :: Word32
     nsects = fromIntegral $ length ss
 
+sizeOfSection :: Section -> Word32
+sizeOfSection Section {size = s} = fromIntegral s
+
 data Section = Section
   { secname  :: String
   , addr     :: Word64
