@@ -258,3 +258,27 @@ unixThread = 0x5
 amd64ThreadState = 4
 
 amd64ExceptionStateCount = 42
+
+data ThreadState = ThreadState
+  { rax    :: Word64
+  , rbx    :: Word64
+  , rcx    :: Word64
+  , rdx    :: Word64
+  , rdi    :: Word64
+  , rsi    :: Word64
+  , rbp    :: Word64
+  , rsp    :: Word64
+  , r8     :: Word64
+  , r9     :: Word64
+  , r10    :: Word64
+  , r11    :: Word64
+  , r12    :: Word64
+  , r13    :: Word64
+  , r14    :: Word64
+  , r15    :: Word64
+  , rip    :: Word64
+  , rflags :: Word64
+  , cs     :: Word64
+  , fs     :: Word64
+  , gs     :: Word64
+  }
