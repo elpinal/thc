@@ -140,7 +140,7 @@ encodeSegment dataOffset offset Segment
   } = concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
       ++ encode n
       ++ concatMap encodeBits [a, s]
-      ++ concatMap encodeBits [0, 0 :: Word64] -- Use zeros for the present
+      ++ concatMap encodeBits [0, s :: Word64] -- Use zeros for the present
       ++ concatMap encode [mp, ip]
       ++ encodeBits (nsects :: Word32)
       ++ encodeBits fs
