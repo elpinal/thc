@@ -39,6 +39,9 @@ emptyFile = File
   , segments = [segment]
   }
 
+margin :: Num a => a
+margin = 4096
+
 instance Encode File where
   encode File {header = h, segments = ss} = encodeHeader ss (length bs) h ++ bs
     where
@@ -49,7 +52,7 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset = fromIntegral . (margin +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
 
 data Header = Header
   { magic      :: Word32
