@@ -48,8 +48,8 @@ instance Encode File where
       f :: [Word8] -> Segment -> [Word8]
       f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
 
-      dataOffset :: Word32
-      dataOffset = (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset :: Word64
+      dataOffset = fromIntegral . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
 
 data Header = Header
   { magic      :: Word32
@@ -146,7 +146,7 @@ segment64 = 0x19
 segmentSize :: Word32
 segmentSize = 72
 
-encodeSegment :: Word32 -> Word32 -> Segment -> [Word8]
+encodeSegment :: Word64 -> Word32 -> Segment -> [Word8]
 encodeSegment dataOffset offset Segment
   { segname  = n
   , maddr    = a
@@ -158,8 +158,8 @@ encodeSegment dataOffset offset Segment
   , segflags = fs
   } = concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
       ++ encode n
-      ++ concatMap encodeBits [a, ms]
-      ++ concatMap encodeBits [0, s :: Word64] -- FIXME: Deliberate fileoff and filesize.
+      ++ concatMap encodeBits [a, dataoff ms]
+      ++ concatMap encodeBits [0, dataoff s] -- FIXME: Deliberate fileoff and filesize.
       ++ concatMap encode [mp, ip]
       ++ encodeBits (nsects :: Word32)
       ++ encodeBits fs
@@ -171,13 +171,19 @@ encodeSegment dataOffset offset Segment
     ffu :: [Word8]
     ffu = fst $ foldl f ([], dataOffset) ss
 
-    f :: ([Word8], Word32) -> Section -> ([Word8], Word32)
+    f :: ([Word8], Word64) -> Section -> ([Word8], Word64)
     f (acc, off) s = (acc ++ encodeSection n off s, off + sizeOfSection s)
+
+    -- FIXME: This is an ad hoc way.
+    dataoff :: Word64 -> Word64
+    dataoff x
+      | s == 0    = x
+      | otherwise = dataOffset + x
 
     -- offsets :: [Word32]
     -- offsets = take nsects . iterate (+ sectionSize) $ offset + segmentSize
 
-sizeOfSection :: Section -> Word32
+sizeOfSection :: Num a => Section -> a
 sizeOfSection Section {size = s} = fromIntegral s
 
 data Section = Section
@@ -202,14 +208,14 @@ sectionSize :: Word32
 sectionSize = 80
 
 -- TODO: Consider 'offset' field.
-encodeSection :: String -> Word32 -> Section -> [Word8]
+encodeSection :: String -> Word64 -> Section -> [Word8]
 encodeSection segn dataOffset Section
   { secname  = n
   , addr     = a
   , size     = s
   , align    = al
   , secflags = fs
-  } = concatMap encode [n, segn] ++ concatMap encodeBits [a, s] ++ concatMap encodeBits [dataOffset, al, 0, 0, fs] ++ reserved
+  } = concatMap encode [n, segn] ++ concatMap encodeBits [a + dataOffset, s] ++ concatMap encodeBits [fromIntegral dataOffset, al, 0, 0, fs] ++ reserved
   where
     reserved :: [Word8]
     reserved = concatMap encodeBits $ replicate 3 (0x00 :: Word32)
