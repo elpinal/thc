@@ -130,7 +130,7 @@ pagezero = Segment
 textSegment :: [Word8] -> Segment
 textSegment text = Segment
   { segname  = "__TEXT"
-  , maddr    = 0
+  , maddr    = pagezeroSize
   , msize    = fromIntegral $ length text
   , fsize    = fromIntegral $ length text
   , maxprot  = allProt
@@ -191,7 +191,7 @@ data Section = Section
 textSection :: [Word8] -> Section
 textSection text = Section
   { secname  = "__text"
-  , addr     = 0
+  , addr     = pagezeroSize
   , size     = fromIntegral $ length text
   , align    = 0
   , secflags = 0
