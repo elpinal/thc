@@ -112,6 +112,21 @@ segment = Segment
   , segflags = 0
   }
 
+pagezeroSize :: Word64
+pagezeroSize = 0x100000000
+
+pagezero :: Segment
+pagezero = Segment
+  { segname  = "__PAGEZERO"
+  , maddr    = 0
+  , msize    = pagezeroSize
+  , fsize    = 0
+  , maxprot  = []
+  , initprot = []
+  , sections = []
+  , segflags = 0
+  }
+
 textSegment :: [Word8] -> Segment
 textSegment text = Segment
   { segname  = "__TEXT"
