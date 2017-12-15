@@ -256,3 +256,5 @@ unixThread :: Word32
 unixThread = 0x5
 
 amd64ThreadState = 4
+
+amd64ExceptionStateCount = 42
