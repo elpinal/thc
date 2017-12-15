@@ -49,7 +49,7 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
 
       dataOffset :: Word32
-      dataOffset = sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset = (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
 
 data Header = Header
   { magic      :: Word32
@@ -67,6 +67,9 @@ header64 = Header
   , filetype   = Execute
   , hflags     = 0
   }
+
+headerSize :: Word32
+headerSize = 32
 
 encodeHeader :: [Segment] -> Int -> Header -> [Word8]
 encodeHeader ss l Header
