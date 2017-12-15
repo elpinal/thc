@@ -93,6 +93,7 @@ data Segment = Segment
   { segname  :: String
   , maddr    :: Word64
   , msize    :: Word64
+  , fsize    :: Word64
   , maxprot  :: [Prot]
   , initprot :: [Prot]
   , sections :: [Section]
@@ -104,6 +105,7 @@ segment = Segment
   { segname  = ""
   , maddr    = 0
   , msize    = 0
+  , fsize    = 0
   , maxprot  = allProt
   , initprot = allProt
   , sections = []
@@ -115,6 +117,7 @@ textSegment text = Segment
   { segname  = "__TEXT"
   , maddr    = 0
   , msize    = fromIntegral $ length text
+  , fsize    = fromIntegral $ length text
   , maxprot  = allProt
   , initprot = [Readable, Executable]
   , sections = [textSection text]
@@ -132,14 +135,15 @@ encodeSegment :: Word32 -> Word32 -> Segment -> [Word8]
 encodeSegment dataOffset offset Segment
   { segname  = n
   , maddr    = a
-  , msize    = s
+  , msize    = ms
+  , fsize    = s
   , maxprot  = mp
   , initprot = ip
   , sections = ss
   , segflags = fs
   } = concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
       ++ encode n
-      ++ concatMap encodeBits [a, s]
+      ++ concatMap encodeBits [a, ms]
       ++ concatMap encodeBits [0, s :: Word64] -- FIXME: Deliberate fileoff and filesize.
       ++ concatMap encode [mp, ip]
       ++ encodeBits (nsects :: Word32)
