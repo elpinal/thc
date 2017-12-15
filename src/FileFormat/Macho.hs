@@ -153,7 +153,7 @@ encodeSegment dataOffset offset Segment
     ffu = fst $ foldl f ([], dataOffset) ss
 
     f :: ([Word8], Word32) -> Section -> ([Word8], Word32)
-    f (acc, off) s = (acc ++ encodeSection n (fromIntegral $ length acc) s, sizeOfSection s)
+    f (acc, off) s = (acc ++ encodeSection n off s, off + sizeOfSection s)
 
     -- offsets :: [Word32]
     -- offsets = take nsects . iterate (+ sectionSize) $ offset + segmentSize
