@@ -183,9 +183,6 @@ encodeSegment dataOffset offset Segment
       | s == 0    = x
       | otherwise = dataOffset + x
 
-    -- offsets :: [Word32]
-    -- offsets = take nsects . iterate (+ sectionSize) $ offset + segmentSize
-
 sizeOfSection :: Num a => Section -> a
 sizeOfSection Section {size = s} = fromIntegral s
 
