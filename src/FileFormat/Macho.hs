@@ -251,3 +251,6 @@ data FileType =
 
 instance Encode FileType where
   encode f = encodeBits $ (2 :: Word32) ^ fromIntegral (fromEnum f)
+
+unixThread :: Word32
+unixThread = 0x5
