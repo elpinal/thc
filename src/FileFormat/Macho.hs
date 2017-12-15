@@ -251,15 +251,3 @@ data FileType =
 
 instance Encode FileType where
   encode f = encodeBits $ (2 :: Word32) ^ fromIntegral (fromEnum f)
-
-lcSegment64 :: Word32
-lcSegment64 = 0x19
-
-lcSymtab :: Word32
-lcSymtab = 0x02
-
-lcDysymtab :: Word32
-lcDysymtab = 0x0b
-
-lcUuid :: Word32
-lcUuid = 0x1b
