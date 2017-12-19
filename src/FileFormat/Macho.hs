@@ -341,7 +341,7 @@ encodeThreadState ThreadState
   , cs     = x18
   , fs     = x19
   , gs     = x20
-  } = concatMap encodeBits [unixThread, threadStateLoadCommandSize] ++ concatMap encodeBits
+  } = concatMap encodeBits [unixThread, threadStateLoadCommandSize, amd64ThreadState, amd64ExceptionStateCount] ++ concatMap encodeBits
   [ x0
   , x1
   , x2
