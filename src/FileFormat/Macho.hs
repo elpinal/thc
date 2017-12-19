@@ -309,3 +309,49 @@ threadState = ThreadState
   , fs     = 0
   , gs     = 0
   }
+
+encodeThreadState :: ThreadState -> [Word8]
+encodeThreadState ThreadState
+  { rax    = x0
+  , rbx    = x1
+  , rcx    = x2
+  , rdx    = x3
+  , rdi    = x4
+  , rsi    = x5
+  , rbp    = x6
+  , rsp    = x7
+  , r8     = x8
+  , r9     = x9
+  , r10    = x10
+  , r11    = x11
+  , r12    = x12
+  , r13    = x13
+  , r14    = x14
+  , r15    = x15
+  , rip    = x16
+  , rflags = x17
+  , cs     = x18
+  , fs     = x19
+  , gs     = x20
+  } = concatMap encodeBits
+  [ x0
+  , x1
+  , x2
+  , x3
+  , x4
+  , x5
+  , x6
+  , x7
+  , x8
+  , x9
+  , x10
+  , x11
+  , x12
+  , x13
+  , x14
+  , x15
+  , x16
+  , x17
+  , x18
+  , x19
+  ]
