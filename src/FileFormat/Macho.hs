@@ -285,6 +285,9 @@ data ThreadState = ThreadState
   , gs     :: Word64
   }
 
+threadStateLoadCommandSize :: Word32
+threadStateLoadCommandSize = threadStateSize + 4*4
+
 threadStateSize :: Word32
 threadStateSize = 21 * 8
 
