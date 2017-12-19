@@ -260,7 +260,7 @@ unixThread = 0x5
 amd64ThreadState :: Word32
 amd64ThreadState = 4
 
-amd64ThreadState :: Word32
+amd64ExceptionStateCount :: Word32
 amd64ExceptionStateCount = 42
 
 data ThreadState = ThreadState
