@@ -31,12 +31,14 @@ encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
 data File = File
   { header   :: Header
   , segments :: [Segment]
+  , threadS  :: ThreadState
   }
 
 emptyFile :: File
 emptyFile = File
   { header   = header64
   , segments = [segment]
+  , threadS = threadState
   }
 
 margin :: Num a => a
