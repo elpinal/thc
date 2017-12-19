@@ -45,7 +45,7 @@ margin :: Num a => a
 margin = 4096
 
 instance Encode File where
-  encode File {header = h, segments = ss} = encodeHeader ss (length bs) h ++ bs
+  encode File {header = h, segments = ss, threadS = ts} = encodeHeader ss (length bs) h ++ tstate ++ bs
     where
       bs :: [Word8]
       bs = foldl f [] ss
@@ -54,7 +54,10 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral . (margin +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset = fromIntegral . (fromIntegral (length tstate) +) . (margin +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+
+      tstate :: [Word8]
+      tstate = encodeThreadState ts
 
 data Header = Header
   { magic      :: Word32
