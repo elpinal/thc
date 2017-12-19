@@ -285,6 +285,8 @@ data ThreadState = ThreadState
   , gs     :: Word64
   }
 
+threadStateSize = 21 * 8
+
 threadState :: ThreadState
 threadState = ThreadState
   { rax    = 0
