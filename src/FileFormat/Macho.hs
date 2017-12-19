@@ -282,3 +282,28 @@ data ThreadState = ThreadState
   , fs     :: Word64
   , gs     :: Word64
   }
+
+threadState :: ThreadState
+threadState = ThreadState
+  { rax    = 0
+  , rbx    = 0
+  , rcx    = 0
+  , rdx    = 0
+  , rdi    = 0
+  , rsi    = 0
+  , rbp    = 0
+  , rsp    = 0
+  , r8     = 0
+  , r9     = 0
+  , r10    = 0
+  , r11    = 0
+  , r12    = 0
+  , r13    = 0
+  , r14    = 0
+  , r15    = 0
+  , rip    = 0
+  , rflags = 0
+  , cs     = 0
+  , fs     = 0
+  , gs     = 0
+  }
