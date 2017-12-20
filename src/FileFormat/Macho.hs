@@ -72,9 +72,11 @@ instance Encode File where
       f :: [Word8] -> Segment -> [Word8]
       f acc s = acc ++ encodeSegment dataOffset s
 
+      -- | Indicates the offset in the file of the data.
       dataOffset :: Word64
       dataOffset = fromIntegral $ threadCommandSize + headerSize + sum (map g ss)
 
+      -- | Gets the size of the segment load command plus the size of its sections.
       g :: Segment -> Word32
       g s = segmentSize + sectionSize * nsectsOf s
 
