@@ -58,7 +58,7 @@ instance Encode File where
       bs = foldl f [] ss
 
       f :: [Word8] -> Segment -> [Word8]
-      f acc s = acc ++ encodeSegment dataOffset (lengthNum acc) s
+      f acc s = acc ++ encodeSegment dataOffset s
 
       dataOffset :: Word64
       dataOffset = fromIntegral $ threadCommandSize + headerSize + sum (map g ss)
@@ -168,8 +168,8 @@ segment64 = 0x19
 segmentSize :: Word32
 segmentSize = 72
 
-encodeSegment :: Word64 -> Word32 -> Segment -> [Word8]
-encodeSegment dataOffset offset Segment
+encodeSegment :: Word64 -> Segment -> [Word8]
+encodeSegment dataOffset Segment
   { segname  = n
   , maddr    = a
   , msize    = ms
