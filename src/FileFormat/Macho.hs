@@ -61,7 +61,7 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (lengthNum acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral $ threadStateLoadCommandSize + headerSize + sum (map g ss)
+      dataOffset = fromIntegral $ threadCommandSize + headerSize + sum (map g ss)
 
       g :: Segment -> Word32
       g s = segmentSize + sectionSize * nsectsOf s
@@ -106,7 +106,7 @@ encodeHeader ss l Header
     ncmds = lengthNum ss + 1 -- 1 is for LC_UNIXTHREAD
 
     sizeofcmds :: Word32
-    sizeofcmds = l + threadStateLoadCommandSize
+    sizeofcmds = l + threadCommandSize
 
     reserved :: Word32
     reserved = 0x00
@@ -311,8 +311,8 @@ data ThreadState = ThreadState
   , gs     :: Word64
   }
 
-threadStateLoadCommandSize :: Word32
-threadStateLoadCommandSize = threadStateSize + 4*4
+threadCommandSize :: Word32
+threadCommandSize = threadStateSize + 4*4
 
 threadStateSize :: Word32
 threadStateSize = 21 * 8
@@ -367,7 +367,7 @@ encodeThreadState ThreadState
   , gs     = x20
   } = concatMap encodeBits
     [ unixThread
-    , threadStateLoadCommandSize
+    , threadCommandSize
     , amd64ThreadState
     , amd64ExceptionStateCount
     ] ++ concatMap encodeBits
