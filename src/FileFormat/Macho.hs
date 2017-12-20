@@ -81,7 +81,7 @@ instance Encode File where
       g s = segmentSize + sectionSize * nsectsOf s
 
       tstate :: [Word8]
-      tstate = encodeThreadState ts
+      tstate = encodeThreadState dataOffset ts
 
 data Header = Header
   { magic      :: Word32
@@ -320,7 +320,7 @@ data ThreadState = ThreadState
   , r13    :: Word64
   , r14    :: Word64
   , r15    :: Word64
-  , rip    :: Word64
+  -- , rip    :: Word64 -- Intended to be automatically set.
   , rflags :: Word64
   , cs     :: Word64
   , fs     :: Word64
@@ -351,15 +351,14 @@ threadState = ThreadState
   , r13    = 0
   , r14    = 0
   , r15    = 0
-  , rip    = 0 -- FIXME: set this value to the __text address.
   , rflags = 0
   , cs     = 0
   , fs     = 0
   , gs     = 0
   }
 
-encodeThreadState :: ThreadState -> [Word8]
-encodeThreadState ThreadState
+encodeThreadState :: Word64 -> ThreadState -> [Word8]
+encodeThreadState dataOffset ThreadState
   { rax    = x0
   , rbx    = x1
   , rcx    = x2
@@ -376,11 +375,10 @@ encodeThreadState ThreadState
   , r13    = x13
   , r14    = x14
   , r15    = x15
-  , rip    = x16
-  , rflags = x17
-  , cs     = x18
-  , fs     = x19
-  , gs     = x20
+  , rflags = x16
+  , cs     = x17
+  , fs     = x18
+  , gs     = x19
   } = concatMap encodeBits
     [ unixThread
     , threadCommandSize
@@ -403,9 +401,9 @@ encodeThreadState ThreadState
     , x13
     , x14
     , x15
+    , pagezeroSize + dataOffset
     , x16
     , x17
     , x18
     , x19
-    , x20
     ]
