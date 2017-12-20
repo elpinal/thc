@@ -229,7 +229,6 @@ textSection text = Section
 sectionSize :: Word32
 sectionSize = 80
 
--- TODO: Consider 'offset' field.
 encodeSection :: String -> Word64 -> Section -> [Word8]
 encodeSection segn dataOffset Section
   { secname  = n
