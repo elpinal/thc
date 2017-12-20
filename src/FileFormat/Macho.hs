@@ -92,12 +92,12 @@ headerSize = 32
 encodeHeader :: [Segment] -> Word32 -> Header -> [Word8]
 encodeHeader ss l Header
   { magic      = m
-  , cputype    = c
-  , cpusubtype = cs
+  , cputype    = cpu
+  , cpusubtype = cpusub
   , filetype   = f
   , hflags     = h
   } = mconcat
-    [ concatMap encodeBits [m, c, cs]
+    [ concatMap encodeBits [m, cpu, cpusub]
     , encode f
     , concatMap encodeBits [ncmds, sizeofcmds, h, reserved]
     ]
