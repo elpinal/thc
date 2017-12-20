@@ -48,7 +48,11 @@ lengthNum :: Num b => [a] -> b
 lengthNum = fromIntegral . length
 
 instance Encode File where
-  encode File {header = h, segments = ss, threadS = ts} = encodeHeader ss (length bs) h ++ bs ++ tstate
+  encode File
+    { header = h
+    , segments = ss
+    , threadS = ts
+    } = encodeHeader ss (length bs) h ++ bs ++ tstate
     where
       bs :: [Word8]
       bs = foldl f [] ss
@@ -57,7 +61,10 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (lengthNum acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral . (threadStateLoadCommandSize +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * lengthNum secs) ss
+      dataOffset = fromIntegral $ threadStateLoadCommandSize + headerSize + sum (map g ss)
+
+      g :: Segment -> Word32
+      g s = segmentSize + sectionSize * nsectsOf s
 
       tstate :: [Word8]
       tstate = encodeThreadState ts
@@ -193,6 +200,9 @@ encodeSegment dataOffset offset Segment
 
 sizeOfSection :: Num a => Section -> a
 sizeOfSection Section {size = s} = fromIntegral s
+
+nsectsOf :: Num a => Segment -> a
+nsectsOf Segment { sections = ss } = lengthNum ss
 
 data Section = Section
   { secname  :: String
