@@ -52,7 +52,7 @@ instance Encode File where
     { header = h
     , segments = ss
     , threadS = ts
-    } = encodeHeader ss (length bs) h ++ bs ++ tstate
+    } = encodeHeader ss (lengthNum bs) h ++ bs ++ tstate
     where
       bs :: [Word8]
       bs = foldl f [] ss
@@ -89,23 +89,27 @@ header64 = Header
 headerSize :: Word32
 headerSize = 32
 
-encodeHeader :: [Segment] -> Int -> Header -> [Word8]
+encodeHeader :: [Segment] -> Word32 -> Header -> [Word8]
 encodeHeader ss l Header
   { magic      = m
   , cputype    = c
   , cpusubtype = cs
   , filetype   = f
   , hflags     = h
-  } = concatMap encodeBits [m, c, cs] ++ encode f ++ ncmds ++ encodeBits sizeofcmds ++ encodeBits h ++ reserved
+  } = mconcat
+    [ concatMap encodeBits [m, c, cs]
+    , encode f
+    , concatMap encodeBits [ncmds, sizeofcmds, h, reserved]
+    ]
   where
-    reserved :: [Word8]
-    reserved = [0, 0, 0, 0]
-
-    ncmds :: [Word8]
-    ncmds = encodeBits $ (lengthNum ss :: Word32) + 1 -- 1 is for LC_UNIXTHREAD
+    ncmds :: Word32
+    ncmds = lengthNum ss + 1 -- 1 is for LC_UNIXTHREAD
 
     sizeofcmds :: Word32
-    sizeofcmds = fromIntegral l + threadStateLoadCommandSize
+    sizeofcmds = l + threadStateLoadCommandSize
+
+    reserved :: Word32
+    reserved = 0x00
 
 data Segment = Segment
   { segname  :: String
