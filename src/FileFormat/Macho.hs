@@ -54,7 +54,7 @@ instance Encode File where
       f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral . (fromIntegral (length tstate) +) . (margin +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset = fromIntegral . (threadStateLoadCommandSize +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
 
       tstate :: [Word8]
       tstate = encodeThreadState ts
