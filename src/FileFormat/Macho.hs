@@ -28,6 +28,18 @@ encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
     shiftR8 :: Bits a => a -> a
     shiftR8 = flip shiftR 8
 
+executableFromText :: [Word8] -> [Word8]
+executableFromText txt = bs ++ spaces
+  where
+    bs :: [Word8]
+    bs = encode file ++ txt
+
+    file :: File
+    file = File header64 [pagezero, textSegment txt] threadState
+
+    spaces :: [Word8]
+    spaces = replicate (4096 - length bs) 0x00
+
 data File = File
   { header   :: Header
   , segments :: [Segment]
