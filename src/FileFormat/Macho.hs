@@ -45,7 +45,7 @@ margin :: Num a => a
 margin = 4096
 
 instance Encode File where
-  encode File {header = h, segments = ss, threadS = ts} = encodeHeader ss (length bs) h ++ tstate ++ bs
+  encode File {header = h, segments = ss, threadS = ts} = encodeHeader ss (length bs) h ++ bs ++ tstate
     where
       bs :: [Word8]
       bs = foldl f [] ss
@@ -92,10 +92,10 @@ encodeHeader ss l Header
     reserved = [0, 0, 0, 0]
 
     ncmds :: [Word8]
-    ncmds = encodeBits (fromIntegral $ length ss :: Word32)
+    ncmds = encodeBits $ (fromIntegral $ length ss :: Word32) + 1 -- 1 is for LC_UNIXTHREAD
 
     sizeofcmds :: Word32
-    sizeofcmds = fromIntegral l
+    sizeofcmds = fromIntegral l + threadStateLoadCommandSize
 
 data Segment = Segment
   { segname  :: String
@@ -370,4 +370,5 @@ encodeThreadState ThreadState
   , x17
   , x18
   , x19
+  , x20
   ]
