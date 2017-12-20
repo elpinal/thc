@@ -38,7 +38,10 @@ executableFromText txt = bs ++ spaces
     file = File header64 [pagezero, textSegment txt] threadState
 
     spaces :: [Word8]
-    spaces = replicate (4096 - length bs) 0x00
+    spaces = replicate (minBytes - length bs) 0x00
+
+    minBytes :: Int
+    minBytes = 0x1000
 
 data File = File
   { header   :: Header
@@ -52,9 +55,6 @@ emptyFile = File
   , segments = [segment]
   , threadS = threadState
   }
-
-margin :: Num a => a
-margin = 4096
 
 lengthNum :: Num b => [a] -> b
 lengthNum = fromIntegral . length
