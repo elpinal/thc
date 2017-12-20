@@ -178,16 +178,16 @@ encodeSegment dataOffset offset Segment
   , initprot = ip
   , sections = ss
   , segflags = fs
-  } = concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
-      ++ encode n
-      ++ concatMap encodeBits [a, dataoff ms]
-      ++ concatMap encodeBits [0, dataoff s] -- FIXME: Deliberate fileoff and filesize.
-      ++ concatMap encode [mp, ip]
-      ++ encodeBits (nsects :: Word32)
-      ++ encodeBits fs
-      ++ sects
+  } = mconcat
+    [ concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
+    , encode n
+    , concatMap encodeBits [a, dataoff ms, 0, dataoff s]
+    , concatMap encode [mp, ip]
+    , concatMap encodeBits [nsects, fs]
+    , sects
+    ]
   where
-    nsects :: Num a => a
+    nsects :: Word32
     nsects = lengthNum ss
 
     sects :: [Word8]
