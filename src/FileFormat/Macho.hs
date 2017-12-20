@@ -44,6 +44,9 @@ emptyFile = File
 margin :: Num a => a
 margin = 4096
 
+lengthNum :: Num b => [a] -> b
+lengthNum = fromIntegral . length
+
 instance Encode File where
   encode File {header = h, segments = ss, threadS = ts} = encodeHeader ss (length bs) h ++ bs ++ tstate
     where
@@ -51,10 +54,10 @@ instance Encode File where
       bs = foldl f [] ss
 
       f :: [Word8] -> Segment -> [Word8]
-      f acc s = acc ++ encodeSegment dataOffset (fromIntegral $ length acc) s
+      f acc s = acc ++ encodeSegment dataOffset (lengthNum acc) s
 
       dataOffset :: Word64
-      dataOffset = fromIntegral . (threadStateLoadCommandSize +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * fromIntegral (length secs)) ss
+      dataOffset = fromIntegral . (threadStateLoadCommandSize +) . (headerSize +) . sum $ map (\Segment {sections = secs} -> segmentSize + sectionSize * lengthNum secs) ss
 
       tstate :: [Word8]
       tstate = encodeThreadState ts
@@ -92,7 +95,7 @@ encodeHeader ss l Header
     reserved = [0, 0, 0, 0]
 
     ncmds :: [Word8]
-    ncmds = encodeBits $ (fromIntegral $ length ss :: Word32) + 1 -- 1 is for LC_UNIXTHREAD
+    ncmds = encodeBits $ (lengthNum ss :: Word32) + 1 -- 1 is for LC_UNIXTHREAD
 
     sizeofcmds :: Word32
     sizeofcmds = fromIntegral l + threadStateLoadCommandSize
@@ -139,8 +142,8 @@ textSegment :: [Word8] -> Segment
 textSegment text = Segment
   { segname  = "__TEXT"
   , maddr    = pagezeroSize
-  , msize    = fromIntegral $ length text
-  , fsize    = fromIntegral $ length text
+  , msize    = lengthNum text
+  , fsize    = lengthNum text
   , maxprot  = allProt
   , initprot = [Readable, Executable]
   , sections = [textSection text]
@@ -174,7 +177,7 @@ encodeSegment dataOffset offset Segment
       ++ sects
   where
     nsects :: Num a => a
-    nsects = fromIntegral $ length ss
+    nsects = lengthNum ss
 
     sects :: [Word8]
     sects = fst $ foldl f ([], dataOffset) ss
@@ -203,7 +206,7 @@ textSection :: [Word8] -> Section
 textSection text = Section
   { secname  = "__text"
   , addr     = pagezeroSize
-  , size     = fromIntegral $ length text
+  , size     = lengthNum text
   , align    = 0
   , secflags = 0
   }
