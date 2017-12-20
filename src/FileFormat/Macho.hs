@@ -253,7 +253,10 @@ data Prot =
   deriving Enum
 
 instance Encode [Prot] where
-  encode = encodeBits . foldr (.|.) 0 . map (\p -> (2 :: Word32) ^ fromEnum p)
+  encode = encodeBits . foldr ((.|.) . pow2FromEnum) 0
+
+pow2FromEnum :: Enum a => a -> Word32
+pow2FromEnum e = 2 ^ fromEnum e
 
 allProt :: [Prot]
 allProt = [Readable, Writable, Executable]
@@ -276,7 +279,7 @@ data FileType =
   deriving Enum
 
 instance Encode FileType where
-  encode f = encodeBits $ (2 :: Word32) ^ fromIntegral (fromEnum f)
+  encode = encodeBits . pow2FromEnum
 
 unixThread :: Word32
 unixThread = 0x5
