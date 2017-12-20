@@ -237,10 +237,14 @@ encodeSection segn dataOffset Section
   , size     = s
   , align    = al
   , secflags = fs
-  } = concatMap encode [n, segn] ++ concatMap encodeBits [a + dataOffset, s] ++ concatMap encodeBits [fromIntegral dataOffset, al, 0, 0, fs] ++ reserved
+  } = mconcat
+    [ concatMap encode [n, segn]
+    , concatMap encodeBits [a + dataOffset, s]
+    , concatMap encodeBits $ [fromIntegral dataOffset, al, 0, 0, fs] ++ reserved
+    ]
   where
-    reserved :: [Word8]
-    reserved = concatMap encodeBits $ replicate 3 (0x00 :: Word32)
+    reserved :: [Word32]
+    reserved = replicate 3 0x00
 
 data Prot =
     Readable
