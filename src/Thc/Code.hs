@@ -8,4 +8,5 @@ import Thc.Asm
 type Code = B.ByteString
 
 class Machine m where
-  fromAsm :: Asm -> m Code
+  fromAsm :: Asm -> m
+  fromMachine :: m -> Code
