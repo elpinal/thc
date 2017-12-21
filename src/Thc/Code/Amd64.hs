@@ -1,4 +1,6 @@
-module Thc.Code.Amd64 where
+module Thc.Code.Amd64
+  ( updateContext
+  ) where
 
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.ByteString.Lazy as B
@@ -6,6 +8,9 @@ import Data.Word
 
 import Thc.Asm
 import Thc.Code
+
+updateContext :: Context -> Context
+updateContext c = c { cpu = \Amd64 -> return . fromAsm }
 
 fromAsm :: Asm -> Code
 fromAsm (Ret l, x) = ret l x
