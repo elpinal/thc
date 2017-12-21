@@ -2,8 +2,16 @@ module FileFormat.MachoSpec where
 
 import Test.Hspec
 
+import qualified Data.ByteString.Lazy as B
+
+import FileFormat.Macho
+
 spec :: Spec
 spec = do
-  describe "..." $
-    it "..." $ do
-      return () :: IO ()
+  describe "executableFromText" $ do
+    it "creates an executable Mach-O binary from text" $ do
+      want <- B.readFile "test/FileFormat/data/binary"
+      B.pack (executableFromText [0xc3]) `shouldBe` want
+
+    it "emits a binary whose size is more than or equal to 4096 bytes" $ do
+      length (executableFromText [0xc3]) `shouldBe` 4096
