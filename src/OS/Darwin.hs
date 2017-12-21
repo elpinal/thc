@@ -1,5 +1,7 @@
 module OS.Darwin where
 
+import Data.Bits
+
 syscallClassShift = 24
 
 syscallClassMask = shift 0xff syscallClassShift
