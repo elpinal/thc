@@ -40,7 +40,8 @@ test-suite thc-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       Thc.TacSpec
-                      ,Thc.AsmSpec
+                     , Thc.AsmSpec
+                     , FileFormat.MachoSpec
   build-depends:       base
                      , thc
                      , hspec >= 2.4.4
