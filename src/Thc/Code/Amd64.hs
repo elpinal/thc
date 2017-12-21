@@ -7,11 +7,8 @@ import Data.Word
 import Thc.Asm
 import Thc.Code
 
-data Amd64 = Amd64 B.ByteString
+fromAsm :: Asm -> Code
+fromAsm (Ret l, x) = ret l x
 
-instance Machine Amd64 where
-  fromAsm (Ret l, x) = ret l x
-  fromMachine (Amd64 b) = b
-
-ret :: Loc -> String -> Amd64
-ret (StringTable n) x = Amd64 $ C.pack x
+ret :: Loc -> String -> Code
+ret (StringTable n) x = C.pack x

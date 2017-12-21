@@ -5,5 +5,5 @@ import Thc.Code
 import Thc.Expr
 import Thc.Tac
 
-compile :: Machine m => Term -> m
-compile = fromAsm . fromTac . fromExpr
+compile :: Context -> Term -> OS -> CPU -> Either Error Code
+compile ctx t o c = encode ctx (fromTac $ fromExpr t) o c
