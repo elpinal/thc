@@ -1,3 +1,6 @@
+{-|
+This module is provided to deal with Mach-O file format.
+-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module FileFormat.Macho where
@@ -18,12 +21,12 @@ class Encode a where
 instance Encode String where
   encode = fillString16 . B.unpack . C.pack
 
--- | Make the length of bytes encoded from a string 16 bytes.
+-- | 'fillString16' @xs@ pads @xs@ with zeros to make the length 16 bytes.
 --
 -- >>> fillString16 [7, 8] == [7, 8] ++ replicate 14 0
 -- True
 --
--- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\x -> length (fillString16 x) == 16)
+-- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\xs -> length (fillString16 xs) == 16)
 fillString16 :: [Word8] -> [Word8]
 fillString16 xs
   | length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (length xs)
@@ -38,6 +41,7 @@ encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
     shiftR8 :: Bits a => a -> a
     shiftR8 = flip shiftR 8
 
+-- | 'executableFromText' @text@ creates an executable Mach-O binary from 'text'.
 executableFromText :: [Word8] -> [Word8]
 executableFromText txt = bs ++ spaces
   where
@@ -272,7 +276,7 @@ encodeSection segn dataOffset Section
     reserved :: [Word32]
     reserved = replicate 3 0x00
 
--- | Virtual memory protection.
+-- | 'Prot' represents a sort of virtual memory protection.
 data Prot =
     Readable
   | Writable
@@ -300,6 +304,14 @@ amd64 = 7 .|. abi64
 amd64All :: Word32
 amd64All = 3
 
+-- |
+-- The Mach-O file type. It indicates the usage and alignment of the file.
+-- It is encoded as a 'Word32', 4 bytes.
+--
+-- >>> encode Object
+-- [1,0,0,0]
+-- >>> encode Execute
+-- [2,0,0,0]
 data FileType =
     Object
   | Execute
