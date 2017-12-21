@@ -17,14 +17,14 @@ description:         The thc.
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
-                     , Thc.Expr
-                     , Thc.Tac
+                     , FileFormat.Macho
+                     , OS.Darwin
                      , Thc.Asm
                      , Thc.Code
-                     , FileFormat.Macho
                      , Thc.Code.Amd64
-                     , OS.Darwin
                      , Thc.Compiler
+                     , Thc.Expr
+                     , Thc.Tac
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.8.1
                      , QuickCheck
