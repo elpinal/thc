@@ -1,7 +1,6 @@
 module Thc.Code where
 
 import qualified Data.ByteString.Lazy as B
-import Data.Word
 
 import Thc.Asm
 

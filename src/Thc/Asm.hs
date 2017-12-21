@@ -6,8 +6,6 @@ module Thc.Asm
   , Tac.Val(..)
   ) where
 
-import Data.Bifunctor
-
 import qualified Thc.Tac as Tac
 
 type Asm = (Inst, String)
