@@ -3,7 +3,23 @@ This module is provided to deal with Mach-O file format.
 -}
 {-# LANGUAGE FlexibleInstances #-}
 
-module FileFormat.Macho where
+module FileFormat.Macho
+  ( executableFromText
+  , Encode(..)
+  , encodeBits
+  , encodeHeader
+  , encodeSegment
+  , encodeSection
+  , encodeThreadState
+  , File(..)
+  , Header(..)
+  , Segment(..)
+  , Section(..)
+  , ThreadState(..)
+  , FileType(..)
+  , Prot(..)
+  , fillString16
+  ) where
 
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as C
