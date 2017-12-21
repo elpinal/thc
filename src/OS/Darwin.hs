@@ -2,6 +2,14 @@ module OS.Darwin where
 
 import Data.Bits
 
+import qualified Data.ByteString.Lazy as B
+
+import FileFormat.Macho
+import Thc.Code
+
+updateContext :: Context -> Context
+updateContext c = c { os = \Darwin bs Amd64 -> return . B.pack . executableFromText $ B.unpack bs}
+
 syscallClassShift = 24
 
 syscallClassMask = shift 0xff syscallClassShift
