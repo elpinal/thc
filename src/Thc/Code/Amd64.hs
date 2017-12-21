@@ -8,7 +8,7 @@ import Thc.Asm
 import Thc.Code
 
 updateContext :: Context -> Context
-updateContext c = c { cpu = \Amd64 -> return . fromAsm }
+updateContext ctx = ctx { cpu = \c -> if c == Amd64 then return . fromAsm else cpu ctx c }
 
 fromAsm :: Asm -> Code
 fromAsm (Ret l, x) = ret l x

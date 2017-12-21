@@ -12,8 +12,10 @@ data Context = Context
   }
 
 data CPU = Amd64
+  deriving Eq
 
 data OS = Darwin
+  deriving Eq
 
 context :: Context
 context = Context
