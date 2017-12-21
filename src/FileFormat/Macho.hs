@@ -8,12 +8,22 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Bits
 import Data.Word
 
+-- $setup
+-- >>> import Test.QuickCheck
+
+-- | The 'Encode' class is used to encode something to bytes.
 class Encode a where
   encode :: a -> [Word8]
 
 instance Encode String where
   encode = fillString16 . B.unpack . C.pack
 
+-- | Make the length of bytes encoded from a string 16 bytes.
+--
+-- >>> fillString16 [7, 8] == [7, 8] ++ replicate 14 0
+-- True
+--
+-- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\x -> length (fillString16 x) == 16)
 fillString16 :: [Word8] -> [Word8]
 fillString16 xs
   | length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (length xs)
@@ -43,6 +53,7 @@ executableFromText txt = bs ++ spaces
     minBytes :: Int
     minBytes = 0x1000
 
+-- | The Mach-O file.
 data File = File
   { header   :: Header
   , segments :: [Segment]
@@ -56,6 +67,7 @@ emptyFile = File
   , threadS = threadState
   }
 
+-- | Get the length of a list in 'Num'.
 lengthNum :: Num b => [a] -> b
 lengthNum = fromIntegral . length
 
@@ -83,6 +95,7 @@ instance Encode File where
       tstate :: [Word8]
       tstate = encodeThreadState dataOffset ts
 
+-- | The Mach-O header.
 data Header = Header
   { magic      :: Word32
   , cputype    :: Word32
@@ -259,6 +272,7 @@ encodeSection segn dataOffset Section
     reserved :: [Word32]
     reserved = replicate 3 0x00
 
+-- | Virtual memory protection.
 data Prot =
     Readable
   | Writable
