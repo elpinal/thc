@@ -22,5 +22,6 @@ ret (StringTable n) x = syscallNumber `B.append` B.singleton 0xbf `B.append` B.p
     v :: Word32
     v = fromIntegral $ length x
 
+    -- | TODO: This depends on System-V and xnu.
     syscallNumber :: B.ByteString
     syscallNumber = B.pack [0xb8, 1, 0, 0, 2]
