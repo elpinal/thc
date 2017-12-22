@@ -17,3 +17,6 @@ fromAsm (Ret l, x) = ret l x
 --        Note that syscall numbers depend on OS.
 ret :: Loc -> String -> Code
 ret (StringTable n) x = B.singleton 0xbf `B.append` encode v `B.append` B.pack [0x0f, 0x05]
+  where
+    v :: Word32
+    v = fromIntegral $ length x
