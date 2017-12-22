@@ -34,3 +34,7 @@ encode Context
 data Error =
     NoCPU CPU
   | NoOS OS
+
+-- | The 'Encode' class is used to encode something to bytes.
+class Encode a where
+  encode :: a -> [Word8]
