@@ -32,10 +32,6 @@ import Thc.Code
 -- $setup
 -- >>> import Test.QuickCheck
 
--- | The 'Encode' class is used to encode something to bytes.
-class Encode a where
-  encode :: a -> [Word8]
-
 instance Encode String where
   encode = fillString16 . B.unpack . C.pack
 
