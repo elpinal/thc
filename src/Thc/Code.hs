@@ -1,5 +1,6 @@
 module Thc.Code where
 
+import Data.Bits
 import qualified Data.ByteString.Lazy as B
 import Data.Word
 
