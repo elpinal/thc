@@ -14,4 +14,4 @@ compile :: Term -> OS -> CPU -> Either Error Code
 compile = compileWithContext coreContext
 
 compileWithContext :: Context -> Term -> OS -> CPU -> Either Error Code
-compileWithContext ctx t o c = encode ctx (fromTac $ fromExpr t) o c
+compileWithContext ctx t o c = encodeFromAsm ctx (fromTac $ fromExpr t) o c
