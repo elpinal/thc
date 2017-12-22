@@ -8,7 +8,11 @@ import FileFormat.Macho
 import Thc.Code
 
 updateContext :: Context -> Context
-updateContext c = c { os = \Darwin bs Amd64 -> return . B.pack . executableFromText $ B.unpack bs}
+updateContext ctx = ctx { os = f}
+  where
+    f o bs c
+      | o == Darwin && c == Amd64 = return . B.pack . executableFromText $ B.unpack bs
+      | otherwise                 = os ctx o bs c
 
 syscallClassShift = 24
 
