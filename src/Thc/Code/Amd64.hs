@@ -2,7 +2,7 @@ module Thc.Code.Amd64
   ( updateContext
   ) where
 
-import qualified Data.ByteString.Lazy.Char8 as C
+import qualified Data.ByteString.Lazy as B
 
 import Thc.Asm
 import Thc.Code
