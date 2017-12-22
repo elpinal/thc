@@ -17,7 +17,10 @@ fromAsm (Ret l, x) = ret l x
 -- FIXME: Use exit syscall to exit with code: length x.
 --        Note that syscall numbers depend on OS.
 ret :: Loc -> String -> Code
-ret (StringTable n) x = B.singleton 0xbf `B.append` B.pack (encodeBits v) `B.append` B.pack [0x0f, 0x05]
+ret (StringTable n) x = syscallNumber `B.append` B.singleton 0xbf `B.append` B.pack (encodeBits v) `B.append` B.pack [0x0f, 0x05]
   where
     v :: Word32
     v = fromIntegral $ length x
+
+    syscallNumber :: B.ByteString
+    syscallNumber = B.pack [0xb8, 1, 0, 0, 2]
