@@ -39,3 +39,12 @@ data Error =
 -- | The 'Encode' class is used to encode something to bytes.
 class Encode a where
   encode :: a -> [Word8]
+
+encodeBits :: (FiniteBits a, Integral a) => a -> [Word8]
+encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
+  where
+    b :: Int
+    b = finiteBitSize n `div` 8
+
+    shiftR8 :: Bits a => a -> a
+    shiftR8 = flip shiftR 8
