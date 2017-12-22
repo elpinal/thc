@@ -46,15 +46,6 @@ fillString16 xs
   | length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (length xs)
   | otherwise      = xs ++ replicate (16 - length xs) 0x00
 
-encodeBits :: (FiniteBits a, Integral a) => a -> [Word8]
-encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
-  where
-    b :: Int
-    b = finiteBitSize n `div` 8
-
-    shiftR8 :: Bits a => a -> a
-    shiftR8 = flip shiftR 8
-
 -- | 'executableFromText' @text@ creates an executable Mach-O binary from 'text'.
 executableFromText :: [Word8] -> [Word8]
 executableFromText txt = bs ++ spaces
