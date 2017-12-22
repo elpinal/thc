@@ -3,6 +3,7 @@ module Thc.Code.Amd64
   ) where
 
 import qualified Data.ByteString.Lazy as B
+import Data.Word
 
 import Thc.Asm
 import Thc.Code
