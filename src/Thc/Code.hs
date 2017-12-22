@@ -23,8 +23,8 @@ context = Context
   , os = \o _ _ -> Left $ NoOS o
   }
 
-encode :: Context -> Asm -> OS -> CPU -> Either Error Code
-encode Context
+encodeFromAsm :: Context -> Asm -> OS -> CPU -> Either Error Code
+encodeFromAsm Context
   { cpu = cc
   , os = co
   } a o c = do
