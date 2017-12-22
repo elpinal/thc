@@ -27,6 +27,8 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Bits
 import Data.Word
 
+import Thc.Code
+
 -- $setup
 -- >>> import Test.QuickCheck
 
