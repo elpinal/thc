@@ -1,5 +1,7 @@
 module Thc.Compiler where
 
+import Data.Bifunctor
+
 import qualified OS.Darwin as Darwin
 import Thc.Asm
 import Thc.Code
