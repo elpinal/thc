@@ -8,5 +8,8 @@ data Tac = Ret Val
 data Val = Var String
   deriving (Eq, Show)
 
-fromExpr :: Expr.Term -> Tac
-fromExpr (Expr.Var i) = Ret $ Var i
+data FromExprError = OnlyAbs
+  deriving (Eq, Show)
+
+fromExpr :: Expr.Term -> Either FromExprError Tac
+fromExpr (Expr.Var i) = Right . Ret $ Var i
