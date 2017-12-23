@@ -10,9 +10,9 @@ import Thc.Code
 updateContext :: Context -> Context
 updateContext ctx = ctx {os = f}
   where
-    f c o bs
-      | o == Darwin && c == Amd64 = return . B.pack . executableFromText $ B.unpack bs
-      | otherwise                 = os ctx c o bs
+    f c o
+      | o == Darwin && c == Amd64 = return . B.pack . executableFromText . B.unpack
+      | otherwise                 = os ctx c o
 
 syscallClassShift = 24
 
