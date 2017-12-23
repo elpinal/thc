@@ -13,3 +13,4 @@ data FromExprError = OnlyAbs
 
 fromExpr :: Expr.Term -> Either FromExprError Tac
 fromExpr (Expr.Var i) = Right . Ret $ Var i
+fromExpr (Expr.Abs i e) = Left OnlyAbs
