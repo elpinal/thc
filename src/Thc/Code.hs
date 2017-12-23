@@ -29,9 +29,7 @@ encodeFromAsm :: Context -> OS -> CPU -> Asm -> Either Error Code
 encodeFromAsm Context
   { cpu = cc
   , os = co
-  } o c a = do
-    text <- cc c a
-    co c o text
+  } o c a = cc c a >>= co c o
 
 data Error =
     NoCPU CPU
