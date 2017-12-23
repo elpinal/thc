@@ -25,11 +25,11 @@ context = Context
   , os = \o _ _ -> Left $ NoOS o
   }
 
-encodeFromAsm :: Context -> Asm -> OS -> CPU -> Either Error Code
+encodeFromAsm :: Context -> OS -> CPU -> Asm -> Either Error Code
 encodeFromAsm Context
   { cpu = cc
   , os = co
-  } a o c = do
+  } o c a = do
     text <- cc c a
     co o text c
 
