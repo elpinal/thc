@@ -10,7 +10,7 @@ type Code = B.ByteString
 
 data Context = Context
   { cpu :: CPU -> Asm -> Either Error Code
-  , os  :: OS -> Code -> CPU -> Either Error Code
+  , os  :: CPU -> OS -> Code -> Either Error Code
   }
 
 data CPU = Amd64
@@ -22,7 +22,7 @@ data OS = Darwin
 context :: Context
 context = Context
   { cpu = \c _ -> Left $ NoCPU c
-  , os = \o _ _ -> Left $ NoOS o
+  , os = \_ o _ -> Left $ NoOS o
   }
 
 encodeFromAsm :: Context -> OS -> CPU -> Asm -> Either Error Code
@@ -31,7 +31,7 @@ encodeFromAsm Context
   , os = co
   } o c a = do
     text <- cc c a
-    co o text c
+    co c o text
 
 data Error =
     NoCPU CPU
