@@ -45,6 +45,7 @@ test-suite thc-test
   other-modules:       Thc.TacSpec
                      , Thc.AsmSpec
                      , FileFormat.MachoSpec
+                     , Thc.CompilerSpec
   build-depends:       base
                      , thc
                      , hspec >= 2.4.4
