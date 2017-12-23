@@ -22,5 +22,5 @@ compile = compileWithContext coreContext
 
 compileWithContext :: Context -> Term -> OS -> CPU -> Either CompileError Code
 compileWithContext ctx t o c = do
-  q <- first FromExpr $ fromExpr t
-  first FromAsm $ encodeFromAsm ctx (fromTac q) o c
+  t <- first FromExpr $ fromExpr t
+  first FromAsm $ encodeFromAsm ctx (fromTac t) o c
