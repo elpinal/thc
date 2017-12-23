@@ -10,7 +10,12 @@ import Thc.Tac
 coreContext :: Context
 coreContext = Darwin.updateContext . Amd64.updateContext $ context
 
-compile :: Term -> OS -> CPU -> Either Error Code
+data CompileError =
+    FromExpr FromExprError
+  | FromAsm Error
+  deriving (Eq, Show)
+
+compile :: Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
 
 compileWithContext :: Context -> Term -> OS -> CPU -> Either Error Code
