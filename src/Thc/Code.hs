@@ -14,10 +14,10 @@ data Context = Context
   }
 
 data CPU = Amd64
-  deriving Eq
+  deriving (Eq, Show)
 
 data OS = Darwin
-  deriving Eq
+  deriving (Eq, Show)
 
 context :: Context
 context = Context
@@ -36,6 +36,7 @@ encodeFromAsm Context
 data Error =
     NoCPU CPU
   | NoOS OS
+  deriving (Eq, Show)
 
 -- | The 'Encode' class is used to encode something to bytes.
 class Encode a where
