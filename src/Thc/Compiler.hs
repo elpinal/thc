@@ -20,5 +20,7 @@ data CompileError =
 compile :: Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
 
-compileWithContext :: Context -> Term -> OS -> CPU -> Either Error Code
-compileWithContext ctx t o c = encodeFromAsm ctx (fromTac $ fromExpr t) o c
+compileWithContext :: Context -> Term -> OS -> CPU -> Either CompileError Code
+compileWithContext ctx t o c = do
+  q <- first FromExpr $ fromExpr t
+  first FromAsm $ encodeFromAsm ctx (fromTac q) o c
