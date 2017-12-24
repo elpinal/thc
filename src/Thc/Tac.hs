@@ -16,6 +16,7 @@ fromExpr (Expr.Var i) = Right . Ret $ Var i
 fromExpr (Expr.Abs i e) = Left OnlyAbs
 fromExpr (Expr.App (Expr.Abs i e1) e2) = fromExpr $ replace e1 i e2
 
+-- FIXME: Use correct Beta reduction
 replace :: Expr.Term -> String -> Expr.Term -> Expr.Term
 replace v @ (Expr.Var i) r e2
   | i == r    = e2
