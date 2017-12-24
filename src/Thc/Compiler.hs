@@ -21,6 +21,10 @@ compile :: Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
 
 compileWithContext :: Context -> Term -> OS -> CPU -> Either CompileError Code
-compileWithContext ctx t o c = do
-  t <- first FromExpr $ fromExpr t
-  first FromAsm . encodeFromAsm ctx o c $ fromTac t
+compileWithContext ctx t o c = genTac t >>= assemble . fromTac
+  where
+    genTac :: Term -> Either CompileError Tac
+    genTac = first FromExpr . fromExpr
+
+    assemble :: Asm -> Either CompileError Code
+    assemble = first FromAsm . encodeFromAsm ctx o c
