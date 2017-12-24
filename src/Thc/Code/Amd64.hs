@@ -29,6 +29,6 @@ ret (StringTable n) x = B.concat
     v :: Word32
     v = fromIntegral $ length x
 
-    -- | TODO: This depends on System-V and xnu.
+    -- | TODO: This depends on System V ABI and XNU.
     syscallNumber :: B.ByteString
     syscallNumber = B.pack [0xb8, 1, 0, 0, 2]
