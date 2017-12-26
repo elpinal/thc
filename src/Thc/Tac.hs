@@ -1,5 +1,7 @@
 module Thc.Tac where
 
+import Control.Monad.State.Lazy
+
 import qualified Thc.Expr as Expr
 
 data Tac = Ret Val
@@ -42,5 +44,5 @@ data FnDecl = FnDecl String String [Inst]
 data FromExprError' = UndefinedVariable String
   deriving (Eq, Show)
 
-fromExpr' :: Expr.Term -> Either FromExprError' Tac'
+fromExpr' :: Expr.Term -> StateT Int (Either FromExprError') Tac'
 fromExpr' (Expr.Var i) = return ([Return i], [])
