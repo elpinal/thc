@@ -25,3 +25,20 @@ replace a @ (Expr.Abs i e1) r e2
   | i == r    = a
   | otherwise = Expr.Abs i $ replace e1 r e2
 replace a @ (Expr.App e1 e2) r e3 = Expr.App (replace e1 r e3) (replace e2 r e3)
+
+-------------------
+
+type Tac' = ([Inst], [FnDecl])
+
+data Inst =
+    Assign String String
+  | App String String
+  | Return String
+  deriving (Eq, Show)
+
+data FnDecl = FnDecl String String [Inst]
+  deriving (Eq, Show)
+
+data FromExprError' = UndefinedVariable String
+  deriving (Eq, Show)
+
