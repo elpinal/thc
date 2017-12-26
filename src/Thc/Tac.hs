@@ -46,3 +46,13 @@ data FromExprError' = UndefinedVariable String
 
 fromExpr' :: Expr.Term -> StateT Int (Either FromExprError') Tac'
 fromExpr' (Expr.Var i) = return ([Return i], [])
+fromExpr' (Expr.Abs i t) = do
+  fi <- ("f" ++) . show <$> freshName -- FIXME: be likely to conflict
+  (is, fs) <- fromExpr' t
+  return ([Return fi], fs ++ [FnDecl fi i $ is])
+
+freshName :: Monad m => StateT Int m Int
+freshName = do
+  n <- get
+  put $ n + 1
+  return n
