@@ -5,6 +5,8 @@ data Term =
   | Abs String Term
   | App Term Term
 
+-- This is an useful function. Because Thc is a compiler, this is not
+-- necessary for the use.
 eval :: Term -> Term
 eval t = case eval1 t of
   Just t' -> eval t'
