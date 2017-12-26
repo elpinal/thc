@@ -44,12 +44,20 @@ data FnDecl = FnDecl String String [Inst]
 data FromExprError' = UndefinedVariable String
   deriving (Eq, Show)
 
-fromExpr' :: Expr.Term -> StateT Int (Either FromExprError') Tac'
-fromExpr' (Expr.Var i) = return ([Return i], [])
+fromExpr' :: Expr.Term -> StateT Int (Either FromExprError') (String, [Inst], [FnDecl])
+
+fromExpr' (Expr.Var i) = return (i, [], [])
+
 fromExpr' (Expr.Abs i t) = do
   fi <- ("f" ++) . show <$> freshName -- FIXME: be likely to conflict
-  (is, fs) <- fromExpr' t
-  return ([Return fi], fs ++ [FnDecl fi i $ is])
+  (a, is, fs) <- fromExpr' t
+  return (fi, is, fs ++ [FnDecl fi i [Return a]])
+
+fromExpr' (Expr.App t1 t2) = do
+  i <- ("a" ++) . show <$> freshName -- FIXME: be likely to conflict
+  (a, is1, fs1) <- fromExpr' t1
+  (b, is2, fs2) <- fromExpr' t2
+  return (i, is1 ++ is2 ++ [App a b], fs1 ++ fs2)
 
 freshName :: Monad m => StateT Int m Int
 freshName = do
