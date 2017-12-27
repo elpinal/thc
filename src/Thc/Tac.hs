@@ -71,4 +71,6 @@ freshName = do
 data Tac'' = Return' I.Literal
 
 fromLit :: I.Literal -> Tac''
+type Literal = I.Literal
+
 fromLit = Return'
