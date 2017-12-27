@@ -11,6 +11,7 @@ data Term =
 
 data Literal =
     Bool Bool
+  | Int Int
   deriving Show
 
 shift :: Int -> Term -> Term
