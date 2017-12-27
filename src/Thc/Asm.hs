@@ -25,3 +25,6 @@ retv (Tac.Var i) = (Ret $ StringTable 0, i)
 -------------------
 
 type Asm' = Tac.Tac''
+
+fromTac' :: Tac.Tac'' -> Asm'
+fromTac' = id
