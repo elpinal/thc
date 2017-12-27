@@ -21,3 +21,7 @@ fromTac (Tac.Ret v) = retv v
 
 retv :: Tac.Val -> Asm
 retv (Tac.Var i) = (Ret $ StringTable 0, i)
+
+-------------------
+
+type Asm' = Tac.Tac''
