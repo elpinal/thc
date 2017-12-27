@@ -38,6 +38,9 @@ subst j s t = walk 0 t
 substTop :: (Term, Term) -> Term
 substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 
+eval :: Term -> Term
+eval t = maybe t eval $ eval1 t
+
 eval1 :: Term -> Maybe Term
 eval1 (App (Abs _ t1) t2) = return $ substTop (t2, t1)
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
