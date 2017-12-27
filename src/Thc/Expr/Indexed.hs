@@ -36,6 +36,7 @@ subst j s t = walk 0 t
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c l @ (Lit _) = l
 
+-- subst
 substTop :: (Term, Term) -> Term
 substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 
