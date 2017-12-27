@@ -6,6 +6,11 @@ data Term =
     Var String Int Int
   | Abs String Term
   | App Term Term
+  | Lit Literal
+  deriving Show
+
+data Literal =
+    Bool Bool
   deriving Show
 
 shift :: Int -> Term -> Term
