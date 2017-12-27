@@ -14,3 +14,13 @@ shift d t = walk 0 t
       | otherwise = Var i x $ n + d       -- bound
     walk c (Abs i t') = Abs i $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
+
+subst :: Int -> Term -> Term -> Term
+subst j s t = walk 0 t
+  where
+    walk :: Int -> Term -> Term
+    walk c t' @ (Var i x n)
+      | x == j + c = shift c s
+      | otherwise  = t'
+    walk c (Abs i t') = Abs i $ walk (c + 1) t'
+    walk c (App t1 t2) = App (walk c t1) (walk c t2)
