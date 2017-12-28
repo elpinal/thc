@@ -1,4 +1,14 @@
-module Thc.Code where
+module Thc.Code
+  ( Code
+  , Context(..)
+  , context
+  , CPU(..)
+  , OS(..)
+  , Error(..)
+  , encodeFromAsm
+  , Encode(..)
+  , encodeBits
+  ) where
 
 import Data.Bits
 import qualified Data.ByteString.Lazy as B
@@ -19,6 +29,7 @@ data CPU = Amd64
 data OS = Darwin
   deriving (Eq, Show)
 
+-- | A minimal 'Context'.
 context :: Context
 context = Context
   { cpu = \c _ -> Left $ NoCPU c

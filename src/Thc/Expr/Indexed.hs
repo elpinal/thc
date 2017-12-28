@@ -1,4 +1,9 @@
-module Thc.Expr.Indexed where
+module Thc.Expr.Indexed
+  ( Term(..)
+  , eval
+  , Literal(..)
+  , fromLiteral
+  ) where
 
 import Control.Arrow
 
@@ -40,7 +45,7 @@ subst j s t = walk 0 t
 substTop :: (Term, Term) -> Term
 substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 
--- eval
+-- | Evaluates a 'Term' to its normal form.
 eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 

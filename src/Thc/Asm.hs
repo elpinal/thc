@@ -1,14 +1,14 @@
 module Thc.Asm
   ( Asm
-  , Tac.Tac(..)
-  , I.Literal(..)
+  , Tac(..)
+  , Literal(..)
   , fromTac'
   ) where
 
-import qualified Thc.Expr.Indexed as I
-import qualified Thc.Tac as Tac
+import Thc.Expr.Indexed
+import Thc.Tac
 
-type Asm = Tac.Tac
+type Asm = Tac
 
-fromTac' :: Tac.Tac -> Asm
+fromTac' :: Tac -> Asm
 fromTac' = id

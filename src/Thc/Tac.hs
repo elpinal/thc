@@ -1,11 +1,12 @@
-module Thc.Tac where
+module Thc.Tac
+  ( Tac(..)
+  , fromLit
+  ) where
 
-import qualified Thc.Expr.Indexed as I
+import Thc.Expr.Indexed
 
-data Tac = Return I.Literal
+data Tac = Return Literal
   deriving (Eq, Show)
-
-type Literal = I.Literal
 
 fromLit :: Literal -> Tac
 fromLit = Return
