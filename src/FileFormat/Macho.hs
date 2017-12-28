@@ -23,6 +23,7 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as C
 
 import Data.Bits
+import Data.Int
 import Data.Word
 
 import Thc.Code
@@ -31,7 +32,7 @@ import Thc.Code
 -- >>> import Test.QuickCheck
 
 instance Encode String where
-  encode = fillString16 . B.unpack . C.pack
+  encode = fillString16 . C.pack
 
 -- | 'fillString16' @xs@ pads @xs@ with zeros to make the length 16 bytes.
 --
@@ -39,25 +40,25 @@ instance Encode String where
 -- True
 --
 -- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\xs -> length (fillString16 xs) == 16)
-fillString16 :: [Word8] -> [Word8]
+fillString16 :: Code -> Code
 fillString16 xs
-  | length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (length xs)
-  | otherwise      = xs ++ replicate (16 - length xs) 0x00
+  | B.length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (B.length xs)
+  | otherwise      = xs `B.append` B.replicate (16 - codeLength xs) 0x00
 
 -- | 'executableFromText' @text@ creates an executable Mach-O binary from 'text'.
-executableFromText :: [Word8] -> [Word8]
-executableFromText txt = bs ++ spaces
+executableFromText :: Code -> Code
+executableFromText txt = bs `B.append` spaces
   where
-    bs :: [Word8]
-    bs = encode file ++ txt
+    bs :: Code
+    bs = encode file `B.append` txt
 
     file :: File
     file = File header64 [pagezero, textSegment txt] threadState
 
-    spaces :: [Word8]
-    spaces = replicate (minBytes - length bs) 0x00
+    spaces :: Code
+    spaces = B.replicate (minBytes - B.length bs) 0x00
 
-    minBytes :: Int
+    minBytes :: Int64
     minBytes = 0x1000
 
 -- | The Mach-O file.
@@ -78,18 +79,25 @@ emptyFile = File
 lengthNum :: Num b => [a] -> b
 lengthNum = fromIntegral . length
 
+codeLength :: Num a => Code -> a
+codeLength = fromIntegral . B.length
+
 instance Encode File where
   encode File
     { header = h
     , segments = ss
     , threadS = ts
-    } = encodeHeader ss (lengthNum bs) h ++ bs ++ tstate
+    } = mconcat
+    [ encodeHeader ss (codeLength bs) h
+    , bs
+    , tstate
+    ]
     where
-      bs :: [Word8]
-      bs = foldl f [] ss
+      bs :: Code
+      bs = foldl f B.empty ss
 
-      f :: [Word8] -> Segment -> [Word8]
-      f acc s = acc ++ encodeSegment dataOffset s
+      f :: Code -> Segment -> Code
+      f acc s = acc `B.append` encodeSegment dataOffset s
 
       -- | Indicates the offset in the file of the data.
       dataOffset :: Word64
@@ -99,7 +107,7 @@ instance Encode File where
       g :: Segment -> Word32
       g s = segmentSize + sectionSize * nsectsOf s
 
-      tstate :: [Word8]
+      tstate :: Code
       tstate = encodeThreadState dataOffset ts
 
 -- | The Mach-O header.
@@ -123,7 +131,7 @@ header64 = Header
 headerSize :: Word32
 headerSize = 32
 
-encodeHeader :: [Segment] -> Word32 -> Header -> [Word8]
+encodeHeader :: [Segment] -> Word32 -> Header -> Code
 encodeHeader ss l Header
   { magic      = m
   , cputype    = cpu
@@ -131,9 +139,9 @@ encodeHeader ss l Header
   , filetype   = f
   , hflags     = h
   } = mconcat
-    [ concatMap encodeBits [m, cpu, cpusub]
+    [ concatEncode [m, cpu, cpusub]
     , encode f
-    , concatMap encodeBits [ncmds, sizeofcmds, h, reserved]
+    , concatEncode [ncmds, sizeofcmds, h, reserved]
     ]
   where
     ncmds :: Word32
@@ -183,12 +191,12 @@ pagezero = Segment
   , segflags = 0
   }
 
-textSegment :: [Word8] -> Segment
+textSegment :: Code -> Segment
 textSegment text = Segment
   { segname  = "__TEXT"
   , maddr    = pagezeroSize
-  , msize    = lengthNum text
-  , fsize    = lengthNum text
+  , msize    = codeLength text
+  , fsize    = codeLength text
   , maxprot  = allProt
   , initprot = [Readable, Executable]
   , sections = [textSection text]
@@ -202,7 +210,7 @@ segment64 = 0x19
 segmentSize :: Word32
 segmentSize = 72
 
-encodeSegment :: Word64 -> Segment -> [Word8]
+encodeSegment :: Word64 -> Segment -> Code
 encodeSegment dataOffset Segment
   { segname  = n
   , maddr    = a
@@ -213,22 +221,22 @@ encodeSegment dataOffset Segment
   , sections = ss
   , segflags = fs
   } = mconcat
-    [ concatMap encodeBits [segment64, segmentSize + sectionSize * nsects]
+    [ concatEncode [segment64, segmentSize + sectionSize * nsects]
     , encode n
-    , concatMap encodeBits [a, dataoff ms, 0, dataoff s]
-    , concatMap encode [mp, ip]
-    , concatMap encodeBits [nsects, fs]
+    , concatEncode [a, dataoff ms, 0, dataoff s]
+    , mconcat $ map encode [mp, ip]
+    , concatEncode [nsects, fs]
     , sects
     ]
   where
     nsects :: Word32
     nsects = lengthNum ss
 
-    sects :: [Word8]
-    sects = fst $ foldl f ([], dataOffset) ss
+    sects :: Code
+    sects = fst $ foldl f (B.empty, dataOffset) ss
 
-    f :: ([Word8], Word64) -> Section -> ([Word8], Word64)
-    f (acc, off) s = (acc ++ encodeSection n off s, off + sizeOfSection s)
+    f :: (Code, Word64) -> Section -> (Code, Word64)
+    f (acc, off) s = (acc `B.append` encodeSection n off s, off + sizeOfSection s)
 
     -- FIXME: This is an ad hoc way.
     dataoff :: Word64 -> Word64
@@ -250,11 +258,11 @@ data Section = Section
   , secflags :: Word32
   }
 
-textSection :: [Word8] -> Section
+textSection :: Code -> Section
 textSection text = Section
   { secname  = "__text"
   , addr     = pagezeroSize
-  , size     = lengthNum text
+  , size     = codeLength text
   , align    = 0
   , secflags = 0
   }
@@ -263,7 +271,7 @@ textSection text = Section
 sectionSize :: Word32
 sectionSize = 80
 
-encodeSection :: String -> Word64 -> Section -> [Word8]
+encodeSection :: String -> Word64 -> Section -> Code
 encodeSection segn dataOffset Section
   { secname  = n
   , addr     = a
@@ -271,9 +279,9 @@ encodeSection segn dataOffset Section
   , align    = al
   , secflags = fs
   } = mconcat
-    [ concatMap encode [n, segn]
-    , concatMap encodeBits [a + dataOffset, s]
-    , concatMap encodeBits $ [fromIntegral dataOffset, al, 0, 0, fs] ++ reserved
+    [ mconcat $ map encode [n, segn]
+    , concatEncode [a + dataOffset, s]
+    , concatEncode $ [fromIntegral dataOffset, al, 0, 0, fs] ++ reserved
     ]
   where
     reserved :: [Word32]
@@ -386,7 +394,7 @@ threadState = ThreadState
   , gs     = 0
   }
 
-encodeThreadState :: Word64 -> ThreadState -> [Word8]
+encodeThreadState :: Word64 -> ThreadState -> Code
 encodeThreadState dataOffset ThreadState
   { rax    = x0
   , rbx    = x1
@@ -408,12 +416,12 @@ encodeThreadState dataOffset ThreadState
   , cs     = x17
   , fs     = x18
   , gs     = x19
-  } = concatMap encodeBits
+  } = concatEncode
     [ unixThread
     , threadCommandSize
     , amd64ThreadState
     , amd64ExceptionStateCount
-    ] ++ concatMap encodeBits
+    ] `B.append` concatEncode
     [ x0
     , x1
     , x2
@@ -436,3 +444,6 @@ encodeThreadState dataOffset ThreadState
     , x18
     , x19
     ]
+
+concatEncode :: (FiniteBits a, Integral a) => [a] -> Code
+concatEncode = B.concat . map encodeBits

@@ -11,7 +11,7 @@ spec = do
   describe "executableFromText" $ do
     it "creates an executable Mach-O binary from text" $ do
       want <- B.readFile "test/FileFormat/data/binary"
-      B.pack (executableFromText [0xc3]) `shouldBe` want
+      (executableFromText $ B.singleton 0xc3) `shouldBe` want
 
     it "emits a binary whose size is more than or equal to 4096 bytes" $ do
-      length (executableFromText [0xc3]) `shouldBe` 4096
+      B.length (executableFromText $ B.singleton 0xc3) `shouldBe` 4096

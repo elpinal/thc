@@ -4,8 +4,6 @@ module OS.Darwin
 
 import Data.Bits
 
-import qualified Data.ByteString.Lazy as B
-
 import FileFormat.Macho
 import Thc.Code
 
@@ -13,7 +11,7 @@ updateContext :: Context -> Context
 updateContext ctx = ctx {os = f}
   where
     f c o
-      | o == Darwin && c == Amd64 = return . B.pack . executableFromText . B.unpack
+      | o == Darwin && c == Amd64 = return . executableFromText
       | otherwise                 = os ctx c o
 
 syscallClassShift = 24

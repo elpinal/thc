@@ -12,7 +12,6 @@ module Thc.Code
 
 import Data.Bits
 import qualified Data.ByteString.Lazy as B
-import Data.Word
 
 import Thc.Asm
 
@@ -49,10 +48,10 @@ data Error =
 
 -- | The 'Encode' class is used to encode something to bytes.
 class Encode a where
-  encode :: a -> [Word8]
+  encode :: a -> Code
 
-encodeBits :: (FiniteBits a, Integral a) => a -> [Word8]
-encodeBits n = map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
+encodeBits :: (FiniteBits a, Integral a) => a -> Code
+encodeBits n = B.pack . map (fromIntegral . (.&. 0xff)) . take b $ iterate shiftR8 n
   where
     b :: Int
     b = finiteBitSize n `div` 8

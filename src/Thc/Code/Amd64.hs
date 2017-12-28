@@ -24,7 +24,7 @@ fromAsm (Return l) = ret l
 ret :: Literal -> Code
 ret l = B.concat
   [ syscallNumber
-  , B.pack $ 0xbf : encodeBits v ++ [0x0f, 0x05]
+  , B.singleton 0xbf `B.append` encodeBits v `B.append` B.pack [0x0f, 0x05]
   ]
   where
     v :: Word32
