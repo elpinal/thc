@@ -10,4 +10,4 @@ spec = do
   describe "fromTac" $
     it "translates Tac to Asm" $ do
       let r = Tac.Return $ Int 23
-      fromTac' r `shouldBe` r
+      fromTac r `shouldBe` r
