@@ -8,7 +8,7 @@ import Thc.Asm
 import Thc.Code
 import qualified Thc.Code.Amd64 as Amd64
 import Thc.Expr.Indexed
-import qualified Thc.Tac as Tac
+import Thc.Tac
 
 coreContext :: Context
 coreContext = Darwin.updateContext . Amd64.updateContext $ context
@@ -24,8 +24,8 @@ compile = compileWithContext coreContext
 compileWithContext :: Context -> Term -> OS -> CPU -> Either CompileError Code
 compileWithContext ctx t o c = assemble . fromTac' =<< genTac t
   where
-    genTac :: Term -> Either CompileError Tac.Tac''
-    genTac = maybe (Left NotLit) (return . Tac.fromLit) . fromLit . eval
+    genTac :: Term -> Either CompileError Tac''
+    genTac = maybe (Left NotLit) (return . fromLit) . fromLiteral . eval
 
     assemble :: Asm' -> Either CompileError Code
     assemble = first FromAsm . encodeFromAsm ctx o c

@@ -49,6 +49,6 @@ eval1 (App (Abs _ t1) t2) = return $ substTop (t2, t1)
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 _ = Nothing
 
-fromLit :: Term -> Maybe Literal
-fromLit (Lit l) = return l
-fromLit _ = Nothing
+fromLiteral :: Term -> Maybe Literal
+fromLiteral (Lit l) = return l
+fromLiteral _ = Nothing
