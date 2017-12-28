@@ -1,4 +1,6 @@
-module OS.Darwin where
+module OS.Darwin
+  ( updateContext
+  ) where
 
 import Data.Bits
 

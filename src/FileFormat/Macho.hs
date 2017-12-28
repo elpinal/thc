@@ -5,8 +5,6 @@ This module is provided to deal with Mach-O file format.
 
 module FileFormat.Macho
   ( executableFromText
-  , Encode(..)
-  , encodeBits
   , encodeHeader
   , encodeSegment
   , encodeSection
