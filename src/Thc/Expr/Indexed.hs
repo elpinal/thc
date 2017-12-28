@@ -12,7 +12,7 @@ data Term =
 data Literal =
     Bool Bool
   | Int Int
-  deriving Show
+  deriving (Eq, Show)
 
 shift :: Int -> Term -> Term
 shift d t = walk 0 t

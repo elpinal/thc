@@ -32,6 +32,7 @@ replace a @ (Expr.App e1 e2) r e3 = Expr.App (replace e1 r e3) (replace e2 r e3)
 -------------------
 
 data Tac'' = Return' I.Literal
+  deriving (Eq, Show)
 
 type Literal = I.Literal
 

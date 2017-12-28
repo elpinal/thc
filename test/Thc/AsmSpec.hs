@@ -9,4 +9,5 @@ spec :: Spec
 spec = do
   describe "fromTac" $
     it "translates Tac to Asm" $ do
-      fromTac (Tac.Ret $ Var "x") `shouldBe` (Ret $ StringTable 0, "x")
+      let r = Tac.Return' $ Int 23
+      fromTac' r `shouldBe` r
