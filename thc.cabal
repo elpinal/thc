@@ -45,10 +45,11 @@ test-suite thc-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       Thc.TacSpec
+  other-modules:       FileFormat.MachoSpec
                      , Thc.AsmSpec
-                     , FileFormat.MachoSpec
                      , Thc.CompilerSpec
+                     , Thc.Expr.IndexedSpec
+                     , Thc.TacSpec
   build-depends:       base
                      , thc
                      , hspec >= 2.4.4

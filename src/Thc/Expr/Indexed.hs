@@ -3,6 +3,7 @@ module Thc.Expr.Indexed
   , eval
   , E.Literal(..)
   , fromLiteral
+  , fromNamed
   ) where
 
 import Control.Arrow
@@ -14,24 +15,30 @@ data Term =
   | Abs String Term
   | App Term Term
   | Lit E.Literal
-  deriving Show
+  deriving (Eq, Show)
 
-fromNamed :: Context -> E.Term -> Maybe Term
+fromNamed :: E.Term -> Maybe Term
+fromNamed = fromNamed' emptyContext
 
-fromNamed ctx (E.Var i) = do
+fromNamed' :: Context -> E.Term -> Maybe Term
+
+fromNamed' ctx (E.Var i) = do
   x <- (name2index i ctx)
   return $ Var i x $ length ctx
 
-fromNamed ctx (E.Abs i t) = Abs i <$> fromNamed (addName i ctx) t
+fromNamed' ctx (E.Abs i t) = Abs i <$> fromNamed' (addName i ctx) t
 
-fromNamed ctx (E.App t1 t2) = do
-  u1 <- fromNamed ctx t1
-  u2 <- fromNamed ctx t2
+fromNamed' ctx (E.App t1 t2) = do
+  u1 <- fromNamed' ctx t1
+  u2 <- fromNamed' ctx t2
   return $ App u1 u2
 
-fromNamed ctx (E.Lit l) = return $ Lit l
+fromNamed' ctx (E.Lit l) = return $ Lit l
 
 type Context = [String]
+
+emptyContext :: Context
+emptyContext = []
 
 addName :: String -> Context -> Context
 addName i ctx = i : ctx
