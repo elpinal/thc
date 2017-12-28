@@ -23,7 +23,7 @@ fromNamed = fromNamed' emptyContext
 fromNamed' :: Context -> E.Term -> Maybe Term
 
 fromNamed' ctx (E.Var i) = do
-  x <- (name2index i ctx)
+  x <- name2index i ctx
   return $ Var i x $ length ctx
 
 fromNamed' ctx (E.Abs i t) = Abs i <$> fromNamed' (addName i ctx) t
@@ -50,7 +50,7 @@ name2index i (x : xs)
   | otherwise = (1 +) <$> name2index i xs
 
 shift :: Int -> Term -> Term
-shift d t = walk 0 t
+shift d = walk 0
   where
     walk :: Int -> Term -> Term
     walk c (Var i x n)
@@ -61,7 +61,7 @@ shift d t = walk 0 t
     walk c l @ (Lit _) = l
 
 subst :: Int -> Term -> Term -> Term
-subst j s t = walk 0 t
+subst j s = walk 0
   where
     walk :: Int -> Term -> Term
     walk c t' @ (Var i x n)
