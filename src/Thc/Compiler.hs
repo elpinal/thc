@@ -24,7 +24,7 @@ compile = compileWithContext coreContext
 compileWithContext :: Context -> Term -> OS -> CPU -> Either CompileError Code
 compileWithContext ctx t o c = assemble . fromTac' =<< genTac t
   where
-    genTac :: Term -> Either CompileError Tac''
+    genTac :: Term -> Either CompileError Tac
     genTac = maybe (Left NotLit) (return . fromLit) . fromLiteral . eval
 
     assemble :: Asm -> Either CompileError Code
