@@ -1,3 +1,6 @@
+{-|
+A module to deal with three address code.
+-}
 module Thc.Tac
   ( Tac(..)
   , fromLit
