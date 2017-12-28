@@ -1,6 +1,5 @@
 module Thc.Compiler where
 
-import Control.Monad
 import Data.Bifunctor
 
 import qualified OS.Darwin as Darwin
