@@ -3,7 +3,6 @@ module Thc.Asm
   , Tac.Tac''(..)
   , I.Literal(..)
   , fromTac'
-  , Tac.Val(..)
   ) where
 
 import qualified Thc.Expr.Indexed as I

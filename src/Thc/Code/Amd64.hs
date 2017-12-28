@@ -16,7 +16,7 @@ updateContext ctx = ctx { cpu = f }
       | otherwise  = cpu ctx c
 
 fromAsm :: Asm -> Code
-fromAsm (Return' l) = ret l
+fromAsm (Return l) = ret l
 
 -- FIXME:
 -- Use exit syscall to exit with code: False = 80, True = 81.

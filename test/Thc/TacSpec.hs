@@ -2,12 +2,12 @@ module Thc.TacSpec where
 
 import Test.Hspec
 
-import qualified Thc.Expr as Expr
+import Thc.Expr.Indexed
 import Thc.Tac
 
 spec :: Spec
 spec = do
-  describe "fromExpr" $
+  describe "fromLit" $
     it "translates Expr to Tac" $ do
-      fromExpr (Expr.Var "x") `shouldBe` Right (Ret $ Var "x")
-      fromExpr (Expr.Var "7") `shouldBe` Right (Ret $ Var "7")
+      fromLit (Int 12)     `shouldBe` Return (Int 12)
+      fromLit (Bool False) `shouldBe` Return (Bool False)
