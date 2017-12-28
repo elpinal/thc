@@ -1,23 +1,20 @@
 module Thc.Expr.Indexed
   ( Term(..)
   , eval
-  , Literal(..)
+  , E.Literal(..)
   , fromLiteral
   ) where
 
 import Control.Arrow
 
+import qualified Thc.Expr as E
+
 data Term =
     Var String Int Int
   | Abs String Term
   | App Term Term
-  | Lit Literal
+  | Lit E.Literal
   deriving Show
-
-data Literal =
-    Bool Bool
-  | Int Int
-  deriving (Eq, Show)
 
 shift :: Int -> Term -> Term
 shift d t = walk 0 t
@@ -54,6 +51,6 @@ eval1 (App (Abs _ t1) t2) = return $ substTop (t2, t1)
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 _ = Nothing
 
-fromLiteral :: Term -> Maybe Literal
+fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l
 fromLiteral _ = Nothing
