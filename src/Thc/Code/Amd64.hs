@@ -15,7 +15,7 @@ updateContext ctx = ctx { cpu = f }
       | c == Amd64 = return . fromAsm
       | otherwise  = cpu ctx c
 
-fromAsm :: Asm' -> Code
+fromAsm :: Asm -> Code
 fromAsm (Return' l) = ret l
 
 -- FIXME:

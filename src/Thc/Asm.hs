@@ -1,5 +1,5 @@
 module Thc.Asm
-  ( Asm'
+  ( Asm
   , Tac.Tac''(..)
   , I.Literal(..)
   , fromTac'
@@ -9,7 +9,7 @@ module Thc.Asm
 import qualified Thc.Expr.Indexed as I
 import qualified Thc.Tac as Tac
 
-type Asm' = Tac.Tac''
+type Asm = Tac.Tac''
 
-fromTac' :: Tac.Tac'' -> Asm'
+fromTac' :: Tac.Tac'' -> Asm
 fromTac' = id

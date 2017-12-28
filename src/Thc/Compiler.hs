@@ -27,5 +27,5 @@ compileWithContext ctx t o c = assemble . fromTac' =<< genTac t
     genTac :: Term -> Either CompileError Tac''
     genTac = maybe (Left NotLit) (return . fromLit) . fromLiteral . eval
 
-    assemble :: Asm' -> Either CompileError Code
+    assemble :: Asm -> Either CompileError Code
     assemble = first FromAsm . encodeFromAsm ctx o c
