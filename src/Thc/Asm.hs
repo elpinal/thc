@@ -1,11 +1,16 @@
 module Thc.Asm
   ( Asm
+  , Asm'
+  , Tac.Tac''(..)
+  , I.Literal(..)
   , Inst(..)
   , Loc(..)
   , fromTac
+  , fromTac'
   , Tac.Val(..)
   ) where
 
+import qualified Thc.Expr.Indexed as I
 import qualified Thc.Tac as Tac
 
 type Asm = (Inst, String)

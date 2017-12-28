@@ -9,7 +9,7 @@ import Thc.Asm
 type Code = B.ByteString
 
 data Context = Context
-  { cpu :: CPU -> Asm -> Either Error Code
+  { cpu :: CPU -> Asm' -> Either Error Code
   , os  :: CPU -> OS -> Code -> Either Error Code
   }
 
@@ -25,7 +25,7 @@ context = Context
   , os = \_ o _ -> Left $ NoOS o
   }
 
-encodeFromAsm :: Context -> OS -> CPU -> Asm -> Either Error Code
+encodeFromAsm :: Context -> OS -> CPU -> Asm' -> Either Error Code
 encodeFromAsm Context
   { cpu = cc
   , os = co
