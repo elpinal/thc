@@ -39,8 +39,8 @@ spec = do
       it "gets the type of the term" $ do
         typeOf (Lit $ Bool True)                                                               `shouldBe` return T.Bool
         typeOf (Abs "x" T.Int $ Var "x" 0 1)                                                   `shouldBe` return (T.Int T.:->: T.Int)
-        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Bool $ Var "f" 0 1)                  `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: (T.Bool T.:->: T.Bool))
-        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: (T.Int T.:->: T.Bool))
+        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Bool $ Var "f" 0 1)                  `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
+        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
     context "when given a non-typable term" $ do
       it "returns Nothing" $ do

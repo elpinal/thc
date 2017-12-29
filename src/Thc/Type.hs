@@ -7,3 +7,5 @@ data Type =
   | Int
   | Type :->: Type
   deriving (Eq, Show)
+
+infixr 9 :->:
