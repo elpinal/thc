@@ -24,7 +24,7 @@ compile :: E.Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
 
 compileWithContext :: Context -> E.Term -> OS -> CPU -> Either CompileError Code
-compileWithContext ctx t o c = assemble . fromTac =<< genTac =<< genIndexed t
+compileWithContext ctx t o c = genIndexed t >>= genTac >>= assemble . fromTac
   where
     genIndexed :: E.Term -> Either CompileError Term
     genIndexed = maybe (Left Unbound) return . fromNamed
