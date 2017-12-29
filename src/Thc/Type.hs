@@ -5,6 +5,7 @@ module Thc.Type
 data Type =
     Bool
   | Int
+  | Unit
   | Type :->: Type
   deriving (Eq, Show)
 

@@ -15,8 +15,10 @@ data Term =
 data Literal =
     Bool Bool
   | Int Int
+  | Unit
   deriving (Eq, Show)
 
 typeOfLiteral :: Literal -> T.Type
 typeOfLiteral (Bool _) = T.Bool
 typeOfLiteral (Int _) = T.Int
+typeOfLiteral (Unit) = T.Unit

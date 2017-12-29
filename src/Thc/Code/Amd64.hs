@@ -19,7 +19,7 @@ fromAsm :: Asm -> Code
 fromAsm (Return l) = ret l
 
 -- FIXME:
--- Use exit syscall to exit with code: False = 80, True = 81.
+-- Use exit syscall to exit with code: False = 80, True = 81, Unit = 100.
 -- Note that syscall numbers depend on OS.
 ret :: Literal -> Code
 ret l = B.concat
@@ -31,6 +31,7 @@ ret l = B.concat
     v = fromIntegral $ case l of
       Bool b -> 80 + fromEnum b
       Int i -> i
+      Unit -> 100
 
     -- | TODO: This depends on System V ABI and XNU.
     syscallNumber :: B.ByteString
