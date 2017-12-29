@@ -2,13 +2,14 @@ module Thc.Compiler where
 
 import Data.Bifunctor
 
-import qualified OS.Darwin as Darwin
-import Thc.Asm
-import Thc.Code
-import qualified Thc.Code.Amd64 as Amd64
+import           Thc.Asm
+import           Thc.Code
 import qualified Thc.Expr as E
-import Thc.Expr.Indexed
-import Thc.Tac
+import           Thc.Expr.Indexed
+import           Thc.Tac
+
+import qualified OS.Darwin as Darwin
+import qualified Thc.Code.Amd64 as Amd64
 
 coreContext :: Context
 coreContext = Darwin.updateContext . Amd64.updateContext $ context
