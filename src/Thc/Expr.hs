@@ -1,6 +1,7 @@
 module Thc.Expr
   ( Term(..)
   , Literal(..)
+  , typeOfLiteral
   ) where
 
 import qualified Thc.Type as T
@@ -15,3 +16,7 @@ data Literal =
     Bool Bool
   | Int Int
   deriving (Eq, Show)
+
+typeOfLiteral :: Literal -> T.Type
+typeOfLiteral (Bool _) = T.Bool
+typeOfLiteral (Int _) = T.Int

@@ -88,3 +88,20 @@ eval1 _ = Nothing
 fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l
 fromLiteral _ = Nothing
+
+typeOf :: Context -> Term -> Maybe T.Type
+typeOf ctx (Var _ x _) = return $ getTypeFromContext ctx x
+typeOf ctx (Abs i ty1 t) = do
+  let ctx' = addName i ty1 ctx
+  ty2 <- typeOf ctx' t
+  return $ ty1 T.:->: ty2
+typeOf ctx (App t1 t2) = do
+  ty1 <- typeOf ctx t1
+  ty2 <- typeOf ctx t2
+  case ty1 of
+    u1 T.:->: u2 | u1 == ty2 -> return u2
+    _                        -> Nothing
+typeOf ctx (Lit l) = return $ E.typeOfLiteral l
+
+getTypeFromContext :: Context -> Int -> T.Type
+getTypeFromContext ctx n = snd $ ctx !! n
