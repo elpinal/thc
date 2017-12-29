@@ -16,8 +16,7 @@ description:         The thc.
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-                     , FileFormat.Macho
+  exposed-modules:     FileFormat.Macho
                      , OS.Darwin
                      , Thc.Asm
                      , Thc.Code
