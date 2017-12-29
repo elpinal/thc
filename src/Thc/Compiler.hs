@@ -27,10 +27,22 @@ compileWithContext :: Context -> E.Term -> OS -> CPU -> Either CompileError Code
 compileWithContext ctx t o c = genIndexed t >>= genTac >>= assemble . fromTac
   where
     genIndexed :: E.Term -> Either CompileError Term
-    genIndexed = maybe (Left Unbound) return . fromNamed
+    genIndexed = try' fromNamed
 
     genTac :: Term -> Either CompileError Tac
-    genTac = maybe (Left NotLit) (return . fromLit) . fromLiteral . eval
+    genTac = fmap fromLit . try' fromLiteral . eval
 
     assemble :: Asm -> Either CompileError Code
     assemble = first FromAsm . encodeFromAsm ctx o c
+
+class Try a where
+  try :: Maybe a -> Either CompileError a
+
+try' :: Try a => (b -> Maybe a) -> b -> Either CompileError a
+try' f = try . f
+
+instance Try Term where
+  try = maybe (Left Unbound) return
+
+instance Try Literal where
+  try = maybe (Left NotLit) return
