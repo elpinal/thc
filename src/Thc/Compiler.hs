@@ -1,4 +1,7 @@
-module Thc.Compiler where
+module Thc.Compiler
+  ( compile
+  , CompileError(..)
+  ) where
 
 import Data.Bifunctor
 
