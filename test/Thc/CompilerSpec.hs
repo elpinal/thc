@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as B
 import qualified Thc.Code as Code
 import Thc.Compiler
 import Thc.Expr
+import qualified Thc.Type as T
 
 spec :: Spec
 spec = do
@@ -17,6 +18,9 @@ spec = do
 
       want <- B.readFile "test/Thc/data/exit81"
       compile (Lit $ Bool True) Code.Darwin Code.Amd64 `shouldBe` Right want
+
+      want <- B.readFile "test/Thc/data/exit81"
+      compile (Abs "x" T.Int (Var "x") `App` Lit (Int 81)) Code.Darwin Code.Amd64 `shouldBe` Right want
 
     context "when given an invalid program" $
       it "returns an error" $ do
