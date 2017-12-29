@@ -11,6 +11,7 @@ data Term =
   | Abs String T.Type Term
   | App Term Term
   | Lit Literal
+  | Tuple [Term]
 
 data Literal =
     Bool Bool
@@ -21,4 +22,4 @@ data Literal =
 typeOfLiteral :: Literal -> T.Type
 typeOfLiteral (Bool _) = T.Bool
 typeOfLiteral (Int _) = T.Int
-typeOfLiteral (Unit) = T.Unit
+typeOfLiteral Unit = T.Unit

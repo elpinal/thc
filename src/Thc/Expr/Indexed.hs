@@ -19,6 +19,7 @@ data Term =
   | Abs String T.Type Term
   | App Term Term
   | Lit E.Literal
+  | Tuple [Term]
   deriving (Eq, Show)
 
 fromNamed :: E.Term -> Maybe Term
@@ -38,6 +39,7 @@ fromNamed' ctx (E.App t1 t2) = do
   return $ App u1 u2
 
 fromNamed' ctx (E.Lit l) = return $ Lit l
+fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 
 type Context = [(String, T.Type)]
 
@@ -62,7 +64,7 @@ shift d = walk 0
       | otherwise = Var i x $ n + d       -- bound
     walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
-    walk c l @ (Lit _) = l
+    walk c t = t
 
 subst :: Int -> Term -> Term -> Term
 subst j s = walk 0
@@ -73,7 +75,7 @@ subst j s = walk 0
       | otherwise  = t'
     walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
-    walk c l @ (Lit _) = l
+    walk c t = t
 
 -- subst
 substTop :: (Term, Term) -> Term
@@ -108,6 +110,7 @@ typeOf' ctx (App t1 t2) = do
     u1 T.:->: u2 | u1 == ty2 -> return u2
     _                        -> Nothing
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
+typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 
 getTypeFromContext :: Context -> Int -> T.Type
 getTypeFromContext ctx n = snd $ ctx !! n

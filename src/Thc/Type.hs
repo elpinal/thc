@@ -7,6 +7,7 @@ data Type =
   | Int
   | Unit
   | Type :->: Type
+  | Tuple [Type]
   deriving (Eq, Show)
 
 infixr 9 :->:
