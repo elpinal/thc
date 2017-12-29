@@ -6,7 +6,7 @@ import qualified Data.ByteString.Lazy as B
 
 import Thc.Code
 import Thc.Compiler
-import Thc.Expr.Indexed
+import Thc.Expr
 
 spec :: Spec
 spec = do
