@@ -6,3 +6,4 @@ data Type =
     Bool
   | Int
   | Type :->: Type
+  deriving (Eq, Show)

@@ -9,10 +9,11 @@ module Thc.Expr.Indexed
 import Control.Arrow
 
 import qualified Thc.Expr as E
+import qualified Thc.Type as T
 
 data Term =
     Var String Int Int
-  | Abs String Term
+  | Abs String T.Type Term
   | App Term Term
   | Lit E.Literal
   deriving (Eq, Show)
@@ -26,7 +27,7 @@ fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
   return $ Var i x $ length ctx
 
-fromNamed' ctx (E.Abs i t) = Abs i <$> fromNamed' (addName i ctx) t
+fromNamed' ctx (E.Abs i ty t) = Abs i ty <$> fromNamed' (addName i ctx) t
 
 fromNamed' ctx (E.App t1 t2) = do
   u1 <- fromNamed' ctx t1
@@ -56,7 +57,7 @@ shift d = walk 0
     walk c (Var i x n)
       | x >= c    = Var i (x + d) (n + d) -- free
       | otherwise = Var i x $ n + d       -- bound
-    walk c (Abs i t') = Abs i $ walk (c + 1) t'
+    walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c l @ (Lit _) = l
 
@@ -67,7 +68,7 @@ subst j s = walk 0
     walk c t' @ (Var i x n)
       | x == j + c = shift c s
       | otherwise  = t'
-    walk c (Abs i t') = Abs i $ walk (c + 1) t'
+    walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c l @ (Lit _) = l
 
@@ -80,7 +81,7 @@ eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 
 eval1 :: Term -> Maybe Term
-eval1 (App (Abs _ t1) t2) = return $ substTop (t2, t1)
+eval1 (App (Abs _ _ t1) t2) = return $ substTop (t2, t1)
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 _ = Nothing
 

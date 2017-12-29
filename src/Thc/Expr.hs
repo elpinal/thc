@@ -3,9 +3,11 @@ module Thc.Expr
   , Literal(..)
   ) where
 
+import qualified Thc.Type as T
+
 data Term =
     Var String
-  | Abs String Term
+  | Abs String T.Type Term
   | App Term Term
   | Lit Literal
 
