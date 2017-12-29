@@ -25,3 +25,5 @@ spec = do
     context "when given an invalid program" $
       it "returns an error" $ do
         compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left Unbound
+        let s = Abs "x" T.Int $ Var "x" `App` Var "x"
+        compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left NonTypable
