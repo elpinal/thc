@@ -5,3 +5,4 @@ module Thc.Type
 data Type =
     Bool
   | Int
+  | Type :->: Type
