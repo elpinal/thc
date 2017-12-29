@@ -27,7 +27,7 @@ fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
   return $ Var i x $ length ctx
 
-fromNamed' ctx (E.Abs i ty t) = Abs i ty <$> fromNamed' (addName i ctx) t
+fromNamed' ctx (E.Abs i ty t) = Abs i ty <$> fromNamed' (addName i ty ctx) t
 
 fromNamed' ctx (E.App t1 t2) = do
   u1 <- fromNamed' ctx t1
@@ -36,19 +36,19 @@ fromNamed' ctx (E.App t1 t2) = do
 
 fromNamed' ctx (E.Lit l) = return $ Lit l
 
-type Context = [String]
+type Context = [(String, T.Type)]
 
 emptyContext :: Context
 emptyContext = []
 
-addName :: String -> Context -> Context
-addName i ctx = i : ctx
+addName :: String -> T.Type -> Context -> Context
+addName i ty ctx = (i, ty) : ctx
 
 name2index :: String -> Context -> Maybe Int
 name2index i [] = Nothing
 name2index i (x : xs)
-  | i == x    = return 0
-  | otherwise = (1 +) <$> name2index i xs
+  | i == fst x = return 0
+  | otherwise  = (1 +) <$> name2index i xs
 
 shift :: Int -> Term -> Term
 shift d = walk 0
