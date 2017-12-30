@@ -23,3 +23,7 @@ typeOfLiteral :: Literal -> T.Type
 typeOfLiteral (Bool _) = T.Bool
 typeOfLiteral (Int _) = T.Int
 typeOfLiteral Unit = T.Unit
+
+data Pattern =
+    PVar String
+  | PTuple [String]
