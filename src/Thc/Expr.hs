@@ -3,6 +3,7 @@ module Thc.Expr
   , Literal(..)
   , typeOfLiteral
   , Pattern(..)
+  , bounds
   ) where
 
 import qualified Thc.Type as T
