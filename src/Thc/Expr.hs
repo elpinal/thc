@@ -2,6 +2,7 @@ module Thc.Expr
   ( Term(..)
   , Literal(..)
   , typeOfLiteral
+  , Pattern(..)
   ) where
 
 import qualified Thc.Type as T
