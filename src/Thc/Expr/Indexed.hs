@@ -46,6 +46,9 @@ fromNamed' ctx (E.App t1 t2) = do
 fromNamed' ctx (E.Lit l) = return $ Lit l
 fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 
+bindPattern :: E.Pattern -> T.Type -> Context -> Context
+bindPattern (E.PVar i) ty = addName i ty
+
 type Context = [(String, T.Type)]
 
 emptyContext :: Context
