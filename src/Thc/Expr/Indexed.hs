@@ -47,7 +47,7 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 -- Binds variables to a 'Context' verifying the type of a pattern.
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext
--- [("a", T.Bool)]
+-- Just [("a",Bool)]
 bindPattern :: E.Pattern -> T.Type -> Context -> Maybe Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
 bindPattern (E.PTuple is) (T.Tuple ts) ctx
