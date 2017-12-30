@@ -29,6 +29,7 @@ typeOfLiteral Unit = T.Unit
 data Pattern =
     PVar String
   | PTuple [String]
+  deriving (Eq, Show)
 
 bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
