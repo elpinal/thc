@@ -16,7 +16,7 @@ data Term =
     -- |
     -- Name hint, de Bruijn index, and the surrounding context's length for debug
     Var String Int Int
-  | Abs String T.Type Term
+  | Abs E.Pattern T.Type Term
   | App Term Term
   | Lit E.Literal
   | Tuple [Term]
