@@ -36,10 +36,10 @@ instance Encode String where
 
 -- | 'fillString16' @xs@ pads @xs@ with zeros to make the length 16 bytes.
 --
--- >>> fillString16 [7, 8] == [7, 8] ++ replicate 14 0
+-- >>> fillString16 (B.pack [7, 8]) == B.pack ([7, 8] ++ replicate 14 0)
 -- True
 --
--- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\xs -> length (fillString16 xs) == 16)
+-- prop> suchThat arbitrary (\xs -> length xs <= 16) `forAll` (\xs -> B.length (fillString16 $ B.pack xs) == 16)
 fillString16 :: Code -> Code
 fillString16 xs
   | B.length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (B.length xs)
@@ -319,9 +319,9 @@ amd64All = 3
 -- The Mach-O file type. It indicates the usage and alignment of the file.
 -- It is encoded as a 'Word32', 4 bytes.
 --
--- >>> encode Object
+-- >>> B.unpack $ encode Object
 -- [1,0,0,0]
--- >>> encode Execute
+-- >>> B.unpack $ encode Execute
 -- [2,0,0,0]
 data FileType =
     Object
