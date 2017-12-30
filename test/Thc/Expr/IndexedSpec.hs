@@ -18,17 +18,17 @@ spec = do
                       (E.Var "g") $
                       E.Lit (Int 44)
 
-      let y = Abs "f" T.Bool $
+      let y = Abs (E.PVar "f") T.Bool $
                 App
                   (Var "f" 0 1) $
-                  Abs "g" T.Bool $
+                  Abs (E.PVar "g") T.Bool $
                     App
                       (Var "g" 0 2) $
                       Lit (Int 44)
 
       fromNamed x                                                                  `shouldBe` return y
-      fromNamed (E.Abs (E.PVar "x") T.Bool $ E.Var "x")                            `shouldBe` return (Abs "x" T.Bool $ Var "x" 0 1)
-      fromNamed (E.Abs (E.PVar "a") T.Int $ E.Abs (E.PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs "a" T.Int $ Abs "b" T.Bool $ Var "a" 1 2)
+      fromNamed (E.Abs (E.PVar "x") T.Bool $ E.Var "x")                            `shouldBe` return (Abs (E.PVar "x") T.Bool $ Var "x" 0 1)
+      fromNamed (E.Abs (E.PVar "a") T.Int $ E.Abs (E.PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (E.PVar "a") T.Int $ Abs (E.PVar "b") T.Bool $ Var "a" 1 2)
 
     context "when given unbound idendifiers" $
       it "returns Nothing" $ do
@@ -37,19 +37,19 @@ spec = do
   describe "typeOf" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        typeOf (Lit $ Bool True)                                                               `shouldBe` return T.Bool
-        typeOf (Abs "x" T.Int $ Var "x" 0 1)                                                   `shouldBe` return (T.Int T.:->: T.Int)
-        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Bool $ Var "f" 0 1)                  `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
-        typeOf (Abs "f" (T.Int T.:->: T.Bool) $ Abs "x" T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
+        typeOf (Lit $ Bool True)                                                                                 `shouldBe` return T.Bool
+        typeOf (Abs (E.PVar "x") T.Int $ Var "x" 0 1)                                                            `shouldBe` return (T.Int T.:->: T.Int)
+        typeOf (Abs (E.PVar "f") (T.Int T.:->: T.Bool) $ Abs (E.PVar "x") T.Bool $ Var "f" 0 1)                  `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
+        typeOf (Abs (E.PVar "f") (T.Int T.:->: T.Bool) $ Abs (E.PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
     context "when given a non-typable term" $ do
       it "returns Nothing" $ do
-        typeOf (Abs "f" (T.Int T.:->: T.Int) $ Abs "x" T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` Nothing
-        typeOf (Abs "x" T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                 `shouldBe` Nothing
+        typeOf (Abs (E.PVar "f") (T.Int T.:->: T.Int) $ Abs (E.PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` Nothing
+        typeOf (Abs (E.PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                          `shouldBe` Nothing
 
   describe "eval" $ do
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
-        eval (Tuple [Lit $ Int 0])                                      `shouldBe` Tuple [Lit $ Int 0]
-        eval (Tuple [Abs "x" T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs "x" T.Int $ Var "x" 0 1]
-        eval (Tuple [App (Abs "x" T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
+        eval (Tuple [Lit $ Int 0])                                               `shouldBe` Tuple [Lit $ Int 0]
+        eval (Tuple [Abs (E.PVar "x") T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs (E.PVar "x") T.Int $ Var "x" 0 1]
+        eval (Tuple [App (Abs (E.PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
