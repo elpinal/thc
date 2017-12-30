@@ -9,7 +9,7 @@ import qualified Thc.Type as T
 
 data Term =
     Var String
-  | Abs String T.Type Term
+  | Abs Pattern T.Type Term
   | App Term Term
   | Lit Literal
   | Tuple [Term]

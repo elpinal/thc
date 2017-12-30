@@ -10,10 +10,10 @@ spec :: Spec
 spec = do
   describe "fromNamed" $ do
     it "converts a named term to unnamed one" $ do
-      let x = E.Abs "f" T.Bool $
+      let x = E.Abs (E.PVar "f") T.Bool $
                 E.App
                   (E.Var "f") $
-                  E.Abs "g" T.Bool $
+                  E.Abs (E.PVar "g") T.Bool $
                     E.App
                       (E.Var "g") $
                       E.Lit (Int 44)
@@ -26,9 +26,9 @@ spec = do
                       (Var "g" 0 2) $
                       Lit (Int 44)
 
-      fromNamed x                                                `shouldBe` return y
-      fromNamed (E.Abs "x" T.Bool $ E.Var "x")                   `shouldBe` return (Abs "x" T.Bool $ Var "x" 0 1)
-      fromNamed (E.Abs "a" T.Int $ E.Abs "b" T.Bool $ E.Var "a") `shouldBe` return (Abs "a" T.Int $ Abs "b" T.Bool $ Var "a" 1 2)
+      fromNamed x                                                                  `shouldBe` return y
+      fromNamed (E.Abs (E.PVar "x") T.Bool $ E.Var "x")                            `shouldBe` return (Abs "x" T.Bool $ Var "x" 0 1)
+      fromNamed (E.Abs (E.PVar "a") T.Int $ E.Abs (E.PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs "a" T.Int $ Abs "b" T.Bool $ Var "a" 1 2)
 
     context "when given unbound idendifiers" $
       it "returns Nothing" $ do

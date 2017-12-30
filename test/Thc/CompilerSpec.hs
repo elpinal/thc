@@ -20,13 +20,13 @@ spec = do
       compile (Lit $ Bool True) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit81"
-      compile (Abs "x" T.Int (Var "x") `App` Lit (Int 81)) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (Abs (PVar "x") T.Int (Var "x") `App` Lit (Int 81)) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit100"
-      compile (Abs "x" (T.Unit T.:->: T.Unit) (Var "x" `App` Lit Unit) `App` Abs "y" T.Unit (Lit Unit)) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (Abs (PVar "x") (T.Unit T.:->: T.Unit) (Var "x" `App` Lit Unit) `App` Abs (PVar "y") T.Unit (Lit Unit)) Code.Darwin Code.Amd64 `shouldBe` Right want
 
     context "when given an invalid program" $
       it "returns an error" $ do
         compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left Unbound
-        let s = Abs "x" T.Int $ Var "x" `App` Var "x"
+        let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
         compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left NonTypable
