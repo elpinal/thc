@@ -46,6 +46,9 @@ type Context = [(String, T.Type)]
 emptyContext :: Context
 emptyContext = []
 
+addNames :: [(String, T.Type)] -> Context -> Context
+addNames xs ctx = xs ++ ctx
+
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
 
