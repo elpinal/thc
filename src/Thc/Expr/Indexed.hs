@@ -90,6 +90,13 @@ eval t = maybe t eval $ eval1 t
 eval1 :: Term -> Maybe Term
 eval1 (App (Abs _ _ t1) t2) = return $ substTop (t2, t1)
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
+eval1 (Tuple ts) = Tuple <$> f ts
+  where
+    f :: [Term] -> Maybe [Term]
+    f [] = Nothing
+    f (t : ts) = case eval1 t of
+      Just t' -> return $ t' : ts
+      Nothing -> (t :) <$> f ts
 eval1 _ = Nothing
 
 fromLiteral :: Term -> Maybe E.Literal
