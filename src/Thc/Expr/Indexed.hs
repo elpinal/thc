@@ -48,6 +48,8 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 
 bindPattern :: E.Pattern -> T.Type -> Context -> Context
 bindPattern (E.PVar i) ty = addName i ty
+bindPattern (E.PTuple is) (T.Tuple ts)
+  | length is == length ts = addNames (zip is ts)
 
 type Context = [(String, T.Type)]
 
