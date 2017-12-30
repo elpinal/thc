@@ -31,7 +31,7 @@ fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
   return $ Var i x $ length ctx
 
-fromNamed' ctx (E.Abs i ty t) = Abs i ty <$> fromNamed' (addName i ty ctx) t
+fromNamed' ctx (E.Abs (E.PVar i) ty t) = Abs i ty <$> fromNamed' (addName i ty ctx) t
 
 fromNamed' ctx (E.App t1 t2) = do
   u1 <- fromNamed' ctx t1
