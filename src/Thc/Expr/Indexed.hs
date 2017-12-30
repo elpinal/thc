@@ -123,8 +123,8 @@ typeOf = typeOf' emptyContext
 
 typeOf' :: Context -> Term -> Maybe T.Type
 typeOf' ctx (Var _ x _) = return $ getTypeFromContext ctx x
-typeOf' ctx (Abs i ty1 t) = do
-  let ctx' = addName i ty1 ctx
+typeOf' ctx (Abs p ty1 t) = do
+  ctx' <- bindPattern p ty1 ctx
   ty2 <- typeOf' ctx' t
   return $ ty1 T.:->: ty2
 typeOf' ctx (App t1 t2) = do
