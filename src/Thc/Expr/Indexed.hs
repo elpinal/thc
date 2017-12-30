@@ -46,10 +46,12 @@ fromNamed' ctx (E.App t1 t2) = do
 fromNamed' ctx (E.Lit l) = return $ Lit l
 fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 
-bindPattern :: E.Pattern -> T.Type -> Context -> Context
-bindPattern (E.PVar i) ty = addName i ty
-bindPattern (E.PTuple is) (T.Tuple ts)
-  | length is == length ts = addNames (zip is ts)
+bindPattern :: E.Pattern -> T.Type -> Context -> Maybe Context
+bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
+bindPattern (E.PTuple is) (T.Tuple ts) ctx
+  | length is == length ts = return $ addNames (zip is ts) ctx
+  | otherwise              = Nothing
+bindPattern (E.PTuple is) ty _ = Nothing -- Note that type variables are currently not supported.
 
 type Context = [(String, T.Type)]
 
