@@ -46,3 +46,10 @@ spec = do
       it "returns Nothing" $ do
         typeOf (Abs "f" (T.Int T.:->: T.Int) $ Abs "x" T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` Nothing
         typeOf (Abs "x" T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                 `shouldBe` Nothing
+
+  describe "eval" $ do
+    context "when given a tuple" $ do
+      it "evaluates terms in tuples" $ do
+        eval (Tuple [Lit $ Int 0])                                      `shouldBe` Tuple [Lit $ Int 0]
+        eval (Tuple [Abs "x" T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs "x" T.Int $ Var "x" 0 1]
+        eval (Tuple [App (Abs "x" T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
