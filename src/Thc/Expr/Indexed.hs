@@ -101,6 +101,7 @@ dups = snd . flip execState ([], []) . mapM_ f
   where
     f x = get >>= g x
 
+    g :: Eq a => a -> ([a], [a]) -> State ([a], [a]) ()
     g x acc =
       case elem x `both` acc of
         (True, True)  -> return ()
