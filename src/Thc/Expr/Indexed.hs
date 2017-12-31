@@ -37,6 +37,26 @@ data Term =
 
 type NamedTerm = E.Term
 
+-- |
+-- @fromNamed t@ converts a 'NamedTerm' to a 'Term'.
+--
+-- >>> l = E.Lit $ E.Int 0
+-- >>> fromNamed l
+-- Just (Lit (Int 0))
+-- >>> fromNamed (E.Abs (E.PVar "a") (T.Int T.:->: T.Bool) $ E.App (E.Var "a") l)
+-- Just (Abs (PVar "a") (Int :->: Bool) (App (Var "a" 0 1) (Lit (Int 0))))
+--
+-- Unbound variables cause the result 'Nothing'.
+--
+-- >>> fromNamed (E.Var "x")
+-- Nothing
+--
+-- In 'E.Abs', conflicts between the parameter's pattern and its corresponding
+-- type cause the result 'Nothing' (i.e. @λ(nn,):Int.nn@ where @(/x/,)@ is
+-- a 1-tuple whose only element is /x/).
+--
+-- >>> fromNamed (E.Abs (E.PTuple ["nn"]) T.Int $ E.Var "nn")
+-- Nothing
 fromNamed :: NamedTerm -> Maybe Term
 fromNamed = fromNamed' emptyContext
 
