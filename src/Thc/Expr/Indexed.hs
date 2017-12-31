@@ -101,8 +101,8 @@ dups = snd . flip execState ([], []) . mapM_ f
   where
     f :: String -> State ([String], [String]) ()
     f x = do
-      (ys, zs) <- get
-      case (x `elem` ys, x `elem` zs) of
+      acc <- get
+      case elem x *** elem x $ acc of
         (True, True)  -> return ()
         (True, False) -> modify $ second (x :)
         (False, _)    -> modify $ first (x :)
