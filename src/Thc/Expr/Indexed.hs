@@ -9,6 +9,9 @@ module Thc.Expr.Indexed
   -- * Literals
   , E.Literal(..)
   , fromLiteral
+
+  -- * Named terms
+  , NamedTerm
   ) where
 
 import Control.Arrow
@@ -26,10 +29,12 @@ data Term =
   | Tuple [Term]
   deriving (Eq, Show)
 
-fromNamed :: E.Term -> Maybe Term
+type NamedTerm = E.Term
+
+fromNamed :: NamedTerm -> Maybe Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: Context -> E.Term -> Maybe Term
+fromNamed' :: Context -> NamedTerm -> Maybe Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
