@@ -58,3 +58,8 @@ spec = do
         eval (Tuple [Lit $ Int 0])                                               `shouldBe` Tuple [Lit $ Int 0]
         eval (Tuple [Abs (E.PVar "x") T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs (E.PVar "x") T.Int $ Var "x" 0 1]
         eval (Tuple [App (Abs (E.PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
+
+    context "when given a tuple as the pattern in a lambda abstraction" $ do
+      it "evaluates it binding each variable to a item" $ do
+        let swap = Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 1 2, Var "a" 0 2]
+        eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
