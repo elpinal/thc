@@ -12,6 +12,9 @@ module Thc.Expr.Indexed
   , E.Literal(..)
   , fromLiteral
 
+  -- * Patterns
+  , E.Pattern(..)
+
   -- * Named terms
   , NamedTerm
 
