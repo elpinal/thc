@@ -14,6 +14,9 @@ module Thc.Expr.Indexed
 
   -- * Named terms
   , NamedTerm
+
+  -- * Functions exported for testing.
+  , evalTuple
   ) where
 
 import Control.Arrow
