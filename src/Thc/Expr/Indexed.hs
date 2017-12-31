@@ -1,5 +1,7 @@
 module Thc.Expr.Indexed
   (
+  -- $setup
+
   -- * Terms
     Term(..)
   , fromNamed
@@ -18,6 +20,10 @@ import Control.Arrow
 
 import qualified Thc.Expr as E
 import qualified Thc.Type as T
+
+-- $setup
+-- >>> import qualified Thc.Expr as E
+-- >>> import qualified Thc.Type as T
 
 data Term =
     -- |
@@ -112,8 +118,6 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 -- |
 -- Evaluates a 'Term' to its normal form. Well-typed terms cannot diverge.
 --
--- >>> import qualified Thc.Expr as E
--- >>> import qualified Thc.Type as T
 -- >>> eval (Lit (E.Int 3))
 -- Lit (Int 3)
 -- >>> eval (Abs (E.PVar "x") T.Int (Var "x" 0 1))
