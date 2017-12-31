@@ -121,7 +121,7 @@ addNames xs ctx = foldr addNameFromPattern ctx xs
 
 addNameFromPattern :: (E.Pattern, T.Type) -> Context -> Context
 addNameFromPattern ((E.PVar i), t) ctx = (i, t) : ctx
--- TODO: E.PTuple
+addNameFromPattern ((E.PTuple ps), (T.Tuple ts)) ctx = addNames (zip ps ts) ctx
 
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
