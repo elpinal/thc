@@ -28,8 +28,8 @@ spec = do
                       (Var "g" 0 2) $
                       Lit (Int 44)
 
-      fromNamed x                                                                  `shouldBe` return y
-      fromNamed (E.Abs (PVar "x") T.Bool $ E.Var "x")                            `shouldBe` return (Abs (PVar "x") T.Bool $ Var "x" 0 1)
+      fromNamed x                                                              `shouldBe` return y
+      fromNamed (E.Abs (PVar "x") T.Bool $ E.Var "x")                          `shouldBe` return (Abs (PVar "x") T.Bool $ Var "x" 0 1)
       fromNamed (E.Abs (PVar "a") T.Int $ E.Abs (PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (PVar "a") T.Int $ Abs (PVar "b") T.Bool $ Var "a" 1 2)
 
     context "when given duplicated variables in a tuple pattern" $
@@ -44,20 +44,20 @@ spec = do
   describe "typeOf" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        typeOf (Lit $ Bool True)                                                                                 `shouldBe` return T.Bool
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                            `shouldBe` return (T.Int T.:->: T.Int)
+        typeOf (Lit $ Bool True)                                                                             `shouldBe` return T.Bool
+        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldBe` return (T.Int T.:->: T.Int)
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
     context "when given a non-typable term" $ do
       it "returns Nothing" $ do
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldBe` Nothing
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                          `shouldBe` Nothing
+        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldBe` Nothing
 
   describe "eval" $ do
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
-        eval (Tuple [Lit $ Int 0])                                               `shouldBe` Tuple [Lit $ Int 0]
+        eval (Tuple [Lit $ Int 0])                                             `shouldBe` Tuple [Lit $ Int 0]
         eval (Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1]
         eval (Tuple [App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
 
