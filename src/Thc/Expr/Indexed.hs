@@ -109,7 +109,32 @@ subst j s = walk 0
 substTop :: (Term, Term) -> Term
 substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 
--- | Evaluates a 'Term' to its normal form.
+-- |
+-- Evaluates a 'Term' to its normal form. Well-typed terms cannot diverge.
+--
+-- >>> import qualified Thc.Expr as E
+-- >>> import qualified Thc.Type as T
+-- >>> eval (Lit (E.Int 3))
+-- Lit (Int 3)
+-- >>> eval (Abs (E.PVar "x") T.Int (Var "x" 0 1))
+-- Abs (PVar "x") Int (Var "x" 0 1)
+-- >>> eval (App (Abs (E.PVar "x") T.Int (Var "x" 0 1)) (Lit (E.Bool False)))
+-- Lit (Bool False)
+--
+-- Even when given invalid variables:
+--
+-- >>> eval (Var "x" 100 100)
+-- Var "x" 100 100
+--
+-- For ill-typed terms:
+--
+-- >>> x = (Abs (E.PVar "x") T.Int $ App (Var "x" 0 1) (Var "x" 0 1))
+-- >>> eval x == x
+-- True
+-- >>> eval (App x (Lit (E.Int 2)))
+-- App (Lit (Int 2)) (Lit (Int 2))
+--
+-- @eval (App x x)@ diverges.
 eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 
