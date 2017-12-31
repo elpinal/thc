@@ -28,9 +28,9 @@ typeOfLiteral Unit = T.Unit
 
 data Pattern =
     PVar String
-  | PTuple [String]
+  | PTuple [Pattern]
   deriving (Eq, Show)
 
 bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
-bounds (PTuple is) = is
+bounds (PTuple ps) = concatMap bounds ps

@@ -6,6 +6,8 @@ import qualified Thc.Expr as E
 import Thc.Expr.Indexed
 import qualified Thc.Type as T
 
+tuplePat = E.PTuple . map E.PVar
+
 spec :: Spec
 spec = do
   describe "fromNamed" $ do
@@ -32,8 +34,8 @@ spec = do
 
     context "when given duplicated variables in a tuple pattern" $
       it "returns Nothing" $ do
-        fromNamed (E.Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
-        fromNamed (E.Abs (E.PTuple ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` Nothing
+        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
+        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` Nothing
 
     context "when given unbound idendifiers" $
       it "returns Nothing" $ do
@@ -61,7 +63,7 @@ spec = do
 
     context "when given a tuple as the pattern in a lambda abstraction" $ do
       it "evaluates it binding each variable to a item" $ do
-        let swap = Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 1 2, Var "a" 0 2]
+        let swap = Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 1 2, Var "a" 0 2]
         eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
 
         let idTuple = Abs (E.PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1

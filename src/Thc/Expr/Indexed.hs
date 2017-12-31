@@ -86,27 +86,28 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 -- Just [("a",Bool)]
 bindPattern :: E.Pattern -> T.Type -> Context -> Maybe Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
-bindPattern (E.PTuple is) (T.Tuple ts) ctx
+bindPattern (E.PTuple ps) (T.Tuple ts) ctx
   | not $ null ds          = Nothing
-  | length is == length ts = return $ addNames (zip is ts) ctx
+  | length ps == length ts = return $ addNames (zip ps ts) ctx
   | otherwise              = Nothing
   where
     ds :: [String]
-    ds = dups is
-bindPattern (E.PTuple is) ty _ = Nothing -- Note that type variables are currently not supported.
+    ds = dups ps
+bindPattern (E.PTuple ps) ty _ = Nothing -- Note that type variables are currently not supported.
 
 -- | @dups xs@ finds duplications in @xs@.
-dups :: [String] -> [String]
+dups :: [E.Pattern] -> [String]
 dups = snd . flip execState ([], []) . mapM_ f
   where
-    f x = get >>= g x
+    f p = get >>= g p
 
-    g :: Eq a => a -> ([a], [a]) -> State ([a], [a]) ()
-    g x acc =
+    g :: E.Pattern -> ([String], [String]) -> State ([String], [String]) ()
+    g (E.PVar x) acc =
       case elem x `both` acc of
         (True, True)  -> return ()
         (True, False) -> modify $ second (x :)
         (False, _)    -> modify $ first (x :)
+    g (E.PTuple ps) acc = mapM_ (flip g acc) ps
 
     both f = f *** f
 
@@ -115,8 +116,12 @@ type Context = [(String, T.Type)]
 emptyContext :: Context
 emptyContext = []
 
-addNames :: [(String, T.Type)] -> Context -> Context
-addNames xs ctx = xs ++ ctx
+addNames :: [(E.Pattern, T.Type)] -> Context -> Context
+addNames xs ctx = foldr addNameFromPattern ctx xs
+
+addNameFromPattern :: (E.Pattern, T.Type) -> Context -> Context
+addNameFromPattern ((E.PVar i), t) ctx = (i, t) : ctx
+-- TODO: E.PTuple
 
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
