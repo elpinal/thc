@@ -1,10 +1,10 @@
 module Thc.Expr.Indexed
   ( Term(..)
+  , fromNamed
+  , typeOf
   , eval
   , E.Literal(..)
   , fromLiteral
-  , fromNamed
-  , typeOf
   ) where
 
 import Control.Arrow
