@@ -102,11 +102,10 @@ dups = snd . flip execState ([], []) . mapM_ f
     f :: String -> State ([String], [String]) ()
     f x = do
       (ys, zs) <- get
-      if x `elem` ys
-        then if x `elem` zs
-          then return ()
-          else modify $ second (x :)
-        else modify $ first (x :)
+      case (x `elem` ys, x `elem` zs) of
+        (True, True)  -> return ()
+        (True, False) -> modify $ second (x :)
+        (False, _)    -> modify $ first (x :)
 
 type Context = [(String, T.Type)]
 
