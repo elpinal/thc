@@ -1,8 +1,12 @@
 module Thc.Expr.Indexed
-  ( Term(..)
+  (
+  -- * Terms
+    Term(..)
   , fromNamed
   , typeOf
   , eval
+
+  -- * Literals
   , E.Literal(..)
   , fromLiteral
   ) where
