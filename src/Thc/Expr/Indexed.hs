@@ -15,7 +15,7 @@ module Thc.Expr.Indexed
   -- * Named terms
   , NamedTerm
 
-  -- * Functions exported for testing.
+  -- * Functions exported for testing
   , evalTuple
   , evalForPat
   ) where
