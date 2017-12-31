@@ -99,15 +99,14 @@ bindPattern (E.PTuple is) ty _ = Nothing -- Note that type variables are current
 dups :: [String] -> [String]
 dups = snd . flip execState ([], []) . mapM_ f
   where
-    f :: String -> State ([String], [String]) ()
-    f x = do
-      acc <- get
+    f x = get >>= g x
+
+    g x acc =
       case elem x `both` acc of
         (True, True)  -> return ()
         (True, False) -> modify $ second (x :)
         (False, _)    -> modify $ first (x :)
 
-    both :: Arrow a => a b c -> a (b, b) (c, c)
     both f = f *** f
 
 type Context = [(String, T.Type)]
