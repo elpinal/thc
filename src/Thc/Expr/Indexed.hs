@@ -17,6 +17,7 @@ module Thc.Expr.Indexed
 
   -- * Functions exported for testing.
   , evalTuple
+  , evalForPat
   ) where
 
 import Control.Arrow
@@ -209,6 +210,11 @@ evalTuple t ts =
   return . shift (- length ts) . foldl f t $ zip [0..] ts
   where
     f t1 (n, t2) = subst n (shift (n + 1) t2) t1
+
+evalForPat :: E.Pattern -> Term -> Maybe Term
+evalForPat (E.PVar i) t = return t
+evalForPat (E.PTuple ps) (Tuple ts) = fmap Tuple . mapM (uncurry evalForPat) $ zip ps ts
+evalForPat p @ (E.PTuple _) t = eval1 t >>= evalForPat p
 
 fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l

@@ -68,3 +68,7 @@ spec = do
 
         let idTuple = Abs (E.PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
         eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
+
+  describe "evalForPat" $ do
+    it "evaluates a term for a pattern" $ do
+      evalForPat (E.PVar "x") (Lit $ Int 1) `shouldBe` return (Lit $ Int 1)
