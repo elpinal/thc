@@ -79,7 +79,7 @@ fromNamed' ctx (E.Lit l) = return $ Lit l
 fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 
 -- |
--- Binds variables to a 'Context' verifying the type of a pattern.
+-- Binds variables to a @Context@ verifying the type of a pattern.
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext
 -- Just [("a",Bool)]
