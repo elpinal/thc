@@ -30,6 +30,11 @@ spec = do
       fromNamed (E.Abs (E.PVar "x") T.Bool $ E.Var "x")                            `shouldBe` return (Abs (E.PVar "x") T.Bool $ Var "x" 0 1)
       fromNamed (E.Abs (E.PVar "a") T.Int $ E.Abs (E.PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (E.PVar "a") T.Int $ Abs (E.PVar "b") T.Bool $ Var "a" 1 2)
 
+    context "when given duplicated variables in a tuple pattern" $
+      it "returns Nothing" $ do
+        fromNamed (E.Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
+        fromNamed (E.Abs (E.PTuple ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` Nothing
+
     context "when given unbound idendifiers" $
       it "returns Nothing" $ do
         fromNamed (E.Var "x") `shouldBe` Nothing

@@ -17,6 +17,7 @@ module Thc.Expr.Indexed
   ) where
 
 import Control.Arrow
+import Control.Monad.State.Lazy
 
 import qualified Thc.Expr as E
 import qualified Thc.Type as T
@@ -86,9 +87,26 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 bindPattern :: E.Pattern -> T.Type -> Context -> Maybe Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
 bindPattern (E.PTuple is) (T.Tuple ts) ctx
+  | not $ null ds          = Nothing
   | length is == length ts = return $ addNames (zip is ts) ctx
   | otherwise              = Nothing
+  where
+    ds :: [String]
+    ds = dups is
 bindPattern (E.PTuple is) ty _ = Nothing -- Note that type variables are currently not supported.
+
+-- | @dups xs@ finds duplications in @xs@.
+dups :: [String] -> [String]
+dups = snd . flip execState ([], []) . mapM_ f
+  where
+    f :: String -> State ([String], [String]) ()
+    f x = do
+      (ys, zs) <- get
+      if x `elem` ys
+        then if x `elem` zs
+          then return ()
+          else modify $ second (x :)
+        else modify $ first (x :)
 
 type Context = [(String, T.Type)]
 
