@@ -59,7 +59,7 @@ type NamedTerm = E.Term
 -- type cause the result 'Nothing' (i.e. @λ(nn,):Int.nn@ where @(/x/,)@ is
 -- a 1-tuple whose only element is /x/).
 --
--- >>> fromNamed (E.Abs (E.PTuple ["nn"]) T.Int $ E.Var "nn")
+-- >>> fromNamed (E.Abs (E.PTuple [E.PVar "nn"]) T.Int $ E.Var "nn")
 -- Nothing
 fromNamed :: NamedTerm -> Maybe Term
 fromNamed = fromNamed' emptyContext
