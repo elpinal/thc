@@ -63,3 +63,6 @@ spec = do
       it "evaluates it binding each variable to a item" $ do
         let swap = Abs (E.PTuple ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 1 2, Var "a" 0 2]
         eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
+
+        let idTuple = Abs (E.PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
+        eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]

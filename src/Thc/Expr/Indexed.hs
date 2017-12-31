@@ -188,6 +188,7 @@ eval1 (App (Abs (E.PTuple _) _ t) (Tuple ts)) =
   return . shift (- length ts) . foldl f t $ zip [0..] ts
   where
     f t1 (n, t2) = subst n (shift (n + 1) t2) t1
+eval1 (App a @ (Abs (E.PTuple _) _ t1) t2) = App a <$> eval1 t2
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 (Tuple ts) = Tuple <$> f ts
   where
