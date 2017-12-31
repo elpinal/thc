@@ -102,10 +102,13 @@ dups = snd . flip execState ([], []) . mapM_ f
     f :: String -> State ([String], [String]) ()
     f x = do
       acc <- get
-      case elem x *** elem x $ acc of
+      case elem x `both` acc of
         (True, True)  -> return ()
         (True, False) -> modify $ second (x :)
         (False, _)    -> modify $ first (x :)
+
+    both :: Arrow a => a b c -> a (b, b) (c, c)
+    both f = f *** f
 
 type Context = [(String, T.Type)]
 
