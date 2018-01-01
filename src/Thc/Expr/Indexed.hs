@@ -268,6 +268,8 @@ class EvalError m where
 instance EvalError Maybe where
   ok = Just
   errorE e = Nothing
+newtype Option e a = Option (Maybe a)
+
 
 instance EvalError (Either String) where
   ok = Right
