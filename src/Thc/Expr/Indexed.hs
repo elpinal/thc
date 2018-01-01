@@ -271,3 +271,4 @@ instance EvalError Maybe where
 
 instance EvalError (Either e) where
   evalError = Right
+  errorE = Left
