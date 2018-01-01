@@ -270,5 +270,5 @@ instance EvalError Maybe where
   errorE e = Nothing
 
 instance EvalError (Either e) where
-  evalError = Right
+  ok = Right
   errorE = Left
