@@ -260,3 +260,6 @@ typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 
 getTypeFromContext :: Context -> Int -> T.Type
 getTypeFromContext ctx n = snd $ ctx !! n
+
+class Monad m => EvalError m where
+  evalError :: a -> m a
