@@ -265,11 +265,11 @@ class EvalError m where
   ok :: a -> m e a
   errorE :: e -> m e a
 
-instance EvalError Maybe where
-  ok = Just
-  errorE e = Nothing
 newtype Option e a = Option (Maybe a)
 
+instance EvalError Option where
+  ok = Option . Just
+  errorE e = Option Nothing
 
 instance EvalError (Either String) where
   ok = Right
