@@ -267,6 +267,7 @@ class Monad m => EvalError m where
 
 instance EvalError Maybe where
   evalError = Just
+  errorE e = Nothing
 
 instance EvalError (Either e) where
   evalError = Right
