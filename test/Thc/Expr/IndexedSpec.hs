@@ -8,6 +8,11 @@ import qualified Thc.Type as T
 
 tuplePat = PTuple . map PVar
 
+shouldNotThrow :: (HasCallStack, Eq a, Show a) => IO a -> a -> Expectation
+shouldNotThrow x y = do
+  x' <- x
+  x' `shouldBe` y
+
 spec :: Spec
 spec = do
   describe "fromNamed" $ do
@@ -71,4 +76,13 @@ spec = do
 
   describe "evalForPat" $ do
     it "evaluates a term for a pattern" $ do
-      evalForPat (PVar "x") (Lit $ Int 1) `shouldBe` return (Lit $ Int 1)
+      evalForPat (PVar "x") (Lit $ Int 1)                                                   `shouldNotThrow` Lit (Int 1)
+      evalForPat (tuplePat ["a", "b", "c"]) (Tuple [])                                      `shouldNotThrow` Tuple []
+      evalForPat (tuplePat ["a", "b", "c"]) (Tuple [Var "a" 0 1])                           `shouldNotThrow` Tuple [Var "a" 0 1]
+      evalForPat (tuplePat ["a", "b", "c"]) (Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]) `shouldNotThrow` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]
+      let idTuple = Abs (PVar "t") (T.Tuple [T.Int, T.Int, T.Int]) $ Var "t" 0 1
+      evalForPat (tuplePat ["a", "b", "c"]) (idTuple `App` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]) `shouldNotThrow` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]
+
+    context "when the type check has not been done" $ do
+      it "throws an exception" $ do
+        evalForPat (tuplePat ["a", "b", "c"]) (Lit $ Int 1) `shouldThrow` anyException

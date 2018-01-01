@@ -24,6 +24,7 @@ module Thc.Expr.Indexed
   ) where
 
 import Control.Arrow
+import Control.Exception.Safe
 import Control.Monad.State.Lazy
 
 import qualified Thc.Expr as E
@@ -214,10 +215,26 @@ evalTuple t ts =
   where
     f t1 (n, t2) = subst n (shift (n + 1) t2) t1
 
-evalForPat :: E.Pattern -> Term -> Maybe Term
-evalForPat (E.PVar i) t = return t
+evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
+evalForPat (E.PVar _) t = return t
 evalForPat (E.PTuple ps) (Tuple ts) = fmap Tuple . mapM (uncurry evalForPat) $ zip ps ts
-evalForPat p @ (E.PTuple _) t = eval1 t >>= evalForPat p
+evalForPat p @ (E.PTuple _) t =
+  case eval1 t of
+    Just t' -> evalForPat p t'
+    Nothing -> throwPatTerm p t
+
+throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
+throwPatTerm p t = throw $
+  case typeOf t of
+    Just ty -> WrongPattern p ty
+    Nothing -> IllTyped t
+
+data EvalException
+  = WrongPattern E.Pattern T.Type
+  | IllTyped Term
+  deriving Show
+
+instance Exception EvalException
 
 fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l
