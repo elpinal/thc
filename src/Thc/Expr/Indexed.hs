@@ -263,7 +263,7 @@ getTypeFromContext ctx n = snd $ ctx !! n
 
 class Monad m => EvalError m where
   ok :: a -> m a
-  errorE :: e -> m a
+  errorE :: String -> m a
 
 instance EvalError Maybe where
   ok = Just
