@@ -269,6 +269,6 @@ instance EvalError Maybe where
   ok = Just
   errorE e = Nothing
 
-instance EvalError (Either e) where
+instance EvalError (Either String) where
   ok = Right
   errorE = Left
