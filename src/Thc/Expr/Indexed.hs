@@ -271,6 +271,6 @@ instance EvalError Option where
   ok = Option . Just
   errorE e = Option Nothing
 
-instance EvalError (Either String) where
+instance EvalError Either where
   ok = Right
   errorE = Left
