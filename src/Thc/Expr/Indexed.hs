@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Thc.Expr.Indexed
   (
   -- $setup
