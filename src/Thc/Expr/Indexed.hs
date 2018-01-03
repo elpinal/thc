@@ -58,21 +58,21 @@ type NamedTerm = E.Term
 --
 -- >>> l = E.Lit $ E.Int 0
 -- >>> fromNamed l
--- Just (Lit (Int 0))
+-- Right (Lit (Int 0))
 -- >>> fromNamed (E.Abs (E.PVar "a") (T.Int T.:->: T.Bool) $ E.App (E.Var "a") l)
--- Just (Abs (PVar "a") (Int :->: Bool) (App (Var "a" 0 1) (Lit (Int 0))))
+-- Right (Abs (PVar "a") (Int :->: Bool) (App (Var "a" 0 1) (Lit (Int 0))))
 --
 -- Unbound variables cause the result 'Nothing'.
 --
 -- >>> fromNamed (E.Var "x")
--- Nothing
+-- Left (Unbound "x")
 --
 -- In 'E.Abs', conflicts between the parameter's pattern and its corresponding
 -- type cause the result 'Nothing' (i.e. @λ(nn,):Int.nn@ where @(/x/,)@ is
 -- a 1-tuple whose only element is /x/).
 --
 -- >>> fromNamed (E.Abs (E.PTuple [E.PVar "nn"]) T.Int $ E.Var "nn")
--- Nothing
+-- Left (PatternMismatch (PTuple [PVar "nn"]) Int)
 fromNamed :: NamedTerm -> Either EvalError Term
 fromNamed = fromNamed' emptyContext
 
@@ -97,7 +97,7 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
 --
--- >>> bindPattern (E.PVar "a") T.Bool emptyContext
+-- >>> bindPattern (E.PVar "a") T.Bool emptyContext :: Maybe Context
 -- Just [("a",Bool)]
 bindPattern :: MonadError m EvalError => E.Pattern -> T.Type -> Context -> m Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
