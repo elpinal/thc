@@ -68,10 +68,10 @@ type NamedTerm = E.Term
 --
 -- >>> fromNamed (E.Abs (E.PTuple [E.PVar "nn"]) T.Int $ E.Var "nn")
 -- Nothing
-fromNamed :: NamedTerm -> Maybe Term
+fromNamed :: NamedTerm -> Either String Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: Context -> NamedTerm -> Maybe Term
+fromNamed' :: EvalError m => Context -> NamedTerm -> m Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
@@ -94,16 +94,16 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext
 -- Just [("a",Bool)]
-bindPattern :: E.Pattern -> T.Type -> Context -> Maybe Context
+bindPattern :: EvalError m => E.Pattern -> T.Type -> Context -> m Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
-bindPattern (E.PTuple ps) (T.Tuple ts) ctx
-  | not $ null ds          = Nothing
+bindPattern p @ (E.PTuple ps) (T.Tuple ts) ctx
+  | not $ null ds          = errorE $ "duplicate variables bound by a pattern: " ++ show p
   | length ps == length ts = return $ addNames (zip ps ts) ctx
-  | otherwise              = Nothing
+  | otherwise              = errorE "FIXME: should throw an exception: should be type-checked"
   where
     ds :: [String]
     ds = dups ps
-bindPattern (E.PTuple ps) ty _ = Nothing -- Note that type variables are currently not supported.
+bindPattern (E.PTuple ps) ty _ = errorE "FIXME: should throw an exception: should be type-checked" -- Note that type variables are currently not supported.
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
@@ -136,8 +136,8 @@ addNameFromPattern ((E.PTuple ps), (T.Tuple ts)) ctx = addNames (zip ps ts) ctx
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
 
-name2index :: String -> Context -> Maybe Int
-name2index i [] = Nothing
+name2index :: EvalError m => String -> Context -> m Int
+name2index i [] = errorE $ "unbound variable: " ++ i
 name2index i (x : xs)
   | i == fst x = return 0
   | otherwise  = (1 +) <$> name2index i xs

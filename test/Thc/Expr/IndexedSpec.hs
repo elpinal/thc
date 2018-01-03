@@ -2,6 +2,8 @@ module Thc.Expr.IndexedSpec where
 
 import Test.Hspec
 
+import Data.Either
+
 import qualified Thc.Expr as E
 import Thc.Expr.Indexed
 import qualified Thc.Type as T
@@ -38,13 +40,13 @@ spec = do
       fromNamed (E.Abs (PVar "a") T.Int $ E.Abs (PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (PVar "a") T.Int $ Abs (PVar "b") T.Bool $ Var "a" 1 2)
 
     context "when given duplicated variables in a tuple pattern" $
-      it "returns Nothing" $ do
+      it "returns an error" $ do
         fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
-        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` Nothing
+        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldSatisfy` isLeft
 
     context "when given unbound idendifiers" $
-      it "returns Nothing" $ do
-        fromNamed (E.Var "x") `shouldBe` Nothing
+      it "returns an error" $ do
+        fromNamed (E.Var "x") `shouldSatisfy` isLeft
 
   describe "typeOf" $ do
     context "when given a typable term" $ do

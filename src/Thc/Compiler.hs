@@ -36,7 +36,7 @@ compileWithContext ctx t o c = do
   assemble . fromTac $ tac
   where
     genIndexed :: E.Term -> Either CompileError Term
-    genIndexed = try' fromNamed
+    genIndexed = first (const Unbound) . fromNamed
 
     verifyType :: Term -> Either CompileError T.Type
     verifyType = try' typeOf
@@ -52,9 +52,6 @@ class Try a where
 
 try' :: Try a => (b -> Maybe a) -> b -> Either CompileError a
 try' f = try . f
-
-instance Try Term where
-  try = maybe (Left Unbound) return
 
 instance Try T.Type where
   try = maybe (Left NonTypable) return
