@@ -227,7 +227,7 @@ evalTuple t ts =
 -- |
 -- Evaluates an application.
 --
--- >>> evalApp (E.PVar "x") (Lit $ Int 1) (Lit $ Int 2)
+-- >>> evalApp (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
 -- Lit (Int 1)
 evalApp :: E.Pattern -> Term -> Term -> Term
 
