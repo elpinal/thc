@@ -224,6 +224,8 @@ evalTuple t ts =
   where
     f t1 (n, t2) = subst n (shift (n + 1) t2) t1
 
+evalApp :: E.Pattern -> Term -> Term -> Term
+
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
 evalForPat (E.PTuple ps) (Tuple ts) = fmap Tuple . mapM (uncurry evalForPat) $ zip ps ts
