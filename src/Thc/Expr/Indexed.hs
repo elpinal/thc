@@ -73,7 +73,7 @@ type NamedTerm = E.Term
 fromNamed :: NamedTerm -> Either String Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: EvalError m String => Context -> NamedTerm -> m Term
+fromNamed' :: MonadError m String => Context -> NamedTerm -> m Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
@@ -96,7 +96,7 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext
 -- Just [("a",Bool)]
-bindPattern :: EvalError m String => E.Pattern -> T.Type -> Context -> m Context
+bindPattern :: MonadError m String => E.Pattern -> T.Type -> Context -> m Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
 bindPattern p @ (E.PTuple ps) (T.Tuple ts) ctx
   | not $ null ds          = errorE $ "duplicate variables bound by a pattern: " ++ show p
@@ -138,7 +138,7 @@ addNameFromPattern ((E.PTuple ps), (T.Tuple ts)) ctx = addNames (zip ps ts) ctx
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
 
-name2index :: EvalError m String => String -> Context -> m Int
+name2index :: MonadError m String => String -> Context -> m Int
 name2index i [] = errorE $ "unbound variable: " ++ i
 name2index i (x : xs)
   | i == fst x = return 0
@@ -265,11 +265,11 @@ typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 getTypeFromContext :: Context -> Int -> T.Type
 getTypeFromContext ctx n = snd $ ctx !! n
 
-class Monad m => EvalError m e where
+class Monad m => MonadError m e where
   errorE :: e -> m a
 
-instance EvalError Maybe e where
+instance MonadError Maybe e where
   errorE e = Nothing
 
-instance EvalError (Either e) e where
+instance MonadError (Either e) e where
   errorE = Left
