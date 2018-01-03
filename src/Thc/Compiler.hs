@@ -26,7 +26,7 @@ data CompileError =
   deriving (Eq, Show)
 
 fromEvalError :: EvalError -> CompileError
-fromEvalError e = Eval e
+fromEvalError = Eval
 
 compile :: E.Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
