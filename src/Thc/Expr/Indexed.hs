@@ -70,10 +70,10 @@ type NamedTerm = E.Term
 --
 -- >>> fromNamed (E.Abs (E.PTuple [E.PVar "nn"]) T.Int $ E.Var "nn")
 -- Nothing
-fromNamed :: NamedTerm -> Either String Term
+fromNamed :: NamedTerm -> Either EvalError Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: MonadError m String => Context -> NamedTerm -> m Term
+fromNamed' :: MonadError m EvalError => Context -> NamedTerm -> m Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
@@ -96,16 +96,16 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext
 -- Just [("a",Bool)]
-bindPattern :: MonadError m String => E.Pattern -> T.Type -> Context -> m Context
+bindPattern :: MonadError m EvalError => E.Pattern -> T.Type -> Context -> m Context
 bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
-bindPattern p @ (E.PTuple ps) (T.Tuple ts) ctx
-  | not $ null ds          = errorE $ "duplicate variables bound by a pattern: " ++ show p
+bindPattern p @ (E.PTuple ps) ty @ (T.Tuple ts) ctx
+  | not $ null ds          = errorE $ DuplicateVariables p
   | length ps == length ts = return $ addNames (zip ps ts) ctx
-  | otherwise              = errorE "FIXME: should throw an exception: should be type-checked"
+  | otherwise              = errorE $ PatternMismatch p ty
   where
     ds :: [String]
     ds = dups ps
-bindPattern (E.PTuple ps) ty _ = errorE "FIXME: should throw an exception: should be type-checked" -- Note that type variables are currently not supported.
+bindPattern p @ (E.PTuple ps) ty _ = errorE $ PatternMismatch p ty -- Note that type variables are currently not supported.
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
@@ -138,8 +138,8 @@ addNameFromPattern ((E.PTuple ps), (T.Tuple ts)) ctx = addNames (zip ps ts) ctx
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
 
-name2index :: MonadError m String => String -> Context -> m Int
-name2index i [] = errorE $ "unbound variable: " ++ i
+name2index :: MonadError m EvalError => String -> Context -> m Int
+name2index i [] = errorE $ Unbound i
 name2index i (x : xs)
   | i == fst x = return 0
   | otherwise  = (1 +) <$> name2index i xs
@@ -273,3 +273,9 @@ instance MonadError Maybe e where
 
 instance MonadError (Either e) e where
   errorE = Left
+
+data EvalError
+  = Unbound String
+  | DuplicateVariables E.Pattern
+  | PatternMismatch E.Pattern T.Type
+  deriving (Eq, Show)
