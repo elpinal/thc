@@ -229,6 +229,8 @@ evalTuple t ts =
 --
 -- >>> evalApp (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
 -- Lit (Int 1)
+-- >>> evalApp (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
+-- Lit (Int 2)
 evalApp :: E.Pattern -> Term -> Term -> Term
 evalApp p t2 t1 = t2
 
