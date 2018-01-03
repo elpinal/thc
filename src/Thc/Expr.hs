@@ -3,6 +3,7 @@ module Thc.Expr
   , Literal(..)
   , typeOfLiteral
   , Pattern(..)
+  , tuplePat
   , bounds
   ) where
 
@@ -34,3 +35,6 @@ data Pattern =
 bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
 bounds (PTuple ps) = concatMap bounds ps
+
+tuplePat :: [String] -> Pattern
+tuplePat = PTuple . map PVar

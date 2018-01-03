@@ -38,5 +38,9 @@ spec = do
             ty = T.Int
         compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.PatternMismatch p ty)
 
+        let p = tuplePat ["x", "x"]
+            ty = T.Tuple [T.Int, T.Int]
+        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.DuplicateVariables p)
+
         let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
         compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left NonTypable

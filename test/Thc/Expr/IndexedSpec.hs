@@ -8,7 +8,7 @@ import qualified Thc.Expr as E
 import Thc.Expr.Indexed
 import qualified Thc.Type as T
 
-tuplePat = PTuple . map PVar
+tuplePat = E.tuplePat
 
 shouldNotThrow :: (HasCallStack, Eq a, Show a) => IO a -> a -> Expectation
 shouldNotThrow x y = do
