@@ -239,6 +239,7 @@ throwPatTerm p t = throw $
 data EvalException
   = WrongPattern E.Pattern T.Type
   | IllTyped Term
+  | WrongIndex Context Int
   deriving Show
 
 instance Exception EvalException
@@ -251,7 +252,7 @@ typeOf :: Term -> Maybe T.Type
 typeOf = typeOf' emptyContext
 
 typeOf' :: Context -> Term -> Maybe T.Type
-typeOf' ctx (Var _ x _) = return $ getTypeFromContext ctx x
+typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
 typeOf' ctx (Abs p ty1 t) = do
   ctx' <- bindPattern p ty1 ctx
   ty2 <- typeOf' ctx' t
@@ -265,8 +266,10 @@ typeOf' ctx (App t1 t2) = do
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 
-getTypeFromContext :: Context -> Int -> T.Type
-getTypeFromContext ctx n = snd $ ctx !! n
+getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
+getTypeFromContext ctx n
+  | length ctx <= n = throw $ WrongIndex ctx n
+  | otherwise       = return . snd $ ctx !! n
 
 class Monad m => MonadError m e where
   errorE :: e -> m a
