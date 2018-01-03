@@ -30,9 +30,11 @@ module Thc.Expr.Indexed
   , evalForPat
   ) where
 
+import Control.Applicative
 import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad.State.Lazy
+import Control.Monad.Trans.Maybe
 
 import qualified Thc.Expr as E
 import qualified Thc.Type as T
@@ -231,8 +233,9 @@ evalForPat p @ (E.PTuple _) t =
     Nothing -> throwPatTerm p t
 
 throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
-throwPatTerm p t = throw $
-  case typeOf t of
+throwPatTerm p t = do
+  a <- typeOf t
+  throw $ case a of
     Just ty -> WrongPattern p ty
     Nothing -> IllTyped t
 
@@ -248,13 +251,13 @@ fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l
 fromLiteral _ = Nothing
 
-typeOf :: Term -> Maybe T.Type
-typeOf = typeOf' emptyContext
+typeOf :: MonadThrow m => Term -> m (Maybe T.Type)
+typeOf = runMaybeT . typeOf' emptyContext
 
-typeOf' :: Context -> Term -> Maybe T.Type
+typeOf' :: MonadThrow m => Context -> Term -> MaybeT m T.Type
 typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
 typeOf' ctx (Abs p ty1 t) = do
-  ctx' <- bindPattern p ty1 ctx
+  ctx' <- MaybeT . return $ bindPattern p ty1 ctx
   ty2 <- typeOf' ctx' t
   return $ ty1 T.:->: ty2
 typeOf' ctx (App t1 t2) = do
@@ -262,7 +265,7 @@ typeOf' ctx (App t1 t2) = do
   ty2 <- typeOf' ctx t2
   case ty1 of
     u1 T.:->: u2 | u1 == ty2 -> return u2
-    _                        -> Nothing
+    _                        -> empty
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 
