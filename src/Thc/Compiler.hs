@@ -20,10 +20,13 @@ coreContext = Darwin.updateContext . Amd64.updateContext $ context
 
 data CompileError =
     NotLit
-  | Unbound
+  | Eval EvalError
   | NonTypable
   | FromAsm Error
   deriving (Eq, Show)
+
+fromEvalError :: EvalError -> CompileError
+fromEvalError e = Eval e
 
 compile :: E.Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
@@ -36,7 +39,7 @@ compileWithContext ctx t o c = do
   assemble . fromTac $ tac
   where
     genIndexed :: E.Term -> Either CompileError Term
-    genIndexed = first (const Unbound) . fromNamed
+    genIndexed = first fromEvalError . fromNamed
 
     verifyType :: Term -> Either CompileError T.Type
     verifyType = try' typeOf

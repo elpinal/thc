@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as B
 import qualified Thc.Code as Code
 import Thc.Compiler
 import Thc.Expr
+import qualified Thc.Expr.Indexed as I
 import qualified Thc.Type as T
 
 spec :: Spec
@@ -30,6 +31,6 @@ spec = do
 
     context "when given an invalid program" $
       it "returns an error" $ do
-        compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left Unbound
+        compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.Unbound "x")
         let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
         compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left NonTypable

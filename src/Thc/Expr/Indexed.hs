@@ -22,6 +22,9 @@ module Thc.Expr.Indexed
   -- * Named terms
   , NamedTerm
 
+  -- * Errors
+  , EvalError(..)
+
   -- * Functions exported for testing
   , evalTuple
   , evalForPat
