@@ -85,6 +85,12 @@ spec = do
       let idTuple = Abs (PVar "t") (T.Tuple [T.Int, T.Int, T.Int]) $ Var "t" 0 1
       evalForPat (tuplePat ["a", "b", "c"]) (idTuple `App` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]) `shouldNotThrow` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]
 
+      let int = Lit . Int
+          tuple = Tuple $ map Tuple [map int [12, 28], map int [39, 54]]
+          p = PTuple [tuplePat ["c", "d"], tuplePat ["e", "f"]]
+      evalForPat p tuple                                      `shouldNotThrow` tuple
+      evalForPat p (Abs (PVar "x") (T.Int) tuple `App` int 2) `shouldNotThrow` tuple
+
     context "when the type check has not been done" $ do
       it "throws an exception" $ do
         evalForPat (tuplePat ["a", "b", "c"]) (Lit $ Int 1) `shouldThrow` anyException
