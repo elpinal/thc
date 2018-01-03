@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Thc.Expr.Indexed
   (
   -- $setup
@@ -262,16 +263,11 @@ typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 getTypeFromContext :: Context -> Int -> T.Type
 getTypeFromContext ctx n = snd $ ctx !! n
 
-class EvalError m where
-  ok :: a -> m e a
-  errorE :: e -> m e a
+class Monad m => EvalError m where
+  errorE :: String -> m a
 
-newtype Option e a = Option (Maybe a)
+instance EvalError Maybe where
+  errorE e = Nothing
 
-instance EvalError Option where
-  ok = Option . Just
-  errorE e = Option Nothing
-
-instance EvalError Either where
-  ok = Right
+instance EvalError (Either String) where
   errorE = Left
