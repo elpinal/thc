@@ -232,6 +232,7 @@ evalTuple t ts =
 -- >>> evalApp (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
 -- Lit (Int 2)
 evalApp :: E.Pattern -> Term -> Term -> Term
+evalApp (E.PVar _) t2 t1 = substTop  (t1, t2)
 evalApp p t2 t1 = t2
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
