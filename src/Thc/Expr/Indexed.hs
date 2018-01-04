@@ -240,19 +240,17 @@ eval1 _ = Nothing
 -- >>> reduce p (Var "y" 2 4) tuple
 -- Abs (PVar "z") Int (Var "z" 0 1)
 reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
-reduce p t2 t1 = do
-  (t, _) <- reduce' l 0 p t2 t1
-  return $ shift (-l) t
+reduce p t2 t1 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' l p t2 t1
   where
     l = length $ E.bounds p
 
-reduce' :: MonadThrow m => Int -> Int -> E.Pattern -> Term -> Term -> m (Term, Int)
-reduce' i n (E.PVar _) t2 t1 = return (subst n (shift i t1) t2, n + 1)
-reduce' i n (E.PTuple ps) t2 (Tuple ts) = flip runStateT n . foldrM f t2 $ zip ps ts
+reduce' :: MonadThrow m => Int -> E.Pattern -> Term -> Term -> StateT Int m Term
+reduce' i (E.PVar _) t2 t1 = state $ \n -> (subst n (shift i t1) t2, n + 1)
+reduce' i (E.PTuple ps) t2 (Tuple ts) = foldrM f t2 $ zip ps ts
   where
     f :: MonadThrow m => (E.Pattern, Term) -> Term -> StateT Int m Term
-    f (p, t) t0 = StateT $ \n -> reduce' i n p t0 t
-reduce' i n p t2 t1 = evalForPat p t1 >>= reduce' i n p t2
+    f (p, t) t0 = reduce' i p t0 t
+reduce' i p t2 t1 = evalForPat p t1 >>= reduce' i p t2
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
