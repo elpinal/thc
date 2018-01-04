@@ -205,8 +205,7 @@ eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 
 eval1 :: Term -> Maybe Term
-eval1 (App (Abs (E.PVar _) _ t1) t2) = return $ substTop (t2, t1)
-eval1 (App (Abs p @ (E.PTuple _) _ t2) t1) = do
+eval1 (App (Abs p _ t2) t1) = do
   t1' <- evalForPat p t1
   return $ evalApp p t2 t1'
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
