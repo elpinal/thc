@@ -240,16 +240,16 @@ eval1 _ = Nothing
 -- >>> reduce p tuple (Var "y" 2 4)
 -- Abs (PVar "z") Int (Var "z" 0 1)
 reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
-reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' l p t1 t2
+reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
   where
     l = length $ E.bounds p
 
-reduce' :: MonadThrow m => Int -> E.Pattern -> Term -> Term -> StateT Int m Term
-reduce' i (E.PVar _) t1 t2 = state $ \n -> (subst n (shift i t1) t2, n + 1)
-reduce' i (E.PTuple ps) (Tuple ts) t = foldrM (uncurry $ reduce' i) t $ zip ps ts
-reduce' i p t1 t2 = do
-  t1' <- evalForPat p t1
-  reduce' i p t1' t2
+    reduce' :: MonadThrow m => E.Pattern -> Term -> Term -> StateT Int m Term
+    reduce' (E.PVar _) t1 t2 = state $ \n -> (subst n (shift l t1) t2, n + 1)
+    reduce' (E.PTuple ps) (Tuple ts) t = foldrM (uncurry reduce') t $ zip ps ts
+    reduce' p t1 t2 = do
+      t1' <- evalForPat p t1
+      reduce' p t1' t2
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
