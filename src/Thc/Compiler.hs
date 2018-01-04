@@ -3,6 +3,7 @@ module Thc.Compiler
   , CompileError(..)
   ) where
 
+import Control.Monad
 import Data.Bifunctor
 
 import           Thc.Asm
@@ -42,7 +43,7 @@ compileWithContext ctx t o c = do
     genIndexed = first fromEvalError . fromNamed
 
     verifyType :: Term -> Either CompileError T.Type
-    verifyType = try' typeOf
+    verifyType = try' $ join . typeOf
 
     genTac :: Term -> Either CompileError Tac
     genTac = fmap fromLit . try' fromLiteral . eval
