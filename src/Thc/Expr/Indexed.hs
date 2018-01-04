@@ -206,7 +206,7 @@ eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 
 eval1 :: Term -> Maybe Term
-eval1 (App (Abs p _ t2) t1) = reduce p t2 t1
+eval1 (App (Abs p _ t2) t1) = reduce p t1 t2
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 (Tuple ts) = Tuple <$> f ts
   where
@@ -218,39 +218,41 @@ eval1 (Tuple ts) = Tuple <$> f ts
 eval1 _ = Nothing
 
 -- |
--- @reduce p t2 t1@ performs beta-reduction.
+-- @reduce p t1 t2@ performs beta-reduction.
 --
--- >>> reduce (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
+-- >>> reduce (E.PVar "x") (Lit $ E.Int 2) (Lit $ E.Int 1)
 -- Lit (Int 1)
--- >>> reduce (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
+-- >>> reduce (E.PVar "x") (Lit $ E.Int 2) (Var "x" 0 1)
 -- Lit (Int 2)
 --
 -- >>> p = E.tuplePat ["x", "y"]
 -- >>> tuple = Tuple [Lit $ E.Int 2, Lit $ E.Int 3]
--- >>> reduce p (Var "y" 0 2) tuple
+-- >>> reduce p tuple (Var "y" 0 2)
 -- Lit (Int 3)
--- >>> reduce p (Var "x" 1 2) tuple
+-- >>> reduce p tuple (Var "x" 1 2)
 -- Lit (Int 2)
 --
 -- >>> p = E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]
 -- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
--- >>> reduce p (Var "z" 1 4) tuple
+-- >>> reduce p tuple (Var "z" 1 4)
 -- Lit (Int 4)
 -- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
--- >>> reduce p (Var "y" 2 4) tuple
+-- >>> reduce p tuple (Var "y" 2 4)
 -- Abs (PVar "z") Int (Var "z" 0 1)
 reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
-reduce p t2 t1 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' l p t2 t1
+reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' l p t1 t2
   where
     l = length $ E.bounds p
 
 reduce' :: MonadThrow m => Int -> E.Pattern -> Term -> Term -> StateT Int m Term
-reduce' i (E.PVar _) t2 t1 = state $ \n -> (subst n (shift i t1) t2, n + 1)
-reduce' i (E.PTuple ps) t2 (Tuple ts) = foldrM f t2 $ zip ps ts
+reduce' i (E.PVar _) t1 t2 = state $ \n -> (subst n (shift i t1) t2, n + 1)
+reduce' i (E.PTuple ps) (Tuple ts) t1 = foldrM f t1 $ zip ps ts
   where
     f :: MonadThrow m => (E.Pattern, Term) -> Term -> StateT Int m Term
-    f (p, t) t0 = reduce' i p t0 t
-reduce' i p t2 t1 = evalForPat p t1 >>= reduce' i p t2
+    f  = uncurry $ reduce' i
+reduce' i p t1 t2 = do
+  t1' <- evalForPat p t1
+  reduce' i p t1' t2
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t

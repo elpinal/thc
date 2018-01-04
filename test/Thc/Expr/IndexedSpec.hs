@@ -78,6 +78,7 @@ spec = do
         eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
 
         let idTuple = Abs (PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
+        eval (App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128])            `shouldBe` Tuple [Lit $ Int 0, Lit $ Int 128]
         eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
 
         let fstsnd = Abs (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
@@ -86,18 +87,18 @@ spec = do
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
-      reduce (PVar "x") t (Lit $ Int 8) `shouldNotThrow` t
+      reduce (PVar "x") (Lit $ Int 8) t `shouldNotThrow` t
 
-      reduce (PVar "x") (Var "y" 1 2) (Lit $ Int 12) `shouldNotThrow` Var "y" 0 1
+      reduce (PVar "x") (Lit $ Int 12) (Var "y" 1 2) `shouldNotThrow` Var "y" 0 1
       let t = Var "x" 0 1
-      reduce (PVar "x") t (Var "y" 1 2) `shouldNotThrow` Var "y" 1 2
+      reduce (PVar "x") (Var "y" 1 2) t `shouldNotThrow` Var "y" 1 2
 
     context "when a pattern and an argument are mismatched" $ do
       it "throws an exception" $ do
         -- TODO:
         -- In error handling, trying to get the type of the term, throws the WrongIndex exception if it's unbound.
         -- But in the time, for more detailed error messages, the Context may be needed.
-        reduce (tuplePat ["x"]) (Var "x" 0 1) (Var "y" 1 2) `shouldThrow` anyException
+        reduce (tuplePat ["x"]) (Var "y" 1 2) (Var "x" 0 1) `shouldThrow` anyException
 
   describe "evalForPat" $ do
     it "evaluates a term for a pattern" $ do
