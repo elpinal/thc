@@ -1,6 +1,9 @@
 module Thc.Expr
   ( Term(..)
   , Literal(..)
+  , bool
+  , int
+  , unit
   , typeOfLiteral
   , Pattern(..)
   , tuplePat
@@ -21,6 +24,15 @@ data Literal =
   | Int Int
   | Unit
   deriving (Eq, Show)
+
+bool :: Bool -> Term
+bool = Lit . Bool
+
+int :: Int -> Term
+int = Lit . Int
+
+unit :: Term
+unit = Lit Unit
 
 typeOfLiteral :: Literal -> T.Type
 typeOfLiteral (Bool _) = T.Bool
