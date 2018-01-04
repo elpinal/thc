@@ -226,14 +226,23 @@ eval1 _ = Nothing
 -- Lit (Int 1)
 -- >>> reduce (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
 -- Lit (Int 2)
--- >>> reduce (E.tuplePat ["x", "y"]) (Var "y" 0 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
+--
+-- >>> p = E.tuplePat ["x", "y"]
+-- >>> tuple = Tuple [Lit $ E.Int 2, Lit $ E.Int 3]
+-- >>> reduce p (Var "y" 0 2) tuple
 -- Lit (Int 3)
--- >>> reduce (E.tuplePat ["x", "y"]) (Var "x" 1 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
+-- >>> reduce p (Var "x" 1 2) tuple
 -- Lit (Int 2)
--- >>> reduce (E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]) (Var "z" 1 4) (Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]])
+--
+-- >>> p = E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]
+-- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
+-- >>> reduce p (Var "z" 1 4) tuple
 -- Lit (Int 4)
+-- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
+-- >>> reduce p (Var "y" 2 4) tuple
+-- Abs (PVar "z") Int (Var "z" 0 1)
 reduce :: E.Pattern -> Term -> Term -> Term
-reduce p t2 t1 = let (t, n) = reduce' 0 p t2 t1 in shift (-n) t
+reduce p t2 t1 = let (t, n) = reduce' 0 p t2 t1 in shift (-(n - 1)) t
 
 reduce' :: Int -> E.Pattern -> Term -> Term -> (Term, Int)
 reduce' n (E.PVar _) t2 t1 = (subst n (shift (n + 1) t1) t2, n + 1)
