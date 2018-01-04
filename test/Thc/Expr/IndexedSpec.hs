@@ -43,6 +43,11 @@ spec = do
           ty = (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]])
       fromNamed (E.Abs p ty $ E.Var "b") `shouldBe` return (Abs p ty $ Var "b" 2 4)
 
+      fromNamed (E.Record []) `shouldBe` return (Record [])
+      let int = Lit . Int
+      fromNamed (E.Record [("", E.int 1)])                         `shouldBe` return (Record [("", int 1)])
+      fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit E.unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
+
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
         fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
