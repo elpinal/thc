@@ -39,6 +39,10 @@ spec = do
       fromNamed (E.Abs (PVar "x") T.Bool $ E.Var "x")                          `shouldBe` return (Abs (PVar "x") T.Bool $ Var "x" 0 1)
       fromNamed (E.Abs (PVar "a") T.Int $ E.Abs (PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (PVar "a") T.Int $ Abs (PVar "b") T.Bool $ Var "a" 1 2)
 
+      let p = PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]
+          ty = (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]])
+      fromNamed (E.Abs p ty $ E.Var "b") `shouldBe` return (Abs p ty $ Var "b" 2 4)
+
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
         fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
