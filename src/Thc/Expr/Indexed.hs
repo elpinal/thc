@@ -246,10 +246,7 @@ reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' l p t1 t2
 
 reduce' :: MonadThrow m => Int -> E.Pattern -> Term -> Term -> StateT Int m Term
 reduce' i (E.PVar _) t1 t2 = state $ \n -> (subst n (shift i t1) t2, n + 1)
-reduce' i (E.PTuple ps) (Tuple ts) t1 = foldrM f t1 $ zip ps ts
-  where
-    f :: MonadThrow m => (E.Pattern, Term) -> Term -> StateT Int m Term
-    f  = uncurry $ reduce' i
+reduce' i (E.PTuple ps) (Tuple ts) t = foldrM (uncurry $ reduce' i) t $ zip ps ts
 reduce' i p t1 t2 = do
   t1' <- evalForPat p t1
   reduce' i p t1' t2
