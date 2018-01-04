@@ -76,6 +76,9 @@ spec = do
         let idTuple = Abs (PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
         eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
 
+        let fstsnd = Abs (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
+        eval (App fstsnd $ Tuple [Tuple [Lit $ Int 8, Lit $ Int 16], Tuple [Lit $ Int 32, Lit $ Int 64]]) `shouldBe` Lit (Int 16)
+
   describe "evalForPat" $ do
     it "evaluates a term for a pattern" $ do
       evalForPat (PVar "x") (Lit $ Int 1)                                                   `shouldNotThrow` Lit (Int 1)
