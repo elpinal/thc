@@ -26,7 +26,7 @@ module Thc.Expr.Indexed
   , EvalError(..)
 
   -- * Functions exported for testing
-  , evalApp
+  , reduce
   , evalForPat
   ) where
 
@@ -208,7 +208,7 @@ eval t = maybe t eval $ eval1 t
 eval1 :: Term -> Maybe Term
 eval1 (App (Abs p _ t2) t1) = do
   t1' <- evalForPat p t1
-  return $ evalApp p t2 t1'
+  return $ reduce p t2 t1'
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 (Tuple ts) = Tuple <$> f ts
   where
@@ -220,28 +220,28 @@ eval1 (Tuple ts) = Tuple <$> f ts
 eval1 _ = Nothing
 
 -- |
--- @evalApp p t2 t1@ performs beta-reduction.
+-- @reduce p t2 t1@ performs beta-reduction.
 --
--- >>> evalApp (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
+-- >>> reduce (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
 -- Lit (Int 1)
--- >>> evalApp (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
+-- >>> reduce (E.PVar "x") (Var "x" 0 1) (Lit $ E.Int 2)
 -- Lit (Int 2)
--- >>> evalApp (E.tuplePat ["x", "y"]) (Var "y" 0 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
+-- >>> reduce (E.tuplePat ["x", "y"]) (Var "y" 0 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
 -- Lit (Int 3)
--- >>> evalApp (E.tuplePat ["x", "y"]) (Var "x" 1 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
+-- >>> reduce (E.tuplePat ["x", "y"]) (Var "x" 1 2) (Tuple [Lit $ E.Int 2, Lit $ E.Int 3])
 -- Lit (Int 2)
--- >>> evalApp (E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]) (Var "z" 1 4) (Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]])
+-- >>> reduce (E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]) (Var "z" 1 4) (Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]])
 -- Lit (Int 4)
-evalApp :: E.Pattern -> Term -> Term -> Term
-evalApp p t2 t1 = let (t, n) = evalApp' 0 p t2 t1 in shift (-n) t
+reduce :: E.Pattern -> Term -> Term -> Term
+reduce p t2 t1 = let (t, n) = reduce' 0 p t2 t1 in shift (-n) t
 
-evalApp' :: Int -> E.Pattern -> Term -> Term -> (Term, Int)
-evalApp' n (E.PVar _) t2 t1 = (subst n (shift (n + 1) t1) t2, n + 1)
-evalApp' n (E.PTuple ps) t2 (Tuple ts) = flip runState n . foldrM f t2 $ zip ps ts
+reduce' :: Int -> E.Pattern -> Term -> Term -> (Term, Int)
+reduce' n (E.PVar _) t2 t1 = (subst n (shift (n + 1) t1) t2, n + 1)
+reduce' n (E.PTuple ps) t2 (Tuple ts) = flip runState n . foldrM f t2 $ zip ps ts
   where
     f :: (E.Pattern, Term) -> Term -> State Int Term
-    f (p, t) t0 = state $ \n -> evalApp' n p t0 t
-evalApp' n p t2 t1 = (t2, n)
+    f (p, t) t0 = state $ \n -> reduce' n p t0 t
+reduce' n p t2 t1 = (t2, n)
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
