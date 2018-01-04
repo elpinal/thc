@@ -138,8 +138,8 @@ addNames :: [(E.Pattern, T.Type)] -> Context -> Context
 addNames xs ctx = foldl addNameFromPattern ctx xs
 
 addNameFromPattern :: Context -> (E.Pattern, T.Type) -> Context
-addNameFromPattern ctx ((E.PVar i), t) = (i, t) : ctx
-addNameFromPattern ctx ((E.PTuple ps), (T.Tuple ts)) = addNames (zip ps ts) ctx
+addNameFromPattern ctx (E.PVar i, t) = (i, t) : ctx
+addNameFromPattern ctx (E.PTuple ps, T.Tuple ts) = addNames (zip ps ts) ctx
 
 addName :: String -> T.Type -> Context -> Context
 addName i ty ctx = (i, ty) : ctx
