@@ -26,7 +26,6 @@ module Thc.Expr.Indexed
   , EvalError(..)
 
   -- * Functions exported for testing
-  , evalTuple
   , evalForPat
   ) where
 
@@ -207,8 +206,9 @@ eval t = maybe t eval $ eval1 t
 
 eval1 :: Term -> Maybe Term
 eval1 (App (Abs (E.PVar _) _ t1) t2) = return $ substTop (t2, t1)
-eval1 (App (Abs (E.PTuple _) _ t) (Tuple ts)) = evalTuple t ts
-eval1 (App a @ (Abs (E.PTuple _) _ t1) t2) = App a <$> eval1 t2
+eval1 (App (Abs p @ (E.PTuple _) _ t2) t1) = do
+  t1' <- evalForPat p t1
+  return $ evalApp p t2 t1'
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 (Tuple ts) = Tuple <$> f ts
   where
@@ -218,12 +218,6 @@ eval1 (Tuple ts) = Tuple <$> f ts
       Just t' -> return $ t' : ts
       Nothing -> (t :) <$> f ts
 eval1 _ = Nothing
-
-evalTuple :: Term -> [Term] -> Maybe Term
-evalTuple t ts =
-  return . shift (- length ts) . foldl f t $ zip [0..] ts
-  where
-    f t1 (n, t2) = subst n (shift (n + 1) t2) t1
 
 -- |
 -- Evaluates an application.
