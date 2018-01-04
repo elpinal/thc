@@ -15,25 +15,25 @@ spec = do
   describe "compile" $ do
     it "compiles a Term to an executable binary file" $ do
       want <- B.readFile "test/Thc/data/exit178"
-      compile (Lit $ Int 178) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (int 178) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit81"
-      compile (Lit $ Bool True) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (bool True) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit81"
-      compile (Abs (PVar "x") T.Int (Var "x") `App` Lit (Int 81)) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (Abs (PVar "x") T.Int (Var "x") `App` int 81) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit100"
-      compile (Abs (PVar "x") (T.Unit T.:->: T.Unit) (Var "x" `App` Lit Unit) `App` Abs (PVar "y") T.Unit (Lit Unit)) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (Abs (PVar "x") (T.Unit T.:->: T.Unit) (Var "x" `App` unit) `App` Abs (PVar "y") T.Unit unit) Code.Darwin Code.Amd64 `shouldBe` Right want
 
       want <- B.readFile "test/Thc/data/exit100"
-      compile (Abs (PTuple [PVar "x", PVar "y"]) (T.Tuple [T.Int, T.Int]) (Var "y") `App` Tuple [Lit $ Int 200, Lit $ Int 100]) Code.Darwin Code.Amd64 `shouldBe` Right want
+      compile (Abs (PTuple [PVar "x", PVar "y"]) (T.Tuple [T.Int, T.Int]) (Var "y") `App` Tuple [int 200, int 100]) Code.Darwin Code.Amd64 `shouldBe` Right want
 
     context "when given an invalid program" $
       it "returns an error" $ do
         compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.Unbound "x")
 
-        let lit12 = Lit $ Int 12
+        let lit12 = int 12
             p = PTuple []
             ty = T.Int
         compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.PatternMismatch p ty)

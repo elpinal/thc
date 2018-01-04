@@ -25,7 +25,7 @@ spec = do
                   E.Abs (PVar "g") T.Bool $
                     E.App
                       (E.Var "g") $
-                      E.Lit (Int 44)
+                      E.int 44
 
       let y = Abs (PVar "f") T.Bool $
                 App
@@ -45,8 +45,8 @@ spec = do
 
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
-        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
-        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.Lit $ Int 0) `shouldSatisfy` isLeft
+        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
+        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldSatisfy` isLeft
 
     context "when given unbound idendifiers" $
       it "returns an error" $ do

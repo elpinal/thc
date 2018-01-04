@@ -59,7 +59,7 @@ type NamedTerm = E.Term
 -- |
 -- @fromNamed t@ converts a 'NamedTerm' to a 'Term'.
 --
--- >>> l = E.Lit $ E.Int 0
+-- >>> l = E.int 0
 -- >>> fromNamed l
 -- Right (Lit (Int 0))
 -- >>> fromNamed (E.Abs (E.PVar "a") (T.Int T.:->: T.Bool) $ E.App (E.Var "a") l)
