@@ -26,6 +26,7 @@ module Thc.Expr.Indexed
   , EvalError(..)
 
   -- * Functions exported for testing
+  , evalApp
   , evalForPat
   ) where
 
@@ -219,7 +220,7 @@ eval1 (Tuple ts) = Tuple <$> f ts
 eval1 _ = Nothing
 
 -- |
--- Evaluates an application.
+-- @evalApp p t2 t1@ performs beta-reduction.
 --
 -- >>> evalApp (E.PVar "x") (Lit $ E.Int 1) (Lit $ E.Int 2)
 -- Lit (Int 1)
