@@ -206,9 +206,7 @@ eval :: Term -> Term
 eval t = maybe t eval $ eval1 t
 
 eval1 :: Term -> Maybe Term
-eval1 (App (Abs p _ t2) t1) = do
-  t1' <- evalForPat p t1
-  return $ reduce p t2 t1'
+eval1 (App (Abs p _ t2) t1) = reduce p t2 t1
 eval1 (App t1 t2) = flip App t2 <$> eval1 t1
 eval1 (Tuple ts) = Tuple <$> f ts
   where
@@ -241,17 +239,20 @@ eval1 _ = Nothing
 -- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
 -- >>> reduce p (Var "y" 2 4) tuple
 -- Abs (PVar "z") Int (Var "z" 0 1)
-reduce :: E.Pattern -> Term -> Term -> Term
-reduce p t2 t1 = let (t, _) = reduce' l 0 p t2 t1 in shift (-l) t
-  where l = length $ E.bounds p
-
-reduce' :: Int -> Int -> E.Pattern -> Term -> Term -> (Term, Int)
-reduce' i n (E.PVar _) t2 t1 = (subst n (shift i t1) t2, n + 1)
-reduce' i n (E.PTuple ps) t2 (Tuple ts) = flip runState n . foldrM f t2 $ zip ps ts
+reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
+reduce p t2 t1 = do
+  (t, _) <- reduce' l 0 p t2 t1
+  return $ shift (-l) t
   where
-    f :: (E.Pattern, Term) -> Term -> State Int Term
-    f (p, t) t0 = state $ \n -> reduce' i n p t0 t
-reduce' n p t2 t1 = (t2, n)
+    l = length $ E.bounds p
+
+reduce' :: MonadThrow m => Int -> Int -> E.Pattern -> Term -> Term -> m (Term, Int)
+reduce' i n (E.PVar _) t2 t1 = return (subst n (shift i t1) t2, n + 1)
+reduce' i n (E.PTuple ps) t2 (Tuple ts) = flip runStateT n . foldrM f t2 $ zip ps ts
+  where
+    f :: MonadThrow m => (E.Pattern, Term) -> Term -> StateT Int m Term
+    f (p, t) t0 = StateT $ \n -> reduce' i n p t0 t
+reduce' i n p t2 t1 = evalForPat p t1 >>= reduce' i n p t2
 
 evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
