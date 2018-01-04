@@ -297,6 +297,7 @@ typeOf' ctx (App t1 t2) = do
     _                        -> empty
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
+typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
 
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n

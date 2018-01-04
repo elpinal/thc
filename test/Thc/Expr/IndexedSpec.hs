@@ -65,6 +65,9 @@ spec = do
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
+        typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
+        typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
+
     context "when given a non-typable term" $ do
       it "returns Nothing" $ do
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Nothing
