@@ -18,6 +18,7 @@ data Term =
   | App Term Term
   | Lit Literal
   | Tuple [Term]
+  | Record [(String, Term)]
 
 data Literal =
     Bool Bool

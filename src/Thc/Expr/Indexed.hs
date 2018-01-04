@@ -52,6 +52,7 @@ data Term =
   | App Term Term
   | Lit E.Literal
   | Tuple [Term]
+  | Record [(String, Term)]
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
