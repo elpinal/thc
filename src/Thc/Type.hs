@@ -1,5 +1,6 @@
 module Thc.Type
   ( Type(..)
+  , variant
   , subtype
   ) where
 
@@ -16,6 +17,10 @@ data Type =
   deriving (Eq, Show)
 
 infixr 9 :->:
+
+-- | @variant xs@ creates a new 'Variant' from @xs@.
+variant :: [(String, Type)] -> Type
+variant = Variant . Map.fromList
 
 -- |
 -- @subtype s t@ tests whether @s@ is subtype of @t@.
