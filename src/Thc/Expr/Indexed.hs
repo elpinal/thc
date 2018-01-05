@@ -163,6 +163,7 @@ shift d = walk 0
     walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c (Tuple ts) = Tuple $ walk c `map` ts
+    walk c (Ann t ty) = Ann (walk c t) ty
     walk c l @ (Lit _) = l
 
 subst :: Int -> Term -> Term -> Term
@@ -175,6 +176,7 @@ subst j s = walk 0
     walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c (Tuple ts) = Tuple $ walk c `map` ts
+    walk c (Ann t ty) = Ann (walk c t) ty
     walk c l @ (Lit _) = l
 
 -- subst
