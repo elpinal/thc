@@ -220,6 +220,9 @@ eval1 (Tuple ts) = Tuple <$> f ts
     f (t : ts) = case eval1 t of
       Just t' -> return $ t' : ts
       Nothing -> (t :) <$> f ts
+eval1 (Ann t ty) = return $ case eval1 t of
+  Just t' -> Ann t' ty
+  Nothing -> t
 eval1 _ = Nothing
 
 -- |
