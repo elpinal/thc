@@ -99,6 +99,7 @@ fromNamed' ctx (E.App t1 t2) = do
 fromNamed' ctx (E.Lit l) = return $ Lit l
 fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 fromNamed' ctx (E.Record ts) = Record <$> mapM (runKleisli . second . Kleisli $ fromNamed' ctx) ts
+fromNamed' ctx (E.Ann t ty) = flip Ann ty <$> fromNamed' ctx t
 
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
