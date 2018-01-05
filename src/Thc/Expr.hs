@@ -19,6 +19,7 @@ data Term =
   | Lit Literal
   | Tuple [Term]
   | Record [(String, Term)]
+  | Ann Term T.Type
 
 data Literal =
     Bool Bool
