@@ -98,6 +98,16 @@ spec = do
         let fstsnd = Abs (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
         eval (App fstsnd $ Tuple [Tuple [Lit $ Int 8, Lit $ Int 16], Tuple [Lit $ Int 32, Lit $ Int 64]]) `shouldBe` Lit (Int 16)
 
+    context "when given annotated values" $ do
+      it "removes the annotations" $ do
+        let int = Lit . Int
+        eval (Ann (int 12) T.Int) `shouldBe` int 12
+        -- Assumes a term well typed. Even if the annotation is wrong, it is ignored.
+        eval (Ann (int 12) T.Bool) `shouldBe` int 12
+
+        let t = Abs (PVar "x") T.Bool $ int 0
+        eval (Ann t $ T.Bool T.:->: T.Int) `shouldBe` t
+
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
