@@ -1,5 +1,6 @@
 module Thc.Type
   ( Type(..)
+  , subtype
   ) where
 
 data Type =
