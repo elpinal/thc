@@ -68,6 +68,12 @@ spec = do
         typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
         typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
 
+    context "when given annotations" $ do
+      it "tests that the type of a term is equal to the annotated type" $ do
+        let l = Lit $ Bool False
+        typeOf (Ann l T.Bool) `shouldNotThrow` return T.Bool
+        typeOf (Ann l T.Int)  `shouldNotThrow` Nothing
+
     context "when given a non-typable term" $ do
       it "returns Nothing" $ do
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Nothing
