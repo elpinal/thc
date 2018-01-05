@@ -3,6 +3,8 @@ module Thc.Type
   , subtype
   ) where
 
+import qualified Data.Map.Lazy as Map
+
 data Type =
     Bool
   | Int
@@ -10,7 +12,7 @@ data Type =
   | Type :->: Type
   | Tuple [Type]
   | Record [(String, Type)]
-  | Variant [(String, Type)]
+  | Variant (Map.Map String Type)
   deriving (Eq, Show)
 
 infixr 9 :->:
