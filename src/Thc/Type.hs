@@ -9,6 +9,7 @@ data Type =
   | Type :->: Type
   | Tuple [Type]
   | Record [(String, Type)]
+  | Variant [(String, Type)]
   deriving (Eq, Show)
 
 infixr 9 :->:
