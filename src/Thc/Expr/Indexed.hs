@@ -299,6 +299,11 @@ typeOf' ctx (App t1 t2) = do
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
+typeOf' ctx (Ann t ty) = do
+  ty' <- typeOf' ctx t
+  if ty == ty'
+    then return ty
+    else empty
 
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n
