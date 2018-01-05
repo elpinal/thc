@@ -48,6 +48,8 @@ spec = do
       fromNamed (E.Record [("", E.int 1)])                         `shouldBe` return (Record [("", int 1)])
       fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit E.unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
 
+      fromNamed (E.Ann (E.int 78) T.Int) `shouldBe` return (Ann (int 78) T.Int)
+
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
         fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
