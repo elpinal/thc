@@ -29,6 +29,9 @@ spec = do
       want <- B.readFile "test/Thc/data/exit100"
       compile (Abs (PTuple [PVar "x", PVar "y"]) (T.Tuple [T.Int, T.Int]) (Var "y") `App` Tuple [int 200, int 100]) Code.Darwin Code.Amd64 `shouldBe` Right want
 
+      want <- B.readFile "test/Thc/data/exit178"
+      compile (Ann (int 178) T.Int) Code.Darwin Code.Amd64 `shouldBe` Right want
+
     context "when given an invalid program" $
       it "returns an error" $ do
         compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.Unbound "x")
