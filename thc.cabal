@@ -52,6 +52,7 @@ test-suite thc-test
                      , Thc.CompilerSpec
                      , Thc.Expr.IndexedSpec
                      , Thc.TacSpec
+                     , Thc.TypeSpec
   build-depends:       base
                      , thc
                      , hspec >= 2.4.4
