@@ -21,4 +21,5 @@ infixr 9 :->:
 -- @subtype s t@ tests whether @s@ is subtype of @t@.
 -- It returns @True@ if @s == t@.
 subtype :: Type -> Type -> Bool
+subtype (Variant ss) (Variant ts) = Map.isSubmapOf ss ts
 subtype s t = s == t
