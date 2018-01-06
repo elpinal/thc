@@ -25,7 +25,7 @@ spec = do
                   E.Abs (PVar "g") T.Bool $
                     E.App
                       (E.Var "g") $
-                      E.int 44
+                      int 44
 
       let y = Abs (PVar "f") T.Bool $
                 App
@@ -43,16 +43,16 @@ spec = do
           ty = (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]])
       fromNamed (E.Abs p ty $ E.Var "b") `shouldBe` return (Abs p ty $ Var "b" 2 4)
 
-      fromNamed (E.Record [])                                      `shouldBe` return (Record [])
-      fromNamed (E.Record [("", E.int 1)])                         `shouldBe` return (Record [("", int 1)])
-      fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit E.unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
+      fromNamed (E.Record [])                                    `shouldBe` return (Record [])
+      fromNamed (E.Record [("", int 1)])                         `shouldBe` return (Record [("", int 1)])
+      fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
 
-      fromNamed (E.Ann (E.int 78) T.Int) `shouldBe` return (Ann (int 78) T.Int)
+      fromNamed (E.Ann (int 78) T.Int) `shouldBe` return (Ann (int 78) T.Int)
 
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
-        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
-        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ E.int 0) `shouldSatisfy` isLeft
+        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
+        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldSatisfy` isLeft
 
     context "when given unbound idendifiers" $
       it "returns an error" $ do
