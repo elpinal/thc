@@ -14,6 +14,7 @@ module Thc.Expr.Indexed
 
   -- * Literals
   , E.Literal(..)
+  , E.Lit(..)
   , fromLiteral
 
   -- * Patterns

@@ -43,8 +43,7 @@ spec = do
           ty = (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]])
       fromNamed (E.Abs p ty $ E.Var "b") `shouldBe` return (Abs p ty $ Var "b" 2 4)
 
-      fromNamed (E.Record []) `shouldBe` return (Record [])
-      let int = Lit . Int
+      fromNamed (E.Record [])                                      `shouldBe` return (Record [])
       fromNamed (E.Record [("", E.int 1)])                         `shouldBe` return (Record [("", int 1)])
       fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit E.unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
 
@@ -72,12 +71,10 @@ spec = do
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do
-        let int = Lit . Int
         typeOf (Tagged "l" $ int 0) `shouldNotThrow` Nothing
 
     context "when given a tagged term with an annotation" $ do
       it "returns the annotated type after verifying the term" $ do
-        let int = Lit . Int
         typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Nothing
 
         let ty = T.variant [("l", T.Int)]
@@ -120,7 +117,6 @@ spec = do
 
     context "when given annotated values" $ do
       it "removes the annotations" $ do
-        let int = Lit . Int
         eval (Ann (int 12) T.Int) `shouldBe` int 12
         -- Assumes a term well typed. Even if the annotation is wrong, it is ignored.
         eval (Ann (int 12) T.Bool) `shouldBe` int 12
@@ -154,8 +150,7 @@ spec = do
           int12 = Lit $ Int 12
       evalForPat (tuplePat ["a", "b", "c"]) (idTuple `App` Tuple (replicate 3 int12)) `shouldNotThrow` Tuple (replicate 3 int12)
 
-      let int = Lit . Int
-          tuple = Tuple $ map Tuple [map int [12, 28], map int [39, 54]]
+      let tuple = Tuple $ map Tuple [map int [12, 28], map int [39, 54]]
           p = PTuple [tuplePat ["c", "d"], tuplePat ["e", "f"]]
       evalForPat p tuple                                      `shouldNotThrow` tuple
       evalForPat p (Abs (PVar "x") (T.Int) tuple `App` int 2) `shouldNotThrow` tuple
