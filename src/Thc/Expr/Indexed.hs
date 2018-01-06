@@ -60,6 +60,11 @@ data Term =
 
 type NamedTerm = E.Term
 
+instance E.Lit Term where
+  bool = Lit . E.Bool
+  int = Lit . E.Int
+  unit = Lit E.Unit
+
 -- |
 -- @fromNamed t@ converts a 'NamedTerm' to a 'Term'.
 --
