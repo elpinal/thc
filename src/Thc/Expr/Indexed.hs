@@ -37,6 +37,7 @@ import Control.Exception.Safe
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Except
 import Data.Foldable
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Lazy as Map
 
 import qualified Thc.Expr as E
@@ -57,7 +58,7 @@ data Term =
   | Record [(String, Term)]
   | Ann Term T.Type
   | Tagged String Term
-  | Case [(E.Pattern, Term)]
+  | Case (NonEmpty.NonEmpty (E.Pattern, Term))
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
