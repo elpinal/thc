@@ -351,8 +351,10 @@ getTypeFromContext ctx n
   | length ctx <= n = throw $ WrongIndex ctx n
   | otherwise       = return . snd $ ctx !! n
 
-typeWithPat :: MonadThrow m => (E.Pattern, Term) -> ExceptT TypeError m T.Type
-typeWithPat = undefined
+typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT TypeError m T.Type
+typeWithPat ctx ty (p, t) = do
+  ctx' <- ExceptT . return . left EvalError $ bindPattern p ty ctx
+  typeOf' ctx' t
 
 class Monad m => MonadError m e where
   errorE :: e -> m a
