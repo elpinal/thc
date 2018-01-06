@@ -36,6 +36,7 @@ import Control.Exception.Safe
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Maybe
 import Data.Foldable
+import qualified Data.Map.Lazy as Map
 
 import qualified Thc.Expr as E
 import qualified Thc.Type as T
@@ -307,6 +308,10 @@ typeOf' ctx (App t1 t2) = do
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
+typeOf' ctx (Tagged i t) = empty
+typeOf' ctx (Ann (Tagged i t) (T.Variant ts)) = do
+  ty <- MaybeT . return $ Map.lookup i ts
+  typeOf' ctx $ Ann t ty
 typeOf' ctx (Ann t ty) = do
   ty' <- typeOf' ctx t
   if ty == ty'
