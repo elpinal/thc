@@ -3,6 +3,7 @@ module Thc.Expr.IndexedSpec where
 import Test.Hspec
 
 import Data.Either
+import qualified Data.Map.Lazy as Map
 
 import qualified Thc.Expr as E
 import Thc.Expr.Indexed
@@ -71,16 +72,20 @@ spec = do
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do
-        typeOf (Tagged "l" $ int 0) `shouldNotThrow` Nothing
+        typeOf (Tagged "l" $ int 0) `shouldNotThrow` Left (BareVariant "l" $ int 0)
 
     context "when given a tagged term with an annotation" $ do
       it "returns the annotated type after verifying the term" $ do
-        typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Nothing
+        typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Left (VariantError "l" (int 0) Map.empty)
 
         let ty = T.variant [("l", T.Int)]
-        typeOf (Ann (Tagged "l" $ int 0) ty)                           `shouldNotThrow` return ty
-        typeOf (Ann (Tagged "l" $ int 0) $ T.variant [("aaa", T.Int)]) `shouldNotThrow` Nothing
-        typeOf (Ann (Tagged "l" $ int 0) $ T.variant [("l", T.Bool)])  `shouldNotThrow` Nothing
+        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrow` return ty
+
+        let ts = Map.singleton "aaa" T.Int
+        typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (VariantError "l" (int 0) ts)
+
+        let ts = Map.singleton "l" T.Bool
+        typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (TypeMismatch T.Int T.Bool)
 
         let ty = T.variant [("l", T.Int), ("x", T.Unit)]
         typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrow` return ty
@@ -89,12 +94,12 @@ spec = do
       it "tests that the type of a term is equal to the annotated type" $ do
         let l = Lit $ Bool False
         typeOf (Ann l T.Bool) `shouldNotThrow` return T.Bool
-        typeOf (Ann l T.Int)  `shouldNotThrow` Nothing
+        typeOf (Ann l T.Int)  `shouldNotThrow` Left (TypeMismatch T.Bool T.Int)
 
     context "when given a non-typable term" $ do
-      it "returns Nothing" $ do
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Nothing
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Nothing
+      it "returns an error" $ do
+        typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (IllTypedApp (Var "f" 1 2) T.Bool)
+        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Left (IllTypedApp (Var "x" 0 1) T.Int)
 
   describe "eval" $ do
     context "when given a tuple" $ do
