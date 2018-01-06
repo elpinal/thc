@@ -57,6 +57,7 @@ data Term =
   | Record [(String, Term)]
   | Ann Term T.Type
   | Tagged String Term
+  | Case [(E.Pattern, Term)]
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
