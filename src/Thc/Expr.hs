@@ -20,6 +20,7 @@ data Term =
   | Tuple [Term]
   | Record [(String, Term)]
   | Ann Term T.Type
+  | Tagged String Term
 
 data Literal =
     Bool Bool

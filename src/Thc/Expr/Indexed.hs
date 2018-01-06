@@ -54,6 +54,7 @@ data Term =
   | Tuple [Term]
   | Record [(String, Term)]
   | Ann Term T.Type
+  | Tagged String Term
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
