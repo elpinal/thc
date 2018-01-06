@@ -70,6 +70,24 @@ spec = do
         typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
         typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
 
+    context "when given a tagged term to which is not annotated its type" $ do
+      it "returns an error" $ do
+        let int = Lit . Int
+        typeOf (Tagged "l" $ int 0) `shouldNotThrow` Nothing
+
+    context "when given a tagged term with an annotation" $ do
+      it "returns the annotated type after verifying the term" $ do
+        let int = Lit . Int
+        typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Nothing
+
+        let ty = T.variant [("l", T.Int)]
+        typeOf (Ann (Tagged "l" $ int 0) ty)                           `shouldNotThrow` return ty
+        typeOf (Ann (Tagged "l" $ int 0) $ T.variant [("aaa", T.Int)]) `shouldNotThrow` Nothing
+        typeOf (Ann (Tagged "l" $ int 0) $ T.variant [("l", T.Bool)])  `shouldNotThrow` Nothing
+
+        let ty = T.variant [("l", T.Int), ("x", T.Unit)]
+        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrow` return ty
+
     context "when given annotations" $ do
       it "tests that the type of a term is equal to the annotated type" $ do
         let l = Lit $ Bool False
