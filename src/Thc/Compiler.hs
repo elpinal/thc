@@ -3,7 +3,6 @@ module Thc.Compiler
   , CompileError(..)
   ) where
 
-import Control.Monad
 import Data.Bifunctor
 
 import           Thc.Asm
@@ -22,12 +21,16 @@ coreContext = Darwin.updateContext . Amd64.updateContext $ context
 data CompileError =
     NotLit
   | Eval EvalError
+  | Type TypeError
   | NonTypable
   | FromAsm Error
   deriving (Eq, Show)
 
 fromEvalError :: EvalError -> CompileError
 fromEvalError = Eval
+
+fromTypeError :: TypeError -> CompileError
+fromTypeError = Type
 
 compile :: E.Term -> OS -> CPU -> Either CompileError Code
 compile = compileWithContext coreContext
@@ -43,7 +46,7 @@ compileWithContext ctx t o c = do
     genIndexed = first fromEvalError . fromNamed
 
     verifyType :: Term -> Either CompileError T.Type
-    verifyType = try' $ join . typeOf
+    verifyType = first fromTypeError . head . typeOf -- TODO: the use of 'head' is unsafe!
 
     genTac :: Term -> Either CompileError Tac
     genTac = fmap fromLit . try' fromLiteral . eval
@@ -56,9 +59,6 @@ class Try a where
 
 try' :: Try a => (b -> Maybe a) -> b -> Either CompileError a
 try' f = try . f
-
-instance Try T.Type where
-  try = maybe (Left NonTypable) return
 
 instance Try Literal where
   try = maybe (Left NotLit) return
