@@ -339,11 +339,19 @@ typeOf' ctx (Ann t ty) = do
   if ty == ty'
     then return ty
     else throwE $ TypeMismatch ty' ty
+typeOf' ctx (Case ts) = do
+  x NonEmpty.:| xs <- mapM typeWithPat ts
+  if and $ map (== x) xs
+    then return x
+    else throwE $ IncompatibleArms ts
 
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n
   | length ctx <= n = throw $ WrongIndex ctx n
   | otherwise       = return . snd $ ctx !! n
+
+typeWithPat :: MonadThrow m => (E.Pattern, Term) -> ExceptT TypeError m T.Type
+typeWithPat = undefined
 
 class Monad m => MonadError m e where
   errorE :: e -> m a
