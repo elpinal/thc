@@ -31,10 +31,10 @@ module Thc.Expr.Indexed
   , evalForPat
   ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad.State.Lazy
+import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
 import Data.Foldable
 import qualified Data.Map.Lazy as Map
@@ -296,13 +296,24 @@ fromLiteral :: Term -> Maybe E.Literal
 fromLiteral (Lit l) = return l
 fromLiteral _ = Nothing
 
-typeOf :: MonadThrow m => Term -> m (Maybe T.Type)
-typeOf = runMaybeT . typeOf' emptyContext
+data TypeError
+  = EvalError EvalError
+  | VariantError String Term (Map.Map String T.Type)
+  -- |
+  -- @IllTypedApp t ty@ means the type of @t@ should have been @ty -> _@ where
+  -- @_@ is a placeholder.
+  | IllTypedApp Term T.Type
+  | BareVariant String Term
+  -- | @TypeMismatch s t@ indicates got type @s@ does not match expected type @t@.
+  | TypeMismatch T.Type T.Type
 
-typeOf' :: MonadThrow m => Context -> Term -> MaybeT m T.Type
+typeOf :: MonadThrow m => Term -> m (Maybe T.Type)
+typeOf = runMaybeT . exceptToMaybeT . typeOf' emptyContext
+
+typeOf' :: MonadThrow m => Context -> Term -> ExceptT TypeError m T.Type
 typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
 typeOf' ctx (Abs p ty1 t) = do
-  ctx' <- MaybeT . return $ bindPattern p ty1 ctx
+  ctx' <- ExceptT . return . left EvalError $ bindPattern p ty1 ctx
   ty2 <- typeOf' ctx' t
   return $ ty1 T.:->: ty2
 typeOf' ctx (App t1 t2) = do
@@ -310,20 +321,20 @@ typeOf' ctx (App t1 t2) = do
   ty2 <- typeOf' ctx t2
   case ty1 of
     u1 T.:->: u2 | u1 == ty2 -> return u2
-    _                        -> empty
+    _                        -> throwE $ IllTypedApp t1 ty2
 typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
-typeOf' ctx (Tagged i t) = empty
+typeOf' ctx (Tagged i t) = throwE $ BareVariant i t
 typeOf' ctx (Ann (Tagged i t) ty @ (T.Variant ts)) = do
-  ty' <- MaybeT . return $ Map.lookup i ts
+  ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
   typeOf' ctx $ Ann t ty'
   return ty
 typeOf' ctx (Ann t ty) = do
   ty' <- typeOf' ctx t
   if ty == ty'
     then return ty
-    else empty
+    else throwE $ TypeMismatch ty' ty
 
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n
