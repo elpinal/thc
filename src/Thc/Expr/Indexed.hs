@@ -58,7 +58,7 @@ data Term =
   | Record [(String, Term)]
   | Ann Term T.Type
   | Tagged String Term
-  | Case (NonEmpty.NonEmpty (E.Pattern, Term))
+  | Case Term (NonEmpty.NonEmpty (E.Pattern, Term))
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
@@ -339,8 +339,9 @@ typeOf' ctx (Ann t ty) = do
   if ty == ty'
     then return ty
     else throwE $ TypeMismatch ty' ty
-typeOf' ctx (Case ts) = do
-  x NonEmpty.:| xs <- mapM typeWithPat ts
+typeOf' ctx (Case t ts) = do
+  ty <- typeOf' ctx t
+  x NonEmpty.:| xs <- forM ts $ typeWithPat ctx ty
   if and $ map (== x) xs
     then return x
     else throwE $ IncompatibleArms ts
