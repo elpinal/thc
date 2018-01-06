@@ -25,6 +25,7 @@ module Thc.Expr.Indexed
 
   -- * Errors
   , EvalError(..)
+  , TypeError(..)
 
   -- * Functions exported for testing
   , reduce
@@ -35,7 +36,6 @@ import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Except
-import Control.Monad.Trans.Maybe
 import Data.Foldable
 import qualified Data.Map.Lazy as Map
 
@@ -281,12 +281,12 @@ throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
 throwPatTerm p t = do
   a <- typeOf t
   throw $ case a of
-    Just ty -> WrongPattern p ty
-    Nothing -> IllTyped t
+    Right ty -> WrongPattern p ty
+    Left e -> IllTyped t e
 
 data EvalException
   = WrongPattern E.Pattern T.Type
-  | IllTyped Term
+  | IllTyped Term TypeError
   | WrongIndex Context Int
   deriving Show
 
@@ -306,9 +306,10 @@ data TypeError
   | BareVariant String Term
   -- | @TypeMismatch s t@ indicates got type @s@ does not match expected type @t@.
   | TypeMismatch T.Type T.Type
+  deriving (Eq, Show)
 
-typeOf :: MonadThrow m => Term -> m (Maybe T.Type)
-typeOf = runMaybeT . exceptToMaybeT . typeOf' emptyContext
+typeOf :: MonadThrow m => Term -> m (Either TypeError T.Type)
+typeOf = runExceptT . typeOf' emptyContext
 
 typeOf' :: MonadThrow m => Context -> Term -> ExceptT TypeError m T.Type
 typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
