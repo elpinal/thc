@@ -46,4 +46,4 @@ spec = do
         compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.DuplicateVariables p)
 
         let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
-        compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left NonTypable
+        compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left (Type $ I.IllTypedApp (I.Var "x" 0 1) T.Int)
