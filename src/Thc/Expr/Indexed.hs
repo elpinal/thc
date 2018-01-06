@@ -197,11 +197,11 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 -- |
 -- Evaluates a 'Term' to its normal form. Well-typed terms cannot diverge.
 --
--- >>> eval (Lit (E.Int 3))
+-- >>> eval (E.int 3)
 -- Lit (Int 3)
 -- >>> eval (Abs (E.PVar "x") T.Int (Var "x" 0 1))
 -- Abs (PVar "x") Int (Var "x" 0 1)
--- >>> eval (App (Abs (E.PVar "x") T.Int (Var "x" 0 1)) (Lit (E.Bool False)))
+-- >>> eval (App (Abs (E.PVar "x") T.Int (Var "x" 0 1)) (E.bool False))
 -- Lit (Bool False)
 --
 -- Even when given invalid variables:
@@ -214,7 +214,7 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 -- >>> x = (Abs (E.PVar "x") T.Int $ App (Var "x" 0 1) (Var "x" 0 1))
 -- >>> eval x == x
 -- True
--- >>> eval (App x (Lit (E.Int 2)))
+-- >>> eval (App x (E.int 2))
 -- App (Lit (Int 2)) (Lit (Int 2))
 --
 -- @eval (App x x)@ diverges.
@@ -239,23 +239,23 @@ eval1 _ = Nothing
 -- |
 -- @reduce p t1 t2@ performs beta-reduction.
 --
--- >>> reduce (E.PVar "x") (Lit $ E.Int 2) (Lit $ E.Int 1)
+-- >>> reduce (E.PVar "x") (E.int 2) (E.int 1)
 -- Lit (Int 1)
--- >>> reduce (E.PVar "x") (Lit $ E.Int 2) (Var "x" 0 1)
+-- >>> reduce (E.PVar "x") (E.int 2) (Var "x" 0 1)
 -- Lit (Int 2)
 --
 -- >>> p = E.tuplePat ["x", "y"]
--- >>> tuple = Tuple [Lit $ E.Int 2, Lit $ E.Int 3]
+-- >>> tuple = Tuple [E.int 2, E.int 3]
 -- >>> reduce p tuple (Var "y" 0 2)
 -- Lit (Int 3)
 -- >>> reduce p tuple (Var "x" 1 2)
 -- Lit (Int 2)
 --
 -- >>> p = E.PTuple [E.tuplePat ["x", "y"], E.tuplePat ["z", "a"]]
--- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Lit $ E.Int 3], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
+-- >>> tuple = Tuple [Tuple [E.int 2, E.int 3], Tuple [E.int 4, E.int 5]]
 -- >>> reduce p tuple (Var "z" 1 4)
 -- Lit (Int 4)
--- >>> tuple = Tuple [Tuple [Lit $ E.Int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [Lit $ E.Int 4, Lit $ E.Int 5]]
+-- >>> tuple = Tuple [Tuple [E.int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [E.int 4, E.int 5]]
 -- >>> reduce p tuple (Var "y" 2 4)
 -- Abs (PVar "z") Int (Var "z" 0 1)
 reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
