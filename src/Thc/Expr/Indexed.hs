@@ -308,6 +308,7 @@ data TypeError
   | BareVariant String Term
   -- | @TypeMismatch s t@ indicates got type @s@ does not match expected type @t@.
   | TypeMismatch T.Type T.Type
+  | IncompatibleArms (NonEmpty.NonEmpty (E.Pattern, Term))
   deriving (Eq, Show)
 
 typeOf :: MonadThrow m => Term -> m (Either TypeError T.Type)
