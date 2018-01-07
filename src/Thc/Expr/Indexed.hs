@@ -146,6 +146,7 @@ dups = snd . flip execState ([], []) . mapM_ f
         (True, False) -> modify $ second (x :)
         (False, _)    -> modify $ first (x :)
     g (E.PTuple ps) acc = mapM_ (flip g acc) ps
+    g (E.PVariant i p) acc = g p acc
 
     both f = f *** f
 
