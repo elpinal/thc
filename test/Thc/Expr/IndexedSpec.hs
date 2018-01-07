@@ -89,7 +89,15 @@ spec = do
         typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrow` return ty
 
         let p = PVariant "a" $ PVar "x"
-        typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrow` return T.Int
+            q = PVariant "nolabel" $ PVar "x"
+            s = Var "x" 0 1
+            a = return (p, s)
+            b = return (q, s)
+        typeOf (Case (Ann t ty) a)        `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) b)        `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
+        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
+        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
 
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
