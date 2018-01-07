@@ -4,6 +4,7 @@ import Test.Hspec
 
 import Data.Either
 import qualified Data.Map.Lazy as Map
+import Data.Semigroup
 
 import qualified Thc.Expr as E
 import Thc.Expr.Indexed
@@ -78,7 +79,11 @@ spec = do
         typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrow` return T.Int
         typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrow` return T.Bool
 
-        typeOf (Case (bool True) $ return (tuplePat ["x"], Var "x" 0 1)) `shouldNotThrow` Left (EvalError $ PatternMismatch (tuplePat ["x"]) T.Bool)
+        let p1 = tuplePat ["x", "y", "z"]
+        typeOf (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (EvalError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
+
+        let p = tuplePat ["x"]
+        typeOf (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (EvalError $ PatternMismatch p T.Bool)
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do
