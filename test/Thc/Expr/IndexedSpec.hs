@@ -71,6 +71,8 @@ spec = do
         typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
         typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
 
+    context "when given a Case" $ do
+      it "returns the type which is all the arms identically have" $ do
         typeOf (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrow` return T.Int
         typeOf (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrow` return T.Bool
 
