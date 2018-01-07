@@ -44,11 +44,13 @@ typeOfLiteral Unit = T.Unit
 data Pattern =
     PVar String
   | PTuple [Pattern]
+  | PVariant String Pattern
   deriving (Eq, Show)
 
 bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
 bounds (PTuple ps) = concatMap bounds ps
+bounds (PVariant i p) = bounds p
 
 tuplePat :: [String] -> Pattern
 tuplePat = PTuple . map PVar
