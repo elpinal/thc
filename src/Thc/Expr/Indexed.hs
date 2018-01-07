@@ -233,12 +233,8 @@ eval1 (Tuple ts) = Tuple <$> f ts
   where
     f :: [Term] -> Maybe [Term]
     f [] = Nothing
-    f (t : ts) = case eval1 t of
-      Just t' -> return $ t' : ts
-      Nothing -> (t :) <$> f ts
-eval1 (Ann t ty) = return $ case eval1 t of
-  Just t' -> Ann t' ty
-  Nothing -> t
+    f (t : ts) = maybe ((t :) <$> f ts) (return . (: ts)) $ eval1 t
+eval1 (Ann t ty) = return . maybe t (flip Ann ty) $ eval1 t
 eval1 (Case t as) = maybe result next $ eval1 t
   where
     next   = return . flip Case as
