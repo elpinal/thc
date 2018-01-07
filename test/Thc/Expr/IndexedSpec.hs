@@ -82,6 +82,12 @@ spec = do
         typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrow` return T.Int
         typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrow` return T.Bool
 
+        let t = Tagged "a" $ int 88
+            p = PVar "x"
+            ty = T.variant [("a", T.Int)]
+        typeOf (Case t $ return (p, Var "x" 0 1))          `shouldNotThrow` Left (BareVariant "a" $ int 88)
+        typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrow` return ty
+
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
           let p1 = tuplePat ["x", "y", "z"]
