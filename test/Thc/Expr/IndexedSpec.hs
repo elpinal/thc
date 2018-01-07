@@ -62,13 +62,23 @@ spec = do
   describe "typeOf" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        typeOf (Lit $ Bool True)                                                                             `shouldNotThrow` return T.Bool
+        typeOf (bool True)                                                                                   `shouldNotThrow` return T.Bool
         typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrow` return (T.Int T.:->: T.Int)
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
         typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
         typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
+
+        typeOf (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrow` return T.Int
+        typeOf (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrow` return T.Bool
+
+        let t = Tuple [int 3, bool False]
+            p = tuplePat ["x", "y"]
+        typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrow` return T.Int
+        typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrow` return T.Bool
+
+        typeOf (Case (bool True) $ return (tuplePat ["x"], Var "x" 0 1)) `shouldNotThrow` Left (EvalError $ PatternMismatch (tuplePat ["x"]) T.Bool)
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do
