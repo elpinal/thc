@@ -99,6 +99,15 @@ spec = do
         typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
         typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
 
+        let ty = T.variant [("a", T.Int), ("b", T.Unit)]
+            q = PVariant "b" $ PVar "x"
+            b = return (q, int 10)
+        typeOf (Case (Ann t ty) a)        `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) b)        `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` return T.Int
+
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
           let p1 = tuplePat ["x", "y", "z"]
