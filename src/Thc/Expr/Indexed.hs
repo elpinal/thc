@@ -238,16 +238,11 @@ eval1 (Ann t ty) = return $ case eval1 t of
   Nothing -> t
 eval1 (Case t as) = case eval1 t of
   Just t' -> return $ Case t' as
-  Nothing -> getFirst $ fold $ NonEmpty.map (First . f) as
+  Nothing -> getFirst . fold $ NonEmpty.map (First . f) as
     where
       f :: (E.Pattern, Term) -> Maybe Term
-      f (p, s) = if matchPat p t
-        then reduce p t s
-        else Nothing
+      f = uncurry $ flip reduce t
 eval1 _ = Nothing
-
-matchPat :: E.Pattern -> Term -> Bool
-matchPat (E.PVar i) t = True
 
 -- |
 -- @reduce p t1 t2@ performs beta-reduction.
