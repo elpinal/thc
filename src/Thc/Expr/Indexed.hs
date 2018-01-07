@@ -39,6 +39,7 @@ import Control.Monad.Trans.Except
 import Data.Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Lazy as Map
+import Data.Monoid
 
 import qualified Thc.Expr as E
 import qualified Thc.Type as T
@@ -235,7 +236,18 @@ eval1 (Tuple ts) = Tuple <$> f ts
 eval1 (Ann t ty) = return $ case eval1 t of
   Just t' -> Ann t' ty
   Nothing -> t
+eval1 (Case t as) = case eval1 t of
+  Just t' -> return $ Case t' as
+  Nothing -> getFirst $ fold $ NonEmpty.map (First . f) as
+    where
+      f :: (E.Pattern, Term) -> Maybe Term
+      f (p, s) = if matchPat p t
+        then reduce p t s
+        else Nothing
 eval1 _ = Nothing
+
+matchPat :: E.Pattern -> Term -> Bool
+matchPat (E.PVar i) t = True
 
 -- |
 -- @reduce p t1 t2@ performs beta-reduction.

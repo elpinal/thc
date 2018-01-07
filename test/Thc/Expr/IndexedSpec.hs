@@ -155,6 +155,11 @@ spec = do
         let t = Abs (PVar "x") T.Bool $ int 0
         eval (Ann t $ T.Bool T.:->: T.Int) `shouldBe` t
 
+    context "when given a case-expression" $ do
+      it "select one arm whose pattern is appropriate to a term; patterns are tested from up to down" $ do
+        let t = int 7
+        eval (Case t $ return (PVar "k", Var "k" 0 1)) `shouldBe` t
+
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
