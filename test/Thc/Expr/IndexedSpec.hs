@@ -210,6 +210,10 @@ spec = do
         it "removes the annotation" $ do
           eval (Ann t $ T.variant [("a", T.Int)]) `shouldBe` t
 
+      context "when also given case expression" $ do
+        it "performs pattern matching" $ do
+          eval (Case t $ return (PVar "x", Var "x" 0 1)) `shouldBe` t
+
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
