@@ -199,6 +199,17 @@ spec = do
         eval (Case tuple $ c) `shouldBe` t
         eval (Case tuple $ d) `shouldBe` t1
 
+    context "when given a tagged term" $ do
+      let t = Tagged "a" $ int 5
+
+      context "when no annotation" $ do
+        it "does nothing" $ do
+          eval t `shouldBe` t
+
+      context "when annotated" $ do
+        it "removes the annotation" $ do
+          eval (Ann t $ T.variant [("a", T.Int)]) `shouldBe` t
+
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
