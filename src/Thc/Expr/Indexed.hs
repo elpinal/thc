@@ -239,12 +239,11 @@ eval1 (Tuple ts) = Tuple <$> f ts
 eval1 (Ann t ty) = return $ case eval1 t of
   Just t' -> Ann t' ty
   Nothing -> t
-eval1 (Case t as) = case eval1 t of
-  Just t' -> return $ Case t' as
-  Nothing -> getFirst $ foldMap (First . f) as
-    where
-      f :: (E.Pattern, Term) -> Maybe Term
-      f = uncurry $ flip reduce t
+eval1 (Case t as) = maybe result next $ eval1 t
+  where
+    next   = return . flip Case as
+    result = getFirst $ foldMap (First . f) as
+    f      = uncurry $ flip reduce t
 eval1 _ = Nothing
 
 -- |
