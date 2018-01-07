@@ -241,7 +241,7 @@ eval1 (Ann t ty) = return $ case eval1 t of
   Nothing -> t
 eval1 (Case t as) = case eval1 t of
   Just t' -> return $ Case t' as
-  Nothing -> getFirst . fold $ NonEmpty.map (First . f) as
+  Nothing -> getFirst $ foldMap (First . f) as
     where
       f :: (E.Pattern, Term) -> Maybe Term
       f = uncurry $ flip reduce t
