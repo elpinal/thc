@@ -42,8 +42,11 @@ typeOfLiteral (Int _) = T.Int
 typeOfLiteral Unit = T.Unit
 
 data Pattern =
+  -- | A pattern which matches everything. @PVar i@ binds stuff to @i@
     PVar String
+  -- | A pattern which matches a tuple. @PTuple ps@ binds each item of the tuple to each pattern of @ps@
   | PTuple [Pattern]
+  -- | A pattern which matches a variant. @PVariant i p@ binds a term tagged with @i@ to @p@
   | PVariant String Pattern
   deriving (Eq, Show)
 
