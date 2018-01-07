@@ -158,7 +158,26 @@ spec = do
     context "when given a case-expression" $ do
       it "select one arm whose pattern is appropriate to a term; patterns are tested from up to down" $ do
         let t = int 7
-        eval (Case t $ return (PVar "k", Var "k" 0 1)) `shouldBe` t
+            a = return (PVar "k", Var "k" 0 1)
+            b = return (PVar "l", Var "l" 0 1)
+        eval (Case t $ a)           `shouldBe` t
+        eval (Case t $ a <> a)      `shouldBe` t
+        eval (Case t $ b)           `shouldBe` t
+        eval (Case t $ b <> b)      `shouldBe` t
+        eval (Case t $ a <> b)      `shouldBe` t
+        eval (Case t $ b <> a)      `shouldBe` t
+        eval (Case t $ a <> a <> a) `shouldBe` t
+
+        let t1 = bool True
+        eval (Case t $ return (PVar "k", t1)) `shouldBe` t1
+
+        let tuple = Tuple [t, t1]
+            p     = tuplePat ["x", "y"]
+            c     = return (p, Var "x" 1 2)
+            d     = return (p, Var "y" 0 2)
+        eval (Case tuple $ a) `shouldBe` tuple
+        eval (Case tuple $ c) `shouldBe` t
+        eval (Case tuple $ d) `shouldBe` t1
 
   describe "reduce" $ do
     it "do beta-reduction" $ do
