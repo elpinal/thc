@@ -128,6 +128,9 @@ bindPattern p @ (E.PTuple ps) ty @ (T.Tuple ts) ctx
     ds :: [String]
     ds = dups ps
 bindPattern p @ (E.PTuple ps) ty _ = errorE $ PatternMismatch p ty -- Note that type variables are currently not supported.
+bindPattern pv @ (E.PVariant i p) tv @ (T.Variant ts) ctx = do
+  ty <- maybe (errorE $ PatternMismatch pv tv) return $ Map.lookup i ts
+  bindPattern p ty ctx
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
