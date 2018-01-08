@@ -99,7 +99,7 @@ fromNamed' ctx (E.Var i) = do
   return $ Var i x $ length ctx
 
 fromNamed' ctx (E.Abs p ty t) = do
-  ctx' <- bindPattern p ty ctx
+  ctx' <- bindPattern ctx p ty
   Abs p ty <$> fromNamed' ctx' t
 
 fromNamed' ctx (E.App t1 t2) = do
@@ -118,20 +118,20 @@ fromNamed' ctx (E.Tagged i t) = Tagged i <$> fromNamed' ctx t
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext :: Maybe Context
 -- Just [("a",Bool)]
-bindPattern :: MonadError m EvalError => E.Pattern -> T.Type -> Context -> m Context
-bindPattern (E.PVar i) ty ctx = return $ addName i ty ctx
-bindPattern p @ (E.PTuple ps) ty @ (T.Tuple ts) ctx
+bindPattern :: MonadError m EvalError => Context -> E.Pattern -> T.Type -> m Context
+bindPattern ctx (E.PVar i) ty = return $ addName ctx i ty
+bindPattern ctx p @ (E.PTuple ps) ty @ (T.Tuple ts)
   | not $ null ds          = errorE $ DuplicateVariables p
-  | length ps == length ts = return $ addNames (zip ps ts) ctx
+  | length ps == length ts = foldM (uncurry . bindPattern) ctx $ zip ps ts
   | otherwise              = errorE $ PatternMismatch p ty
   where
     ds :: [String]
     ds = dups ps
-bindPattern p @ (E.PTuple ps) ty _ = errorE $ PatternMismatch p ty -- Note that type variables are currently not supported.
-bindPattern pv @ (E.PVariant i p) tv @ (T.Variant ts) ctx = do
+bindPattern _ p @ (E.PTuple ps) ty = errorE $ PatternMismatch p ty -- Note that type variables are currently not supported.
+bindPattern ctx pv @ (E.PVariant i p) tv @ (T.Variant ts) = do
   ty <- maybe (errorE $ PatternMismatch pv tv) return $ Map.lookup i ts
-  bindPattern p ty ctx
-bindPattern p @ (E.PVariant _ _) ty _ = errorE $ PatternMismatch p ty
+  bindPattern ctx p ty
+bindPattern _ p @ (E.PVariant _ _) ty = errorE $ PatternMismatch p ty
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
@@ -155,15 +155,8 @@ type Context = [(String, T.Type)]
 emptyContext :: Context
 emptyContext = []
 
-addNames :: [(E.Pattern, T.Type)] -> Context -> Context
-addNames xs ctx = foldl addNameFromPattern ctx xs
-
-addNameFromPattern :: Context -> (E.Pattern, T.Type) -> Context
-addNameFromPattern ctx (E.PVar i, t) = (i, t) : ctx
-addNameFromPattern ctx (E.PTuple ps, T.Tuple ts) = addNames (zip ps ts) ctx
-
-addName :: String -> T.Type -> Context -> Context
-addName i ty ctx = (i, ty) : ctx
+addName :: Context -> String -> T.Type -> Context
+addName ctx i ty = (i, ty) : ctx
 
 name2index :: MonadError m EvalError => String -> Context -> m Int
 name2index i [] = errorE $ Unbound i
@@ -368,7 +361,7 @@ getTypeFromContext ctx n
 
 typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT TypeError m T.Type
 typeWithPat ctx ty (p, t) = do
-  ctx' <- ExceptT . return . left EvalError $ bindPattern p ty ctx
+  ctx' <- ExceptT . return . left EvalError $ bindPattern ctx p ty
   typeOf' ctx' t
 
 class Monad m => MonadError m e where
