@@ -78,7 +78,7 @@ instance E.Lit Term where
 -- >>> fromNamed (E.Abs (E.PVar "a") (T.Int T.:->: T.Bool) $ E.App (E.Var "a") l)
 -- Right (Abs (PVar "a") (Int :->: Bool) (App (Var "a" 0 1) (Lit (Int 0))))
 --
--- Unbound variables cause the result 'Nothing'.
+-- Unbound variables cause it to report the error.
 --
 -- >>> fromNamed (E.Var "x")
 -- Left (Unbound "x")
