@@ -157,12 +157,25 @@ spec = do
         typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (IllTypedApp (Var "f" 1 2) T.Bool)
         typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Left (IllTypedApp (Var "x" 0 1) T.Int)
 
-    context "when given an Unfold term" $ do
+    context "when given an Fold term" $ do
       it "returns the type of the term" $ do
         typeOf (Fold (T.Rec "X" T.Int) $ int 3) `shouldNotThrow` return T.Int
 
         let ty = T.Rec "X" $ T.Var "X" 0 1
         typeOf (Fold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+
+    context "when given an Unfold term" $ do
+      it "returns the type of the term" $ do
+        let ty = T.Rec "X" T.Int
+        typeOf (Unfold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+
+        let ty = T.Rec "X" $ T.Var "X" 0 1
+        typeOf (Unfold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+
+        let intlist a = T.variant [("nil", T.Unit), ("cons", T.Tuple [T.Int, a])]
+        let ty        = T.Rec "X" $ intlist $ T.Var "X" 0 1
+        let t         = Ann (Tagged "nil" unit) ty
+        typeOf (Unfold ty t) `shouldNotThrow` return (intlist ty)
 
   describe "eval" $ do
     context "when given a tuple" $ do

@@ -370,6 +370,11 @@ typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
 typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
 typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
 typeOf' ctx (Tagged i t) = throwE $ BareVariant i t
+-- TODO: Deal with Tagged correctly.
+typeOf' ctx (Ann (Tagged i t) ty @ (T.Rec i' (T.Variant ts))) = do
+  ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
+  typeOf' ctx $ Ann t ty'
+  return ty
 typeOf' ctx (Ann (Tagged i t) ty @ (T.Variant ts)) = do
   ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
   typeOf' ctx $ Ann t ty'
