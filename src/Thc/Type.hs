@@ -10,6 +10,8 @@ data Type =
   | Int
   | Unit
   | Type :->: Type
+  | Var String Int Int
+  | Rec String Type
   | Tuple [Type]
   | Record [(String, Type)]
   | Variant (Map.Map String Type)
