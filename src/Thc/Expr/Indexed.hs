@@ -268,6 +268,9 @@ eval1 (Case t as) = maybe result next $ eval1 t
     next   = return . flip Case as
     result = getFirst $ foldMap (First . f) as
     f      = uncurry $ flip reduce t
+eval1 (Fold ty t) = Fold ty <$> eval1 t
+eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) $ eval1 t
+eval1 (Unfold ty t) = Unfold ty <$> eval1 t
 eval1 _ = Nothing
 
 -- |

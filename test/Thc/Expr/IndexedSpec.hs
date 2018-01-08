@@ -251,6 +251,27 @@ spec = do
           eval (Case t $ return (PVar "x", Var "x" 0 1))                `shouldBe` t
           eval (Case t $ return (PVariant "a" $ PVar "x", Var "x" 0 1)) `shouldBe` l
 
+    context "when given Fold or Unfold" $ do
+      it "evaluates it" $ do
+        let t0 = int 4
+        let ty = T.Rec "X" $ T.Var "X" 0 1
+        let t = Fold ty t0
+        eval t `shouldBe` t
+
+        let t1 = Fold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        eval t1 `shouldBe` t
+
+        let t1 = Unfold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        let t = Unfold ty t0
+        eval t1 `shouldBe` t
+
+        let t = Unfold ty (Fold ty t0)
+        eval t `shouldBe` t0
+
+        let t2 = Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        let t = Unfold ty (Fold ty t2)
+        eval t `shouldBe` t0
+
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
