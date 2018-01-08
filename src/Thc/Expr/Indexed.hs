@@ -276,6 +276,11 @@ reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
     reduce' :: MonadThrow m => E.Pattern -> Term -> Term -> StateT Int m Term
     reduce' (E.PVar _) t1 t2 = state $ \n -> (subst n (shift l t1) t2, n + 1)
     reduce' (E.PTuple ps) (Tuple ts) t = foldrM (uncurry reduce') t $ zip ps ts
+    reduce' pv @ (E.PVariant i1 p) tt @ (Tagged i2 t1) t2
+      | i1 == i2  = reduce' p t1 t2
+      -- TODO: Can't determine the type of 'tt' at this time, so the exception
+      -- can be difficult to understand.
+      | otherwise = throwPatTerm pv tt
     reduce' p t1 t2 = do
       t1' <- evalForPat p t1
       reduce' p t1' t2
@@ -287,6 +292,10 @@ evalForPat p @ (E.PTuple _) t =
   case eval1 t of
     Just t' -> evalForPat p t'
     Nothing -> throwPatTerm p t
+evalForPat p0 @ (E.PVariant i1 p) t0 @ (Tagged i2 t)
+  | i1 == i2  = Tagged i1 <$> evalForPat p t
+  | otherwise = throwPatTerm p0 t0 -- TODO: The same problem as 'reduce' have.
+evalForPat p @ (E.PVariant i _) t = maybe (throwPatTerm p t) (evalForPat p) $ eval1 t
 
 throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
 throwPatTerm p t = do

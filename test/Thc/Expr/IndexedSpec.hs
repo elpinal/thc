@@ -200,7 +200,8 @@ spec = do
         eval (Case tuple $ d) `shouldBe` t1
 
     context "when given a tagged term" $ do
-      let t = Tagged "a" $ int 5
+      let l = int 5
+          t = Tagged "a" l
 
       context "when no annotation" $ do
         it "does nothing" $ do
@@ -212,7 +213,8 @@ spec = do
 
       context "when also given case expression" $ do
         it "performs pattern matching" $ do
-          eval (Case t $ return (PVar "x", Var "x" 0 1)) `shouldBe` t
+          eval (Case t $ return (PVar "x", Var "x" 0 1))                `shouldBe` t
+          eval (Case t $ return (PVariant "a" $ PVar "x", Var "x" 0 1)) `shouldBe` l
 
   describe "reduce" $ do
     it "do beta-reduction" $ do
