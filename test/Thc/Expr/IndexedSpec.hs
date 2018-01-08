@@ -289,3 +289,10 @@ spec = do
       let t = a $ Var "x" 1 2
       shift 0 t `shouldBe` t
       shift 1 t `shouldBe` a (Var "x" 1 3)
+
+      let n = int 4
+      let t = Var "x" 0 1
+      let c t = Case n $ return (PVar "x", t)
+      shift 0 (c t) `shouldBe` c t
+      shift 1 (c t) `shouldBe` c (Var "x" 0 2)
+
