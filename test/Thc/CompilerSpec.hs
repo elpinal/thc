@@ -32,6 +32,9 @@ spec = do
       want <- B.readFile "test/Thc/data/exit178"
       compile (Ann (int 178) T.Int) Code.Darwin Code.Amd64 `shouldBe` Right want
 
+      want <- B.readFile "test/Thc/data/exit178"
+      compile (Case (Ann (Tagged "a" $ int 178) $ T.variant [("a", T.Int)]) $ return (PVariant "a" $ PVar "x", Var "x")) Code.Darwin Code.Amd64 `shouldBe` Right want
+
     context "when given an invalid program" $
       it "returns an error" $ do
         compile (Var "x") Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.Unbound "x")
