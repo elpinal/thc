@@ -49,7 +49,13 @@ spec = do
       fromNamed (E.Record [("", int 1)])                         `shouldBe` return (Record [("", int 1)])
       fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
 
-      fromNamed (E.Ann (int 78) T.Int) `shouldBe` return (Ann (int 78) T.Int)
+      let t1 = int 78
+          t2 = int 78
+      fromNamed (E.Ann t1 T.Int) `shouldBe` return (Ann t2 T.Int)
+
+      let a = return (PVar "x", int 12)
+          b = return (PVar "x", int 12)
+      fromNamed (E.Case t1 a) `shouldBe` return (Case t2 b)
 
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do

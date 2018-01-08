@@ -106,6 +106,12 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 fromNamed' ctx (E.Record ts) = Record <$> mapM (runKleisli . second . Kleisli $ fromNamed' ctx) ts
 fromNamed' ctx (E.Ann t ty) = flip Ann ty <$> fromNamed' ctx t
 fromNamed' ctx (E.Tagged i t) = Tagged i <$> fromNamed' ctx t
+fromNamed' ctx (E.Case t as) = Case <$> fromNamed' ctx t <*> mapM f as
+  where
+    f (p, t) = do
+      ctx' <- left BindError $ bindPatternU ctx p
+      t' <- fromNamed' ctx' t
+      return (p, t')
 
 bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
 bindPatternU ctx (E.PVar i) = return $ addName ctx i ()
