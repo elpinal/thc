@@ -6,6 +6,7 @@ module Thc.Expr
   , Pattern(..)
   , tuplePat
   , bounds
+  , nbounds
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -57,6 +58,9 @@ bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
 bounds (PTuple ps) = concatMap bounds ps
 bounds (PVariant i p) = bounds p
+
+nbounds :: Pattern -> Int
+nbounds = length . bounds
 
 tuplePat :: [String] -> Pattern
 tuplePat = PTuple . map PVar

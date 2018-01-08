@@ -287,7 +287,7 @@ eval1 _ = Nothing
 reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
 reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
   where
-    l = length $ E.bounds p
+    l = E.nbounds p
 
     reduce' :: MonadThrow m => E.Pattern -> Term -> Term -> StateT Int m Term
     reduce' (E.PVar _) t1 t2 = state $ \n -> (subst n (shift l t1) t2, n + 1)
