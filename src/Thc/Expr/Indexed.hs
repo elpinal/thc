@@ -183,26 +183,24 @@ data EvalError
   deriving (Eq, Show)
 
 shift :: Int -> Term -> Term
-shift d = walk 0
+shift d = tmap f 0
   where
-    walk :: Int -> Term -> Term
-    walk c (Var i x n)
+    f c i x n
       | x >= c    = Var i (x + d) (n + d) -- free
       | otherwise = Var i x $ n + d       -- bound
-    walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
-    walk c (App t1 t2) = App (walk c t1) (walk c t2)
-    walk c (Tuple ts) = Tuple $ walk c `map` ts
-    walk c (Ann t ty) = Ann (walk c t) ty
-    walk c (Tagged i t) = Tagged i $ walk c t
-    walk c l @ (Lit _) = l
 
 subst :: Int -> Term -> Term -> Term
-subst j s = walk 0
+subst j s = tmap f 0
+  where
+    f c i x n
+      | x == j + c = shift c s
+      | otherwise  = Var i x n
+
+tmap :: (Int -> String -> Int -> Int -> Term) -> Int -> Term -> Term
+tmap f = walk
   where
     walk :: Int -> Term -> Term
-    walk c t' @ (Var i x n)
-      | x == j + c = shift c s
-      | otherwise  = t'
+    walk c (Var i x n) = f c i x n
     walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c (Tuple ts) = Tuple $ walk c `map` ts
