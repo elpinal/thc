@@ -99,9 +99,9 @@ spec = do
             b = return (q, s)
         typeOf (Case (Ann t ty) a)        `shouldNotThrow` return T.Int
         typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) b)        `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
-        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
-        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (EvalError $ PatternMismatch q ty)
+        typeOf (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
 
         let ty = T.variant [("a", T.Int), ("b", T.Unit)]
             q = PVariant "b" $ PVar "x"
@@ -115,10 +115,10 @@ spec = do
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
           let p1 = tuplePat ["x", "y", "z"]
-          typeOf (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (EvalError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
+          typeOf (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
 
           let p = tuplePat ["x"]
-          typeOf (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (EvalError $ PatternMismatch p T.Bool)
+          typeOf (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p T.Bool)
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do

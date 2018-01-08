@@ -39,11 +39,11 @@ spec = do
         let lit12 = int 12
             p = PTuple []
             ty = T.Int
-        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.PatternMismatch p ty)
+        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Type . I.BindTypeError $ I.PatternMismatch p ty)
 
         let p = tuplePat ["x", "x"]
             ty = T.Tuple [T.Int, T.Int]
-        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval $ I.DuplicateVariables p)
+        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldBe` Left (Eval . I.BindError $ I.DuplicateVariables p)
 
         let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
         compile (App s s) Code.Darwin Code.Amd64 `shouldBe` Left (Type $ I.IllTypedApp (I.Var "x" 0 1) T.Int)

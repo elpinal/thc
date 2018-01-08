@@ -26,6 +26,7 @@ module Thc.Expr.Indexed
   -- * Errors
   , EvalError(..)
   , TypeError(..)
+  , BindError(..)
 
   -- * Functions exported for testing
   , reduce
@@ -85,14 +86,14 @@ instance E.Lit Term where
 fromNamed :: NamedTerm -> Either EvalError Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: MonadError m EvalError => ContextU -> NamedTerm -> m Term
+fromNamed' :: ContextU -> NamedTerm -> Either EvalError Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
   return $ Var i x $ length ctx
 
 fromNamed' ctx (E.Abs p ty t) = do
-  ctx' <- bindPatternU ctx p
+  ctx' <- left BindError $ bindPatternU ctx p
   Abs p ty <$> fromNamed' ctx' t
 
 fromNamed' ctx (E.App t1 t2) = do
@@ -106,7 +107,7 @@ fromNamed' ctx (E.Record ts) = Record <$> mapM (runKleisli . second . Kleisli $ 
 fromNamed' ctx (E.Ann t ty) = flip Ann ty <$> fromNamed' ctx t
 fromNamed' ctx (E.Tagged i t) = Tagged i <$> fromNamed' ctx t
 
-bindPatternU :: MonadError m EvalError => ContextU -> E.Pattern -> m ContextU
+bindPatternU :: MonadError m BindError => ContextU -> E.Pattern -> m ContextU
 bindPatternU ctx (E.PVar i) = return $ addName ctx i ()
 bindPatternU ctx p @ (E.PTuple ps)
   | not $ null ds          = errorE $ DuplicateVariables p
@@ -121,7 +122,7 @@ bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext :: Maybe Context
 -- Just [("a",Bool)]
-bindPattern :: MonadError m EvalError => Context -> E.Pattern -> T.Type -> m Context
+bindPattern :: MonadError m BindError => Context -> E.Pattern -> T.Type -> m Context
 bindPattern ctx (E.PVar i) ty = return $ addName ctx i ty
 bindPattern ctx p @ (E.PTuple ps) ty @ (T.Tuple ts)
   | not $ null ds          = errorE $ DuplicateVariables p
@@ -135,6 +136,11 @@ bindPattern ctx pv @ (E.PVariant i p) tv @ (T.Variant ts) = do
   ty <- maybe (errorE $ PatternMismatch pv tv) return $ Map.lookup i ts
   bindPattern ctx p ty
 bindPattern _ p @ (E.PVariant _ _) ty = errorE $ PatternMismatch p ty
+
+data BindError
+  = PatternMismatch E.Pattern T.Type
+  | DuplicateVariables E.Pattern
+  deriving (Eq, Show)
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
@@ -317,7 +323,7 @@ fromLiteral (Lit l) = return l
 fromLiteral _ = Nothing
 
 data TypeError
-  = EvalError EvalError
+  = BindTypeError BindError
   | VariantError String Term (Map.Map String T.Type)
   -- |
   -- @IllTypedApp t ty@ means the type of @t@ should have been @ty -> _@ where
@@ -368,7 +374,7 @@ getTypeFromContext ctx n
 
 typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT TypeError m T.Type
 typeWithPat ctx ty (p, t) = do
-  ctx' <- ExceptT . return . left EvalError $ bindPattern ctx p ty
+  ctx' <- ExceptT . return . left BindTypeError $ bindPattern ctx p ty
   typeOf' ctx' t
 
 class Monad m => MonadError m e where
@@ -382,6 +388,5 @@ instance MonadError (Either e) e where
 
 data EvalError
   = Unbound String
-  | DuplicateVariables E.Pattern
-  | PatternMismatch E.Pattern T.Type
+  | BindError BindError
   deriving (Eq, Show)
