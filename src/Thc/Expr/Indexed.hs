@@ -391,9 +391,9 @@ typeOf' ctx (Unfold ty t) = typeOfUnfold ctx t ty
 typeOfFold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
 typeOfFold ctx t = f
   where
-    f (T.Rec _ t1) = do
+    f (T.Rec _ ty0) = do
       ty <- typeOf' ctx t
-      let ty' = T.substTop (ty, t1)
+      let ty' = T.substTop (ty, ty0)
       if ty == ty'
         then return ty
         else throwE $ TypeMismatch ty ty'
@@ -402,10 +402,10 @@ typeOfFold ctx t = f
 typeOfUnfold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
 typeOfUnfold ctx t = f
   where
-    f ty' @ (T.Rec _ t1) = do
+    f ty' @ (T.Rec _ ty0) = do
       ty <- typeOf' ctx t
       if ty == ty'
-        then return $ T.substTop (ty, t1)
+        then return $ T.substTop (ty, ty0)
         else throwE $ TypeMismatch ty ty'
     f ty = throwE $ FoldError ty
 
