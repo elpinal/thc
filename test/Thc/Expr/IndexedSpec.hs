@@ -209,6 +209,11 @@ spec = do
         eval (Case tuple $ c) `shouldBe` t
         eval (Case tuple $ d) `shouldBe` t1
 
+        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ c)) `shouldBe` t
+
+        let e = return (p, (Abs (PVar "z") T.Int $ Var "y" 1 3) `App` Var "x" 1 2)
+        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ e)) `shouldBe` t1
+
     context "when given a tagged term" $ do
       let l = int 5
           t = Tagged "a" l

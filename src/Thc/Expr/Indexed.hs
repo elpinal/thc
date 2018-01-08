@@ -212,6 +212,7 @@ tmap f = walk
     walk c (Tuple ts) = Tuple $ walk c `map` ts
     walk c (Ann t ty) = Ann (walk c t) ty
     walk c (Tagged i t) = Tagged i $ walk c t
+    walk c (Case t as) = Case (walk c t) $ NonEmpty.map (second $ walk c) as
     walk c l @ (Lit _) = l
 
 -- subst
