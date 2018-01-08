@@ -31,6 +31,7 @@ module Thc.Expr.Indexed
   -- * Functions exported for testing
   , reduce
   , evalForPat
+  , shift
   ) where
 
 import Control.Arrow
@@ -207,7 +208,7 @@ tmap f = walk
   where
     walk :: Int -> Term -> Term
     walk c (Var i x n) = f c i x n
-    walk c (Abs i ty t') = Abs i ty $ walk (c + 1) t'
+    walk c (Abs p ty t') = Abs p ty $ walk (c + E.nbounds p) t' -- Is this correct?
     walk c (App t1 t2) = App (walk c t1) (walk c t2)
     walk c (Tuple ts) = Tuple $ walk c `map` ts
     walk c (Ann t ty) = Ann (walk c t) ty

@@ -265,3 +265,27 @@ spec = do
     context "when the type check has not been done" $ do
       it "throws an exception" $ do
         evalForPat (tuplePat ["a", "b", "c"]) (Lit $ Int 1) `shouldThrow` anyException
+
+  describe "shift" $ do
+    it "shifts indices in terms" $ do
+      let t = int 8
+      shift 0 t `shouldBe` t
+      shift 1 t `shouldBe` t
+
+      let t = Var "x" 0 1
+      shift 0 t `shouldBe` t
+      shift 1 t `shouldBe` Var "x" 1 2
+
+      let a = Abs (PVar "x") T.Int
+      let t = a $ Var "x" 0 1
+      shift 0 t `shouldBe` t
+      shift 1 t `shouldBe` a (Var "x" 0 2)
+
+      let a = Abs (tuplePat ["x", "y"]) T.Int
+      let t = a $ Var "y" 0 2
+      shift 0 t `shouldBe` t
+      shift 1 t `shouldBe` a (Var "y" 0 3)
+
+      let t = a $ Var "x" 1 2
+      shift 0 t `shouldBe` t
+      shift 1 t `shouldBe` a (Var "x" 1 3)
