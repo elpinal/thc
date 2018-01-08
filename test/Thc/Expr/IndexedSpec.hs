@@ -60,6 +60,10 @@ spec = do
       it "returns an error" $ do
         fromNamed (E.Var "x") `shouldSatisfy` isLeft
 
+    context "when given a lambda abstraction whose parameter does not match the annotated type" $
+      it "does not check the typing error" $ do
+        fromNamed (E.Abs (tuplePat ["nn"]) T.Int $ E.Var "nn") `shouldBe` return (Abs (tuplePat ["nn"]) T.Int $ Var "nn" 0 1)
+
   describe "typeOf" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do

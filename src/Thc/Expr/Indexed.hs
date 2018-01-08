@@ -82,24 +82,17 @@ instance E.Lit Term where
 --
 -- >>> fromNamed (E.Var "x")
 -- Left (Unbound "x")
---
--- In 'E.Abs', conflicts between the parameter's pattern and its corresponding
--- type cause the result 'Nothing' (i.e. @λ(nn,):Int.nn@ where @(/x/,)@ is
--- a 1-tuple whose only element is /x/).
---
--- >>> fromNamed (E.Abs (E.PTuple [E.PVar "nn"]) T.Int $ E.Var "nn")
--- Left (PatternMismatch (PTuple [PVar "nn"]) Int)
 fromNamed :: NamedTerm -> Either EvalError Term
 fromNamed = fromNamed' emptyContext
 
-fromNamed' :: MonadError m EvalError => Context -> NamedTerm -> m Term
+fromNamed' :: MonadError m EvalError => ContextU -> NamedTerm -> m Term
 
 fromNamed' ctx (E.Var i) = do
   x <- name2index i ctx
   return $ Var i x $ length ctx
 
 fromNamed' ctx (E.Abs p ty t) = do
-  ctx' <- bindPattern ctx p ty
+  ctx' <- bindPatternU ctx p
   Abs p ty <$> fromNamed' ctx' t
 
 fromNamed' ctx (E.App t1 t2) = do
@@ -112,6 +105,16 @@ fromNamed' ctx (E.Tuple ts) = Tuple <$> mapM (fromNamed' ctx) ts
 fromNamed' ctx (E.Record ts) = Record <$> mapM (runKleisli . second . Kleisli $ fromNamed' ctx) ts
 fromNamed' ctx (E.Ann t ty) = flip Ann ty <$> fromNamed' ctx t
 fromNamed' ctx (E.Tagged i t) = Tagged i <$> fromNamed' ctx t
+
+bindPatternU :: MonadError m EvalError => ContextU -> E.Pattern -> m ContextU
+bindPatternU ctx (E.PVar i) = return $ addName ctx i ()
+bindPatternU ctx p @ (E.PTuple ps)
+  | not $ null ds          = errorE $ DuplicateVariables p
+  | otherwise              = foldM bindPatternU ctx ps
+  where
+    ds :: [String]
+    ds = dups ps
+bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
 
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
@@ -150,15 +153,19 @@ dups = snd . flip execState ([], []) . mapM_ f
 
     both f = f *** f
 
-type Context = [(String, T.Type)]
+type Context1 a = [(String, a)]
 
-emptyContext :: Context
+type Context = Context1 T.Type
+
+type ContextU = Context1 ()
+
+emptyContext :: Context1 a
 emptyContext = []
 
-addName :: Context -> String -> T.Type -> Context
-addName ctx i ty = (i, ty) : ctx
+addName :: Context1 a -> String -> a -> Context1 a
+addName ctx i x = (i, x) : ctx
 
-name2index :: MonadError m EvalError => String -> Context -> m Int
+name2index :: MonadError m EvalError => String -> Context1 a -> m Int
 name2index i [] = errorE $ Unbound i
 name2index i (x : xs)
   | i == fst x = return 0
