@@ -62,6 +62,8 @@ data Term =
   | Ann Term T.Type
   | Tagged String Term
   | Case Term (NonEmpty.NonEmpty (E.Pattern, Term))
+  | Fold T.Type Term
+  | Unfold T.Type Term
   deriving (Eq, Show)
 
 type NamedTerm = E.Term
@@ -214,6 +216,8 @@ tmap f = walk
     walk c (Ann t ty)    = Ann (walk c t) ty
     walk c (Tagged i t)  = Tagged i $ walk c t
     walk c (Case t as)   = Case (walk c t) $ NonEmpty.map (g c) as
+    walk c (Fold ty t)   = Fold ty $ walk c t
+    walk c (Unfold ty t) = Unfold ty $ walk c t
     walk c l @ (Lit _)   = l
 
     g c = fst &&& app . first (walk . h c)
