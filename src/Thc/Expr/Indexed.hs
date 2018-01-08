@@ -386,6 +386,7 @@ typeOf' ctx (Case t ts) = do
     then return x
     else throwE $ IncompatibleArms ts
 typeOf' ctx (Fold ty t) = typeOfFold ctx t ty
+typeOf' ctx (Unfold ty t) = typeOfUnfold ctx t ty
 
 typeOfFold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
 typeOfFold ctx t = f
@@ -395,6 +396,16 @@ typeOfFold ctx t = f
       let ty' = T.substTop (ty, t1)
       if ty == ty'
         then return ty
+        else throwE $ TypeMismatch ty ty'
+    f ty = throwE $ FoldError ty
+
+typeOfUnfold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
+typeOfUnfold ctx t = f
+  where
+    f ty' @ (T.Rec _ t1) = do
+      ty <- typeOf' ctx t
+      if ty == ty'
+        then return $ T.substTop (ty, t1)
         else throwE $ TypeMismatch ty ty'
     f ty = throwE $ FoldError ty
 
