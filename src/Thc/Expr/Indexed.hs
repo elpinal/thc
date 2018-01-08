@@ -351,6 +351,7 @@ data TypeError
   -- | @TypeMismatch s t@ indicates got type @s@ does not match expected type @t@.
   | TypeMismatch T.Type T.Type
   | IncompatibleArms (NonEmpty.NonEmpty (E.Pattern, Term))
+  | FoldError T.Type
   deriving (Eq, Show)
 
 typeOf :: MonadThrow m => Term -> m (Either TypeError T.Type)
@@ -384,6 +385,15 @@ typeOf' ctx (Case t ts) = do
   if and $ map (== x) xs
     then return x
     else throwE $ IncompatibleArms ts
+typeOf' ctx (Fold ty t) = f ty
+  where
+    f (T.Rec _ t1) = do
+      ty' <- typeOf' ctx t
+      let ty'' = T.substTop (ty, t1)
+      if ty' == ty''
+        then return ty
+        else throwE $ TypeMismatch ty' ty''
+    f ty = throwE $ FoldError ty
 
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n
