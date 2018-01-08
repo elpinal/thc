@@ -43,7 +43,7 @@ instance Encode String where
 fillString16 :: Code -> Code
 fillString16 xs
   | B.length xs > 16 = error $ "the string is too long; the max is 16 bytes, but got " ++ show (B.length xs)
-  | otherwise      = xs `B.append` B.replicate (16 - codeLength xs) 0x00
+  | otherwise        = xs `B.append` B.replicate (16 - codeLength xs) 0x00
 
 -- | 'executableFromText' @text@ creates an executable Mach-O binary from 'text'.
 executableFromText :: Code -> Code
