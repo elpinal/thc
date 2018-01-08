@@ -107,10 +107,10 @@ fromNamed' ctx (E.Record ts) = Record <$> mapM (runKleisli . second . Kleisli $ 
 fromNamed' ctx (E.Ann t ty) = flip Ann ty <$> fromNamed' ctx t
 fromNamed' ctx (E.Tagged i t) = Tagged i <$> fromNamed' ctx t
 
-bindPatternU :: MonadError m BindError => ContextU -> E.Pattern -> m ContextU
+bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
 bindPatternU ctx (E.PVar i) = return $ addName ctx i ()
 bindPatternU ctx p @ (E.PTuple ps)
-  | not $ null ds          = errorE $ DuplicateVariables p
+  | not $ null ds          = Left $ DuplicateVariables p
   | otherwise              = foldM bindPatternU ctx ps
   where
     ds :: [String]
@@ -122,20 +122,20 @@ bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
 --
 -- >>> bindPattern (E.PVar "a") T.Bool emptyContext :: Maybe Context
 -- Just [("a",Bool)]
-bindPattern :: MonadError m BindError => Context -> E.Pattern -> T.Type -> m Context
+bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
 bindPattern ctx (E.PVar i) ty = return $ addName ctx i ty
 bindPattern ctx p @ (E.PTuple ps) ty @ (T.Tuple ts)
-  | not $ null ds          = errorE $ DuplicateVariables p
+  | not $ null ds          = Left $ DuplicateVariables p
   | length ps == length ts = foldM (uncurry . bindPattern) ctx $ zip ps ts
-  | otherwise              = errorE $ PatternMismatch p ty
+  | otherwise              = Left $ PatternMismatch p ty
   where
     ds :: [String]
     ds = dups ps
-bindPattern _ p @ (E.PTuple ps) ty = errorE $ PatternMismatch p ty -- Note that type variables are currently not supported.
+bindPattern _ p @ (E.PTuple ps) ty = Left $ PatternMismatch p ty -- Note that type variables are currently not supported.
 bindPattern ctx pv @ (E.PVariant i p) tv @ (T.Variant ts) = do
-  ty <- maybe (errorE $ PatternMismatch pv tv) return $ Map.lookup i ts
+  ty <- maybe (Left $ PatternMismatch pv tv) return $ Map.lookup i ts
   bindPattern ctx p ty
-bindPattern _ p @ (E.PVariant _ _) ty = errorE $ PatternMismatch p ty
+bindPattern _ p @ (E.PVariant _ _) ty = Left $ PatternMismatch p ty
 
 data BindError
   = PatternMismatch E.Pattern T.Type
@@ -171,11 +171,16 @@ emptyContext = []
 addName :: Context1 a -> String -> a -> Context1 a
 addName ctx i x = (i, x) : ctx
 
-name2index :: MonadError m EvalError => String -> Context1 a -> m Int
-name2index i [] = errorE $ Unbound i
+name2index :: String -> Context1 a -> Either EvalError Int
+name2index i [] = Left $ Unbound i
 name2index i (x : xs)
   | i == fst x = return 0
   | otherwise  = (1 +) <$> name2index i xs
+
+data EvalError
+  = Unbound String
+  | BindError BindError
+  deriving (Eq, Show)
 
 shift :: Int -> Term -> Term
 shift d = walk 0
@@ -376,17 +381,3 @@ typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT
 typeWithPat ctx ty (p, t) = do
   ctx' <- ExceptT . return . left BindTypeError $ bindPattern ctx p ty
   typeOf' ctx' t
-
-class Monad m => MonadError m e where
-  errorE :: e -> m a
-
-instance MonadError Maybe e where
-  errorE e = Nothing
-
-instance MonadError (Either e) e where
-  errorE = Left
-
-data EvalError
-  = Unbound String
-  | BindError BindError
-  deriving (Eq, Show)
