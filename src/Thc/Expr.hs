@@ -8,6 +8,8 @@ module Thc.Expr
   , bounds
   ) where
 
+import qualified Data.List.NonEmpty as NonEmpty
+
 import qualified Thc.Type as T
 
 data Term =
@@ -19,6 +21,7 @@ data Term =
   | Record [(String, Term)]
   | Ann Term T.Type
   | Tagged String Term
+  | Case Term (NonEmpty.NonEmpty (Pattern, Term))
 
 data Literal =
     Bool Bool
