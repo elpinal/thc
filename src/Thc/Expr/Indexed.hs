@@ -207,14 +207,14 @@ tmap :: (Int -> String -> Int -> Int -> Term) -> Int -> Term -> Term
 tmap f = walk
   where
     walk :: Int -> Term -> Term
-    walk c (Var i x n) = f c i x n
+    walk c (Var i x n)   = f c i x n
     walk c (Abs p ty t') = Abs p ty $ walk (h c p) t'
-    walk c (App t1 t2) = App (walk c t1) (walk c t2)
-    walk c (Tuple ts) = Tuple $ walk c `map` ts
-    walk c (Ann t ty) = Ann (walk c t) ty
-    walk c (Tagged i t) = Tagged i $ walk c t
-    walk c (Case t as) = Case (walk c t) $ NonEmpty.map (g c) as
-    walk c l @ (Lit _) = l
+    walk c (App t1 t2)   = App (walk c t1) (walk c t2)
+    walk c (Tuple ts)    = Tuple $ walk c `map` ts
+    walk c (Ann t ty)    = Ann (walk c t) ty
+    walk c (Tagged i t)  = Tagged i $ walk c t
+    walk c (Case t as)   = Case (walk c t) $ NonEmpty.map (g c) as
+    walk c l @ (Lit _)   = l
 
     g c = fst &&& app . first (walk . h c)
     h c p = c + E.nbounds p
