@@ -339,6 +339,7 @@ evalForPat p0 @ (E.PVariant i1 p) t0 @ (Tagged i2 t)
   | i1 == i2  = Tagged i1 <$> evalForPat p t
   | otherwise = throwPatTerm p0 t0 -- TODO: The same problem as 'reduce' have.
 evalForPat p @ (E.PVariant i _) t = maybe (throwPatTerm p t) (evalForPat p) $ eval1 t
+evalForPat (E.PLiteral _) t = return $ eval t -- Literals are values and all values are normal form.
 
 throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
 throwPatTerm p t = do
