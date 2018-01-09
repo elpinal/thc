@@ -180,6 +180,7 @@ dups = snd . flip execState ([], []) . mapM_ f
         (False, _)    -> modify $ first (x :)
     g (E.PTuple ps) acc = mapM_ (flip g acc) ps
     g (E.PVariant i p) acc = g p acc
+    g (E.PLiteral _) _ = return ()
 
     both f = f *** f
 
