@@ -3,7 +3,6 @@ module Thc.Compiler
   , CompileError(..)
   ) where
 
-import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 import Data.Bifunctor
 
@@ -34,8 +33,8 @@ fromEvalError = Eval
 fromTypeError :: TypeError -> CompileError
 fromTypeError = Type
 
-compile :: MonadThrowPlus m => E.Term -> OS -> CPU -> ExceptT CompileError m Code
-compile = compileWithContext coreContext
+compile :: MonadThrowPlus m => E.Term -> OS -> CPU -> m (Either CompileError Code)
+compile t os cpu = runExceptT $ compileWithContext coreContext t os cpu
 
 compileWithContext :: MonadThrowPlus m => Context -> E.Term -> OS -> CPU -> ExceptT CompileError m Code
 compileWithContext ctx t o c = do
