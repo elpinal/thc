@@ -164,6 +164,7 @@ bindPattern1 binder ctx p @ (E.PTuple ps) x
 
       f ctx (p, x) = bindPattern1 binder ctx p x
 bindPattern1 binder ctx (E.PVariant i p) x = onVariant binder ctx i p x
+bindPattern1 _ ctx (E.PLiteral _) _ = return ctx
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
