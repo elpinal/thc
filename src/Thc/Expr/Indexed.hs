@@ -293,6 +293,15 @@ eval1 _ = Nothing
 class (MonadThrow m, MonadPlus m) => MonadThrowPlus m where
   mthrowM :: Exception e => e -> m a
 
+instance MonadThrowPlus [] where
+  mthrowM _ = []
+
+instance MonadThrowPlus Maybe where
+  mthrowM _ = Nothing
+
+instance MonadThrowPlus m => MonadThrowPlus (StateT s m) where
+  mthrowM e = lift $ throwM e
+
 -- |
 -- @reduce p t1 t2@ performs beta-reduction.
 --
