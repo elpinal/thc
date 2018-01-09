@@ -80,7 +80,7 @@ instance E.Lit Term where
 -- >>> fromNamed l
 -- Right (Lit (Int 0))
 -- >>> fromNamed (E.Abs (E.PVar "a") (T.Int T.:->: T.Bool) $ E.App (E.Var "a") l)
--- Right (Abs (PVar "a") (Int :->: Bool) (App (Var "a" 0 1) (Lit (Int 0))))
+-- Right (Abs (PVar "a") (Int -> Bool) (App (Var "a" 0 1) (Lit (Int 0))))
 --
 -- Unbound variables cause it to report the error.
 --
@@ -129,8 +129,8 @@ bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
 --
--- >>> bindPattern (E.PVar "a") T.Bool emptyContext :: Maybe Context
--- Just [("a",Bool)]
+-- >>> bindPattern emptyContext (E.PVar "a") T.Bool
+-- Right [("a",Bool)]
 bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
 bindPattern ctx (E.PVar i) ty = return $ addName ctx i ty
 bindPattern ctx p @ (E.PTuple ps) ty @ (T.Tuple ts)
