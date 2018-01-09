@@ -136,7 +136,7 @@ bindPattern ctx p ty = bindPattern1 ctx p ty Binder
       f ps ty @ (T.Tuple ts)
         | length ps == length ts = return $ zip ps ts
         | otherwise              = Left $ PatternMismatch (E.PTuple ps) ty
-      f ps ty = Left $ PatternMismatch p ty -- Note that type variables are currently not supported.
+      f ps ty = Left $ PatternMismatch (E.PTuple ps) ty -- Note that type variables are currently not supported.
 
       g ctx i p tv @ (T.Variant ts) = do
         ty <- maybe (Left $ PatternMismatch (E.PVariant i p) tv) return $ Map.lookup i ts
