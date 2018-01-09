@@ -117,10 +117,10 @@ fromNamed' ctx (E.Case t as) = Case <$> fromNamed' ctx t <*> mapM f as
       return (p, t')
 
 bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
-bindPatternU ctx p = bindPattern1 ctx p () Binder
+bindPatternU ctx p = bindPattern1 Binder
   { onTuple = \ps _ -> return . zip ps $ repeat ()
   , onVariant = \ctx _ p _ -> bindPatternU ctx p
-  }
+  } ctx p ()
 
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
@@ -128,7 +128,7 @@ bindPatternU ctx p = bindPattern1 ctx p () Binder
 -- >>> bindPattern emptyContext (E.PVar "a") T.Bool
 -- Right [("a",Bool)]
 bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
-bindPattern ctx p ty = bindPattern1 ctx p ty Binder
+bindPattern = bindPattern1 Binder
   { onTuple = f
   , onVariant = g
   }
@@ -153,17 +153,17 @@ data Binder a = Binder
   , onVariant :: Context1 a -> String -> E.Pattern -> a -> Either BindError (Context1 a)
   }
 
-bindPattern1 :: Context1 a -> E.Pattern -> a -> Binder a -> Either BindError (Context1 a)
-bindPattern1 ctx (E.PVar i) x _ = return $ addName ctx i x
-bindPattern1 ctx p @ (E.PTuple ps) x fs
+bindPattern1 :: Binder a -> Context1 a -> E.Pattern -> a -> Either BindError (Context1 a)
+bindPattern1 _ ctx (E.PVar i) x = return $ addName ctx i x
+bindPattern1 binder ctx p @ (E.PTuple ps) x
   | not $ null ds = Left $ DuplicateVariables p
-  | otherwise     = onTuple fs ps x >>= foldM f ctx
+  | otherwise     = onTuple binder ps x >>= foldM f ctx
     where
       ds :: [String]
       ds = dups ps
 
-      f ctx (p, x) = bindPattern1 ctx p x fs
-bindPattern1 ctx (E.PVariant i p) x fs = onVariant fs ctx i p x
+      f ctx (p, x) = bindPattern1 binder ctx p x
+bindPattern1 binder ctx (E.PVariant i p) x = onVariant binder ctx i p x
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
