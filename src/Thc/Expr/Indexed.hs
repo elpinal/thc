@@ -117,14 +117,10 @@ fromNamed' ctx (E.Case t as) = Case <$> fromNamed' ctx t <*> mapM f as
       return (p, t')
 
 bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
-bindPatternU ctx (E.PVar i) = return $ addName ctx i ()
-bindPatternU ctx p @ (E.PTuple ps)
-  | not $ null ds          = Left $ DuplicateVariables p
-  | otherwise              = foldM bindPatternU ctx ps
-  where
-    ds :: [String]
-    ds = dups ps
-bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
+bindPatternU ctx p = bindPattern1 ctx p () Binder
+  { onTuple = \ps _ -> return . zip ps $ repeat ()
+  , onVariant = \ctx _ p _ -> bindPatternU ctx p
+  }
 
 -- |
 -- Binds variables to a @Context@ verifying the type of a pattern.
@@ -132,24 +128,42 @@ bindPatternU ctx (E.PVariant _ p) = bindPatternU ctx p
 -- >>> bindPattern emptyContext (E.PVar "a") T.Bool
 -- Right [("a",Bool)]
 bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
-bindPattern ctx (E.PVar i) ty = return $ addName ctx i ty
-bindPattern ctx p @ (E.PTuple ps) ty @ (T.Tuple ts)
-  | not $ null ds          = Left $ DuplicateVariables p
-  | length ps == length ts = foldM (uncurry . bindPattern) ctx $ zip ps ts
-  | otherwise              = Left $ PatternMismatch p ty
-  where
-    ds :: [String]
-    ds = dups ps
-bindPattern _ p @ (E.PTuple ps) ty = Left $ PatternMismatch p ty -- Note that type variables are currently not supported.
-bindPattern ctx pv @ (E.PVariant i p) tv @ (T.Variant ts) = do
-  ty <- maybe (Left $ PatternMismatch pv tv) return $ Map.lookup i ts
-  bindPattern ctx p ty
-bindPattern _ p @ (E.PVariant _ _) ty = Left $ PatternMismatch p ty
+bindPattern ctx p ty = bindPattern1 ctx p ty Binder
+  { onTuple = f
+  , onVariant = g
+  }
+    where
+      f ps ty @ (T.Tuple ts)
+        | length ps == length ts = return $ zip ps ts
+        | otherwise              = Left $ PatternMismatch (E.PTuple ps) ty
+      f ps ty = Left $ PatternMismatch p ty -- Note that type variables are currently not supported.
+
+      g ctx i p tv @ (T.Variant ts) = do
+        ty <- maybe (Left $ PatternMismatch (E.PVariant i p) tv) return $ Map.lookup i ts
+        bindPattern ctx p ty
+      g _ i p ty = Left $ PatternMismatch (E.PVariant i p) ty
 
 data BindError
   = PatternMismatch E.Pattern T.Type
   | DuplicateVariables E.Pattern
   deriving (Eq, Show)
+
+data Binder a = Binder
+  { onTuple   :: [E.Pattern] -> a -> Either BindError [(E.Pattern, a)]
+  , onVariant :: Context1 a -> String -> E.Pattern -> a -> Either BindError (Context1 a)
+  }
+
+bindPattern1 :: Context1 a -> E.Pattern -> a -> Binder a -> Either BindError (Context1 a)
+bindPattern1 ctx (E.PVar i) x _ = return $ addName ctx i x
+bindPattern1 ctx p @ (E.PTuple ps) x fs
+  | not $ null ds = Left $ DuplicateVariables p
+  | otherwise     = onTuple fs ps x >>= foldM f ctx
+    where
+      ds :: [String]
+      ds = dups ps
+
+      f ctx (p, x) = bindPattern1 ctx p x fs
+bindPattern1 ctx (E.PVariant i p) x fs = onVariant fs ctx i p x
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
