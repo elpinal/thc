@@ -310,6 +310,9 @@ instance MonadThrowPlus [] where
 instance MonadThrowPlus Maybe where
   mthrowM _ = Nothing
 
+instance MonadThrowPlus IO where
+  mthrowM = throwM
+
 instance MonadThrowPlus m => MonadThrowPlus (StateT s m) where
   mthrowM e = lift $ throwM e
 
