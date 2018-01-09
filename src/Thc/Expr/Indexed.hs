@@ -273,27 +273,33 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 -- App (Lit (Int 2)) (Lit (Int 2))
 --
 -- @eval (App x x)@ diverges.
-eval :: Term -> Term
-eval t = maybe t eval $ eval1 t
+eval :: MonadThrowPlus m => Term -> m Term
+eval t = eval1 t >>= maybe (return t) eval
 
-eval1 :: Term -> Maybe Term
-eval1 (App (Abs p _ t2) t1) = reduce p t1 t2
-eval1 (App t1 t2) = flip App t2 <$> eval1 t1
-eval1 (Tuple ts) = Tuple <$> f ts
+eval1 :: MonadThrowPlus m => Term -> m (Maybe Term)
+eval1 (App (Abs p _ t2) t1) = return <$> reduce p t1 t2
+eval1 (App t1 t2) = fmap (flip App t2) <$> eval1 t1
+eval1 (Tuple ts) = fmap Tuple <$> f ts
   where
-    f :: [Term] -> Maybe [Term]
-    f [] = Nothing
-    f (t : ts) = maybe ((t :) <$> f ts) (return . (: ts)) $ eval1 t
-eval1 (Ann t ty) = return . maybe t (flip Ann ty) $ eval1 t
-eval1 (Case t as) = maybe result next $ eval1 t
+    f :: MonadThrowPlus m => [Term] -> m (Maybe [Term])
+    f [] = return Nothing
+    f (t : ts) = eval1 t >>= maybe (qq t) (g ts)
+
+    qq :: MonadThrowPlus m => Term -> m (Maybe [Term])
+    qq t = fmap (t :) <$> f ts
+
+    g :: MonadThrow m => [Term] -> Term -> m (Maybe [Term])
+    g ts = return . return . (: ts)
+eval1 (Ann t ty) = return . maybe t (flip Ann ty) <$> eval1 t
+eval1 (Case t as) = eval1 t >>= maybe result next
   where
-    next   = return . flip Case as
-    result = getFirst $ foldMap (First . f) as
+    next   = return . Just . flip Case as
+    result = fmap return . getAlt $ foldMap (Alt . f) as
     f      = uncurry $ flip reduce t
-eval1 (Fold ty t) = Fold ty <$> eval1 t
-eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) $ eval1 t
-eval1 (Unfold ty t) = Unfold ty <$> eval1 t
-eval1 _ = Nothing
+eval1 (Fold ty t) = fmap (Fold ty) <$> eval1 t
+eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) <$> eval1 t
+eval1 (Unfold ty t) = fmap (Unfold ty) <$> eval1 t
+eval1 _ = return Nothing
 
 class (MonadThrow m, MonadPlus m) => MonadThrowPlus m where
   mthrowM :: Exception e => e -> m a
@@ -329,12 +335,12 @@ instance MonadThrowPlus m => MonadThrowPlus (StateT s m) where
 -- >>> tuple = Tuple [Tuple [E.int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [E.int 4, E.int 5]]
 -- >>> reduce p tuple (Var "y" 2 4)
 -- Abs (PVar "z") Int (Var "z" 0 1)
-reduce :: MonadThrow m => E.Pattern -> Term -> Term -> m Term
+reduce :: MonadThrowPlus m => E.Pattern -> Term -> Term -> m Term
 reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
   where
     l = E.nbounds p
 
-    reduce' :: MonadThrow m => E.Pattern -> Term -> Term -> StateT Int m Term
+    reduce' :: MonadThrowPlus m => E.Pattern -> Term -> Term -> StateT Int m Term
     reduce' (E.PVar _) t1 t2 = state $ \n -> (subst n (shift l t1) t2, n + 1)
     reduce' (E.PTuple ps) (Tuple ts) t = foldrM (uncurry reduce') t $ zip ps ts
     reduce' pv @ (E.PVariant i1 p) tt @ (Tagged i2 t1) t2
@@ -346,23 +352,24 @@ reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
       t1' <- evalForPat p t1
       reduce' p t1' t2
 
-evalForPat :: MonadThrow m => E.Pattern -> Term -> m Term
+evalForPat :: MonadThrowPlus m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
 evalForPat (E.PTuple ps) (Tuple ts) = Tuple <$> uncurry evalForPat `mapM` zip ps ts
-evalForPat p @ (E.PTuple _) t =
-  case eval1 t of
-    Just t' -> evalForPat p t'
+evalForPat p @ (E.PTuple _) t = do
+  t' <- eval1 t
+  case t' of
+    Just t'' -> evalForPat p t''
     Nothing -> throwPatTerm p t
 evalForPat p0 @ (E.PVariant i1 p) t0 @ (Tagged i2 t)
   | i1 == i2  = Tagged i1 <$> evalForPat p t
   | otherwise = throwPatTerm p0 t0 -- TODO: The same problem as 'reduce' have.
-evalForPat p @ (E.PVariant i _) t = maybe (throwPatTerm p t) (evalForPat p) $ eval1 t
-evalForPat (E.PLiteral _) t = return $ eval t -- Literals are values and all values are normal form.
+evalForPat p @ (E.PVariant i _) t = eval1 t >>= maybe (throwPatTerm p t) (evalForPat p)
+evalForPat (E.PLiteral _) t = eval t -- Literals are values and all values are normal form.
 
-throwPatTerm :: MonadThrow m => E.Pattern -> Term -> m a
+throwPatTerm :: MonadThrowPlus m => E.Pattern -> Term -> m a
 throwPatTerm p t = do
   a <- typeOf t
-  throw $ case a of
+  mthrowM $ case a of
     Right ty -> WrongPattern p ty
     Left e -> IllTyped t e
 
