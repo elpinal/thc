@@ -40,6 +40,11 @@ instance Lit Term where
   int = Lit . Int
   unit = Lit Unit
 
+instance Lit Pattern where
+  bool = PLiteral . Bool
+  int = PLiteral . Int
+  unit = PLiteral Unit
+
 typeOfLiteral :: Literal -> T.Type
 typeOfLiteral (Bool _) = T.Bool
 typeOfLiteral (Int _) = T.Int
