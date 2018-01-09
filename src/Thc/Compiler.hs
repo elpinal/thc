@@ -3,6 +3,8 @@ module Thc.Compiler
   , CompileError(..)
   ) where
 
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Except
 import Data.Bifunctor
 
 import           Thc.Asm
@@ -32,27 +34,27 @@ fromEvalError = Eval
 fromTypeError :: TypeError -> CompileError
 fromTypeError = Type
 
-compile :: E.Term -> OS -> CPU -> Either CompileError Code
+compile :: MonadThrowPlus m => E.Term -> OS -> CPU -> ExceptT CompileError m Code
 compile = compileWithContext coreContext
 
-compileWithContext :: Context -> E.Term -> OS -> CPU -> Either CompileError Code
+compileWithContext :: MonadThrowPlus m => Context -> E.Term -> OS -> CPU -> ExceptT CompileError m Code
 compileWithContext ctx t o c = do
   tm <- genIndexed t
   verifyType tm
   tac <- genTac tm
   assemble . fromTac $ tac
   where
-    genIndexed :: E.Term -> Either CompileError Term
-    genIndexed = first fromEvalError . fromNamed
+    genIndexed :: Monad m => E.Term -> ExceptT CompileError m Term
+    genIndexed = ExceptT . return . first fromEvalError . fromNamed
 
-    verifyType :: Term -> Either CompileError T.Type
-    verifyType = first fromTypeError . head . typeOf -- TODO: the use of 'head' is unsafe!
+    verifyType :: MonadThrowPlus m => Term -> ExceptT CompileError m T.Type
+    verifyType = ExceptT . fmap (first fromTypeError) . typeOf
 
-    genTac :: Term -> Either CompileError Tac
-    genTac = fmap fromLit . try' fromLiteral . eval
+    genTac :: MonadThrowPlus m => Term -> ExceptT CompileError m Tac
+    genTac = ExceptT . fmap (fmap fromLit . try' fromLiteral) . eval
 
-    assemble :: Asm -> Either CompileError Code
-    assemble = first FromAsm . encodeFromAsm ctx o c
+    assemble :: MonadThrowPlus m => Asm -> ExceptT CompileError m Code
+    assemble = ExceptT . return . first FromAsm . encodeFromAsm ctx o c
 
 class Try a where
   try :: Maybe a -> Either CompileError a
