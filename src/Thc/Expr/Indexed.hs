@@ -28,6 +28,9 @@ module Thc.Expr.Indexed
   , TypeError(..)
   , BindError(..)
 
+  -- * Exceptions
+  , MonadThrowPlus(..)
+
   -- * Functions exported for testing
   , reduce
   , evalForPat
