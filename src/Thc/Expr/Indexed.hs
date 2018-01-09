@@ -290,6 +290,9 @@ eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) $ eva
 eval1 (Unfold ty t) = Unfold ty <$> eval1 t
 eval1 _ = Nothing
 
+class (MonadThrow m, MonadPlus m) => MonadThrowPlus m where
+  mthrowM :: Exception e => e -> m a
+
 -- |
 -- @reduce p t1 t2@ performs beta-reduction.
 --
