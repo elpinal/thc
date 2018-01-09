@@ -52,12 +52,29 @@ data Pattern =
   | PTuple [Pattern]
   -- | A pattern which matches a variant. @PVariant i p@ binds a term tagged with @i@ to @p@
   | PVariant String Pattern
+  -- | A pattern for a literal.
+  | PLiteral Literal
   deriving (Eq, Show)
 
+-- |
+-- @bounds p@ returns the list of the variables bound by @p@.
+--
+-- >>> bounds (PVar "x")
+-- ["x"]
+-- >>> bounds (tuplePat ["a", "b"])
+-- ["a","b"]
+-- >>> bounds (PLiteral $ Int 2)
+-- []
+--
+-- The returned list may have duplicates.
+--
+-- >>> bounds (PVariant "a" $ tuplePat ["x", "y", "x"])
+-- ["x","y","x"]
 bounds :: Pattern -> [String]
 bounds (PVar i) = [i]
 bounds (PTuple ps) = concatMap bounds ps
 bounds (PVariant i p) = bounds p
+bounds (PLiteral l) = []
 
 nbounds :: Pattern -> Int
 nbounds = length . bounds
