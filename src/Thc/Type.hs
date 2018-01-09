@@ -17,7 +17,7 @@ data Type =
   | Tuple [Type]
   | Record [(String, Type)]
   | Variant (Map.Map String Type)
-  deriving (Eq, Show)
+  deriving Eq
 
 infixr 9 :->:
 
@@ -55,3 +55,24 @@ tymap f = walk
 
 substTop :: (Type, Type) -> Type
 substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
+
+instance Show Type where
+  show = display
+
+-- | @display ty@ displays @ty@ as a string. The current implementation is
+-- conservative in associativity and comma-separation.
+display :: Type -> String
+display Bool         = "Bool"
+display Int          = "Int"
+display Unit         = "Unit"
+display (t1 :->: t2) = paren $ display t1 ++ " -> " ++ display t2
+display (Var i x n)  = "v" ++ show x
+display (Rec i t)    = paren $ "μ" ++ i ++ "." ++ display t
+display (Tuple ts)   = brack $ foldr (\t s -> display t ++ "," ++ s) "" ts
+display (Record ts)  = brace $ foldr (\(i, t) s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
+display (Variant ts) = angle $ Map.foldrWithKey (\i t s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
+
+paren s = "(" ++ s ++ ")"
+brack s = "[" ++ s ++ "]"
+brace s = "{" ++ s ++ "}"
+angle s = "<" ++ s ++ ">"
