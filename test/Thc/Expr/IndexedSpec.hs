@@ -184,59 +184,59 @@ spec = do
   describe "eval" $ do
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
-        eval (Tuple [Lit $ Int 0])                                             `shouldBe` Tuple [Lit $ Int 0]
-        eval (Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1])                      `shouldBe` Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1]
-        eval (Tuple [App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldBe` Tuple [Lit $ Int 12]
+        eval (Tuple [Lit $ Int 0])                                             `shouldNotThrow` Tuple [Lit $ Int 0]
+        eval (Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1])                      `shouldNotThrow` Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1]
+        eval (Tuple [App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldNotThrow` Tuple [Lit $ Int 12]
 
     context "when given a tuple as the pattern in a lambda abstraction" $ do
       it "evaluates it binding each variable to a item" $ do
         let swap = Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 0 2, Var "a" 1 2]
-        eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
+        eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldNotThrow` Tuple [Lit $ Int 128, Lit $ Int 0]
 
         let idTuple = Abs (PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
-        eval (App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128])            `shouldBe` Tuple [Lit $ Int 0, Lit $ Int 128]
-        eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldBe` Tuple [Lit $ Int 128, Lit $ Int 0]
+        eval (App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128])            `shouldNotThrow` Tuple [Lit $ Int 0, Lit $ Int 128]
+        eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldNotThrow` Tuple [Lit $ Int 128, Lit $ Int 0]
 
         let fstsnd = Abs (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
-        eval (App fstsnd $ Tuple [Tuple [Lit $ Int 8, Lit $ Int 16], Tuple [Lit $ Int 32, Lit $ Int 64]]) `shouldBe` Lit (Int 16)
+        eval (App fstsnd $ Tuple [Tuple [Lit $ Int 8, Lit $ Int 16], Tuple [Lit $ Int 32, Lit $ Int 64]]) `shouldNotThrow` Lit (Int 16)
 
     context "when given annotated values" $ do
       it "removes the annotations" $ do
-        eval (Ann (int 12) T.Int) `shouldBe` int 12
+        eval (Ann (int 12) T.Int) `shouldNotThrow` int 12
         -- Assumes a term well typed. Even if the annotation is wrong, it is ignored.
-        eval (Ann (int 12) T.Bool) `shouldBe` int 12
+        eval (Ann (int 12) T.Bool) `shouldNotThrow` int 12
 
         let t = Abs (PVar "x") T.Bool $ int 0
-        eval (Ann t $ T.Bool T.:->: T.Int) `shouldBe` t
+        eval (Ann t $ T.Bool T.:->: T.Int) `shouldNotThrow` t
 
     context "when given a case-expression" $ do
       it "select one arm whose pattern is appropriate to a term; patterns are tested from up to down" $ do
         let t = int 7
             a = return (PVar "k", Var "k" 0 1)
             b = return (PVar "l", Var "l" 0 1)
-        eval (Case t $ a)           `shouldBe` t
-        eval (Case t $ a <> a)      `shouldBe` t
-        eval (Case t $ b)           `shouldBe` t
-        eval (Case t $ b <> b)      `shouldBe` t
-        eval (Case t $ a <> b)      `shouldBe` t
-        eval (Case t $ b <> a)      `shouldBe` t
-        eval (Case t $ a <> a <> a) `shouldBe` t
+        eval (Case t $ a)           `shouldNotThrow` t
+        eval (Case t $ a <> a)      `shouldNotThrow` t
+        eval (Case t $ b)           `shouldNotThrow` t
+        eval (Case t $ b <> b)      `shouldNotThrow` t
+        eval (Case t $ a <> b)      `shouldNotThrow` t
+        eval (Case t $ b <> a)      `shouldNotThrow` t
+        eval (Case t $ a <> a <> a) `shouldNotThrow` t
 
         let t1 = bool True
-        eval (Case t $ return (PVar "k", t1)) `shouldBe` t1
+        eval (Case t $ return (PVar "k", t1)) `shouldNotThrow` t1
 
         let tuple = Tuple [t, t1]
             p     = tuplePat ["x", "y"]
             c     = return (p, Var "x" 1 2)
             d     = return (p, Var "y" 0 2)
-        eval (Case tuple $ a) `shouldBe` tuple
-        eval (Case tuple $ c) `shouldBe` t
-        eval (Case tuple $ d) `shouldBe` t1
+        eval (Case tuple $ a) `shouldNotThrow` tuple
+        eval (Case tuple $ c) `shouldNotThrow` t
+        eval (Case tuple $ d) `shouldNotThrow` t1
 
-        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ c)) `shouldBe` t
+        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ c)) `shouldNotThrow` t
 
         let e = return (p, (Abs (PVar "z") T.Int $ Var "y" 1 3) `App` Var "x" 1 2)
-        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ e)) `shouldBe` t1
+        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ e)) `shouldNotThrow` t1
 
     context "when given a tagged term" $ do
       let l = int 5
@@ -244,37 +244,37 @@ spec = do
 
       context "when no annotation" $ do
         it "does nothing" $ do
-          eval t `shouldBe` t
+          eval t `shouldNotThrow` t
 
       context "when annotated" $ do
         it "removes the annotation" $ do
-          eval (Ann t $ T.variant [("a", T.Int)]) `shouldBe` t
+          eval (Ann t $ T.variant [("a", T.Int)]) `shouldNotThrow` t
 
       context "when also given case expression" $ do
         it "performs pattern matching" $ do
-          eval (Case t $ return (PVar "x", Var "x" 0 1))                `shouldBe` t
-          eval (Case t $ return (PVariant "a" $ PVar "x", Var "x" 0 1)) `shouldBe` l
+          eval (Case t $ return (PVar "x", Var "x" 0 1))                `shouldNotThrow` t
+          eval (Case t $ return (PVariant "a" $ PVar "x", Var "x" 0 1)) `shouldNotThrow` l
 
     context "when given Fold or Unfold" $ do
       it "evaluates it" $ do
         let t0 = int 4
         let ty = T.Rec "X" $ T.Var "X" 0 1
         let t = Fold ty t0
-        eval t `shouldBe` t
+        eval t `shouldNotThrow` t
 
         let t1 = Fold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
-        eval t1 `shouldBe` t
+        eval t1 `shouldNotThrow` t
 
         let t1 = Unfold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
         let t = Unfold ty t0
-        eval t1 `shouldBe` t
+        eval t1 `shouldNotThrow` t
 
         let t = Unfold ty (Fold ty t0)
-        eval t `shouldBe` t0
+        eval t `shouldNotThrow` t0
 
         let t2 = Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
         let t = Unfold ty (Fold ty t2)
-        eval t `shouldBe` t0
+        eval t `shouldNotThrow` t0
 
   describe "reduce" $ do
     it "do beta-reduction" $ do
