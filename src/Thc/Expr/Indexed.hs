@@ -398,7 +398,7 @@ typeOfFold ctx t = f
       ty <- typeOf' ctx t
       let ty' = T.substTop (u, ty0)
       if ty == ty'
-        then return ty
+        then return u
         else throwE $ TypeMismatch ty ty'
     f ty = throwE $ FoldError ty
 

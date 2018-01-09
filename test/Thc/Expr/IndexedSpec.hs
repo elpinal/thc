@@ -159,7 +159,8 @@ spec = do
 
     context "when given an Fold term" $ do
       it "returns the type of the term" $ do
-        typeOf (Fold (T.Rec "X" T.Int) $ int 3) `shouldNotThrow` return T.Int
+        let ty = T.Rec "X" T.Int
+        typeOf (Fold ty $ int 3) `shouldNotThrow` return ty
 
         let ty = T.Rec "X" $ T.Var "X" 0 1
         typeOf (Fold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
@@ -174,8 +175,11 @@ spec = do
 
         let intlist a = T.variant [("nil", T.Unit), ("cons", T.Tuple [T.Int, a])]
         let ty        = T.Rec "X" $ intlist $ T.Var "X" 0 1
-        let t         = Ann (Tagged "nil" unit) ty
-        typeOf (Unfold ty t) `shouldNotThrow` return (intlist ty)
+        let ilbody    = intlist ty
+        let t         = Ann (Tagged "nil" unit) ilbody
+        typeOf t                       `shouldNotThrow` return ilbody
+        typeOf (Fold ty t)             `shouldNotThrow` return ty
+        typeOf (Unfold ty $ Fold ty t) `shouldNotThrow` return ilbody
 
   describe "eval" $ do
     context "when given a tuple" $ do
