@@ -43,14 +43,14 @@ tymap :: (Int -> String -> Int -> Int -> Type) -> Int -> Type -> Type
 tymap f = walk
   where
     walk :: Int -> Type -> Type
-    walk c Bool = Bool
-    walk c Int = Int
-    walk c Unit = Unit
+    walk c Bool         = Bool
+    walk c Int          = Int
+    walk c Unit         = Unit
     walk c (t1 :->: t2) = walk c t1 :->: walk c t2
-    walk c (Var i x n) = f c i x n
-    walk c (Rec i t) = Rec i $ walk (c + 1) t
-    walk c (Tuple ts) = Tuple $ map (walk c) ts
-    walk c (Record ts) = Record $ map (second $ walk c) ts
+    walk c (Var i x n)  = f c i x n
+    walk c (Rec i t)    = Rec i $ walk (c + 1) t
+    walk c (Tuple ts)   = Tuple $ map (walk c) ts
+    walk c (Record ts)  = Record $ map (second $ walk c) ts
     walk c (Variant ts) = Variant $ Map.map (walk c) ts
 
 substTop :: (Type, Type) -> Type
