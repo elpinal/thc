@@ -37,9 +37,11 @@ module Thc.Expr.Indexed
   , shift
   ) where
 
+import Control.Applicative
 import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad
+import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Except
 import Data.Foldable
