@@ -36,7 +36,8 @@ module Thc.Expr.Indexed
 
 import Control.Arrow
 import Control.Exception.Safe
-import Control.Monad.State.Lazy
+import Control.Monad
+import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Except
 import Data.Foldable
 import qualified Data.List.NonEmpty as NonEmpty
