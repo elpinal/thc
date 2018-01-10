@@ -23,6 +23,7 @@ module Thc.Expr.Indexed
   , EvalError(..)
   , TypeError(..)
   , BindError(..)
+  , PatternMatchError(..)
 
   -- * Exceptions
   , MonadThrowPlus(..)
@@ -360,7 +361,7 @@ reduce p t1 t2 = flip evalStateT 0 . runExceptT $ shift (-l) <$> reduce' p t1 t2
       | otherwise = lift . lift $ throwPatTerm pv tt
     reduce' (E.PLiteral l1) (Lit l2) t
       | l1 == l2  = return t
-      | otherwise = undefined
+      | otherwise = throwE $ LiteralMismatch l1 l2
     reduce' p t1 t2 = do
       t1' <- lift $ evalForPat p t1
       reduce' p t1' t2

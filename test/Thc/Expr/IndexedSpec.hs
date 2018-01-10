@@ -290,6 +290,14 @@ spec = do
       let t = Var "x" 0 1
       reduce (PVar "x") (Var "y" 1 2) t `shouldNotThrowM` Var "y" 1 2
 
+    context "when given a literal pattern" $ do
+      it "tests the value" $ do
+        let l1 = int 0
+            l2 = int 2
+        reduce (int 0) l1 l2 `shouldNotThrowM` l2
+        let l1 = int 1
+        reduce (int 0) l1 l2 `shouldNotThrow` Left (LiteralMismatch (Int 0) (Int 1))
+
     context "when a pattern and an argument are mismatched" $ do
       it "throws an exception" $ do
         -- TODO:
