@@ -17,6 +17,11 @@ shouldNotThrow x y = do
   x' <- x
   x' `shouldBe` y
 
+shouldNotThrowM :: (HasCallStack, Eq (m a), Show (m a), Monad m) => IO (m a) -> a -> Expectation
+shouldNotThrowM x y = do
+  x' <- x
+  x' `shouldBe` return y
+
 spec :: Spec
 spec = do
   describe "fromNamed" $ do
@@ -279,11 +284,11 @@ spec = do
   describe "reduce" $ do
     it "do beta-reduction" $ do
       let t = Lit $ Bool True
-      reduce (PVar "x") (Lit $ Int 8) t `shouldNotThrow` t
+      reduce (PVar "x") (Lit $ Int 8) t `shouldNotThrowM` t
 
-      reduce (PVar "x") (Lit $ Int 12) (Var "y" 1 2) `shouldNotThrow` Var "y" 0 1
+      reduce (PVar "x") (Lit $ Int 12) (Var "y" 1 2) `shouldNotThrowM` Var "y" 0 1
       let t = Var "x" 0 1
-      reduce (PVar "x") (Var "y" 1 2) t `shouldNotThrow` Var "y" 1 2
+      reduce (PVar "x") (Var "y" 1 2) t `shouldNotThrowM` Var "y" 1 2
 
     context "when a pattern and an argument are mismatched" $ do
       it "throws an exception" $ do

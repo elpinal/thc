@@ -272,7 +272,7 @@ eval :: MonadThrowPlus m => Term -> m Term
 eval t = eval1 t >>= maybe (return t) eval
 
 eval1 :: MonadThrowPlus m => Term -> m (Maybe Term)
-eval1 (App (Abs p _ t2) t1)     = return <$> reduce p t1 t2
+eval1 (App (Abs p _ t2) t1)     = either2maybe <$> reduce p t1 t2
 eval1 (App t1 t2)               = flip App t2 <$$> eval1 t1
 eval1 (Tuple ts)                = Tuple <$$> evalTuple1 ts
 eval1 (Ann t ty)                = maybe t (flip Ann ty) <-$> eval1 t
@@ -292,8 +292,12 @@ evalCase1 :: MonadThrowPlus m => Term -> NonEmpty.NonEmpty (E.Pattern, Term) -> 
 evalCase1 t as = eval1 t >>= maybe result next
   where
     next   = liftJust . flip Case as
-    result = return . getAlt $ foldMap (Alt . f) as
+    result = fmap either2maybe . getAlt $ foldMap (Alt . f) as
     f      = uncurry $ flip reduce t
+
+either2maybe :: Either e a -> Maybe a
+either2maybe (Right x) = return x
+either2maybe (Left x) = Nothing
 
 liftJust :: MonadThrow m => a -> m (Maybe a)
 liftJust = return . Just
@@ -341,22 +345,29 @@ instance MonadThrowPlus m => MonadThrowPlus (StateT s m) where
 -- >>> tuple = Tuple [Tuple [E.int 2, Abs (E.PVar "z") T.Int $ Var "z" 0 1], Tuple [E.int 4, E.int 5]]
 -- >>> reduce p tuple (Var "y" 2 4)
 -- Abs (PVar "z") Int (Var "z" 0 1)
-reduce :: MonadThrowPlus m => E.Pattern -> Term -> Term -> m Term
-reduce p t1 t2 = fmap (shift (-l)) . flip evalStateT 0 $ reduce' p t1 t2
+reduce :: MonadThrowPlus m => E.Pattern -> Term -> Term -> m (Either PatternMatchError Term)
+reduce p t1 t2 = flip evalStateT 0 . runExceptT $ shift (-l) <$> reduce' p t1 t2
   where
     l = E.nbounds p
 
-    reduce' :: MonadThrowPlus m => E.Pattern -> Term -> Term -> StateT Int m Term
-    reduce' (E.PVar _) t1 t2 = state $ \n -> (subst n (shift l t1) t2, n + 1)
+    reduce' :: MonadThrowPlus m => E.Pattern -> Term -> Term -> ExceptT PatternMatchError (StateT Int m) Term
+    reduce' (E.PVar _) t1 t2 = lift . state $ \n -> (subst n (shift l t1) t2, n + 1)
     reduce' (E.PTuple ps) (Tuple ts) t = foldrM (uncurry reduce') t $ zip ps ts
     reduce' pv @ (E.PVariant i1 p) tt @ (Tagged i2 t1) t2
       | i1 == i2  = reduce' p t1 t2
       -- TODO: Can't determine the type of 'tt' at this time, so the exception
       -- can be difficult to understand.
-      | otherwise = throwPatTerm pv tt
+      | otherwise = lift . lift $ throwPatTerm pv tt
+    reduce' (E.PLiteral l1) (Lit l2) t
+      | l1 == l2  = return t
+      | otherwise = undefined
     reduce' p t1 t2 = do
-      t1' <- evalForPat p t1
+      t1' <- lift $ evalForPat p t1
       reduce' p t1' t2
+
+data PatternMatchError
+  = LiteralMismatch E.Literal E.Literal
+  deriving (Eq, Show)
 
 evalForPat :: MonadThrowPlus m => E.Pattern -> Term -> m Term
 evalForPat (E.PVar _) t = return t
