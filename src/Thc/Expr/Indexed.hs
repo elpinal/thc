@@ -444,11 +444,7 @@ typeOf' ctx (Ann (Tagged i t) ty @ (T.Variant ts)) = do
   ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
   typeOf' ctx $ Ann t ty'
   return ty
-typeOf' ctx (Ann t ty) = do
-  ty' <- typeOf' ctx t
-  if ty == ty'
-    then return ty
-    else throwE $ TypeMismatch ty' ty
+typeOf' ctx (Ann t ty) = typeOf' ctx t >>= assertType ty
 typeOf' ctx (Case t ts) = do
   ty <- typeOf' ctx t
   x NonEmpty.:| xs <- forM ts $ typeWithPat ctx ty
@@ -457,6 +453,11 @@ typeOf' ctx (Case t ts) = do
     else throwE $ IncompatibleArms ts
 typeOf' ctx (Fold ty t) = typeOfFold ctx t ty
 typeOf' ctx (Unfold ty t) = typeOfUnfold ctx t ty
+
+assertType :: Monad m => T.Type -> T.Type -> ExceptT TypeError m T.Type
+assertType ty1 ty2
+  | ty1 == ty2 = return ty1
+  | otherwise = throwE $ TypeMismatch ty2 ty1
 
 typeOfFold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
 typeOfFold ctx t = f
