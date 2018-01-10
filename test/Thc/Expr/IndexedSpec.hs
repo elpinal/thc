@@ -192,6 +192,18 @@ spec = do
         typeOf (Unfold ty $ Fold ty t) `shouldNotThrowM` ilbody
 
   describe "eval" $ do
+    context "when given a literal pattern" $ do
+      it "evaluates it" $ do
+        let p = int 0
+        let ty = T.Int
+        let t = Abs p ty unit
+        eval t               `shouldNotThrow` t
+        eval (t `App` int 0) `shouldNotThrow` unit
+
+        -- A case where a pattern match fails.
+        let t1 = App t $ int 6
+        eval t1 `shouldNotThrow` t1
+
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
         eval (Tuple [Lit $ Int 0])                                             `shouldNotThrow` Tuple [Lit $ Int 0]
