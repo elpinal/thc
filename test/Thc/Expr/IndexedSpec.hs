@@ -86,6 +86,11 @@ spec = do
         typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
         typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
 
+        typeOf (Abs (int 1) T.Int unit)             `shouldNotThrow` return (T.Int T.:->: T.Unit)
+        typeOf (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrow` return T.Unit
+        typeOf (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrow` return T.Unit
+        typeOf (Abs unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
+
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
           p = tuplePat ["x", "y"]

@@ -122,6 +122,7 @@ bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
 bindPatternU ctx p = bindPattern1 Binder
   { onTuple = \ps _ -> return . zip ps $ repeat ()
   , onVariant = \ctx _ p _ -> bindPatternU ctx p
+  , onLiteral = \ctx _ _ -> return ctx
   } ctx p ()
 
 -- |
@@ -133,6 +134,7 @@ bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
 bindPattern = bindPattern1 Binder
   { onTuple = f
   , onVariant = g
+  , onLiteral = h
   }
     where
       f ps ty @ (T.Tuple ts)
@@ -145,6 +147,10 @@ bindPattern = bindPattern1 Binder
         bindPattern ctx p ty
       g _ i p ty = Left $ PatternMismatch (E.PVariant i p) ty
 
+      h ctx l ty
+        | E.typeOfLiteral l == ty = return ctx
+        | otherwise               = Left $ PatternMismatch (E.PLiteral l) ty
+
 data BindError
   = PatternMismatch E.Pattern T.Type
   | DuplicateVariables E.Pattern
@@ -153,6 +159,7 @@ data BindError
 data Binder a = Binder
   { onTuple   :: [E.Pattern] -> a -> Either BindError [(E.Pattern, a)]
   , onVariant :: Context1 a -> String -> E.Pattern -> a -> Either BindError (Context1 a)
+  , onLiteral :: Context1 a -> E.Literal -> a -> Either BindError (Context1 a)
   }
 
 bindPattern1 :: Binder a -> Context1 a -> E.Pattern -> a -> Either BindError (Context1 a)
@@ -166,7 +173,7 @@ bindPattern1 binder ctx p @ (E.PTuple ps) x
 
       f ctx (p, x) = bindPattern1 binder ctx p x
 bindPattern1 binder ctx (E.PVariant i p) x = onVariant binder ctx i p x
-bindPattern1 _ ctx (E.PLiteral _) _ = return ctx
+bindPattern1 binder ctx (E.PLiteral l) x = onLiteral binder ctx l x
 
 -- | @dups xs@ finds duplications in @xs@.
 dups :: [E.Pattern] -> [String]
