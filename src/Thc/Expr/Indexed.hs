@@ -266,7 +266,7 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 -- For ill-typed terms:
 --
 -- >>> x = (Abs (E.PVar "x") T.Int $ App (Var "x" 0 1) (Var "x" 0 1))
--- >>> eval x == x
+-- >>> eval x == Just x
 -- True
 -- >>> eval (App x (E.int 2))
 -- App (Lit (Int 2)) (Lit (Int 2))
