@@ -37,7 +37,6 @@ module Thc.Expr.Indexed
   , shift
   ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad
@@ -283,10 +282,10 @@ eval1 (Tuple ts) = fmap Tuple <$> f ts
   where
     f :: MonadThrowPlus m => [Term] -> m (Maybe [Term])
     f [] = return Nothing
-    f (t : ts) = eval1 t >>= maybe (qq t) (g ts)
+    f (t : ts) = eval1 t >>= maybe (qq t ts) (g ts)
 
-    qq :: MonadThrowPlus m => Term -> m (Maybe [Term])
-    qq t = fmap (t :) <$> f ts
+    qq :: MonadThrowPlus m => Term -> [Term] -> m (Maybe [Term])
+    qq t ts = fmap (t :) <$> f ts
 
     g :: MonadThrow m => [Term] -> Term -> m (Maybe [Term])
     g ts = return . return . (: ts)
