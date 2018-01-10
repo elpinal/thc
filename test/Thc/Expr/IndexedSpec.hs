@@ -78,17 +78,17 @@ spec = do
   describe "typeOf" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        typeOf (bool True)                                                                                   `shouldNotThrow` return T.Bool
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrow` return (T.Int T.:->: T.Int)
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` return ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
+        typeOf (bool True)                                                                                   `shouldNotThrowM` T.Bool
+        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrowM` (T.Int T.:->: T.Int)
+        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
+        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
-        typeOf (Record [])                   `shouldNotThrow` return (T.Record [])
-        typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrow` return (T.Record [("a", T.Int)])
+        typeOf (Record [])                   `shouldNotThrowM` (T.Record [])
+        typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrowM` (T.Record [("a", T.Int)])
 
-        typeOf (Abs (int 1) T.Int unit)             `shouldNotThrow` return (T.Int T.:->: T.Unit)
-        typeOf (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrow` return T.Unit
-        typeOf (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrow` return T.Unit
+        typeOf (Abs (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
+        typeOf (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
+        typeOf (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
         typeOf (Abs unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
 
     context "when given a Case" $ do
@@ -96,25 +96,25 @@ spec = do
           p = tuplePat ["x", "y"]
 
       it "returns the type which is all the arms identically have" $ do
-        typeOf (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrow` return T.Int
-        typeOf (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrow` return T.Bool
+        typeOf (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrowM` T.Int
+        typeOf (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrowM` T.Bool
 
-        typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrow` return T.Int
-        typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrow` return T.Bool
+        typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrowM` T.Int
+        typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrowM` T.Bool
 
         let t = Tagged "a" $ int 88
             p = PVar "x"
             ty = T.variant [("a", T.Int)]
         typeOf (Case t $ return (p, Var "x" 0 1))          `shouldNotThrow` Left (BareVariant "a" $ int 88)
-        typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrow` return ty
+        typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrowM` ty
 
         let p = PVariant "a" $ PVar "x"
             q = PVariant "nolabel" $ PVar "x"
             s = Var "x" 0 1
             a = return (p, s)
             b = return (q, s)
-        typeOf (Case (Ann t ty) a)        `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
+        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
         typeOf (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
         typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
         typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
@@ -122,11 +122,11 @@ spec = do
         let ty = T.variant [("a", T.Int), ("b", T.Unit)]
             q = PVariant "b" $ PVar "x"
             b = return (q, int 10)
-        typeOf (Case (Ann t ty) a)        `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) b)        `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` return T.Int
-        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` return T.Int
+        typeOf (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
+        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
+        typeOf (Case (Ann t ty) b)        `shouldNotThrowM` T.Int
+        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrowM` T.Int
+        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrowM` T.Int
 
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
@@ -145,7 +145,7 @@ spec = do
         typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Left (VariantError "l" (int 0) Map.empty)
 
         let ty = T.variant [("l", T.Int)]
-        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrow` return ty
+        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
 
         let ts = Map.singleton "aaa" T.Int
         typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (VariantError "l" (int 0) ts)
@@ -154,12 +154,12 @@ spec = do
         typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (TypeMismatch T.Int T.Bool)
 
         let ty = T.variant [("l", T.Int), ("x", T.Unit)]
-        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrow` return ty
+        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
 
     context "when given annotations" $ do
       it "tests that the type of a term is equal to the annotated type" $ do
         let l = Lit $ Bool False
-        typeOf (Ann l T.Bool) `shouldNotThrow` return T.Bool
+        typeOf (Ann l T.Bool) `shouldNotThrowM` T.Bool
         typeOf (Ann l T.Int)  `shouldNotThrow` Left (TypeMismatch T.Bool T.Int)
 
     context "when given a non-typable term" $ do
@@ -170,7 +170,7 @@ spec = do
     context "when given an Fold term" $ do
       it "returns the type of the term" $ do
         let ty = T.Rec "X" T.Int
-        typeOf (Fold ty $ int 3) `shouldNotThrow` return ty
+        typeOf (Fold ty $ int 3) `shouldNotThrowM` ty
 
         let ty = T.Rec "X" $ T.Var "X" 0 1
         typeOf (Fold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
@@ -187,9 +187,9 @@ spec = do
         let ty        = T.Rec "X" $ intlist $ T.Var "X" 0 1
         let ilbody    = intlist ty
         let t         = Ann (Tagged "nil" unit) ilbody
-        typeOf t                       `shouldNotThrow` return ilbody
-        typeOf (Fold ty t)             `shouldNotThrow` return ty
-        typeOf (Unfold ty $ Fold ty t) `shouldNotThrow` return ilbody
+        typeOf t                       `shouldNotThrowM` ilbody
+        typeOf (Fold ty t)             `shouldNotThrowM` ty
+        typeOf (Unfold ty $ Fold ty t) `shouldNotThrowM` ilbody
 
   describe "eval" $ do
     context "when given a tuple" $ do
