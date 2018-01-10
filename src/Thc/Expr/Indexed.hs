@@ -276,25 +276,28 @@ eval :: MonadThrowPlus m => Term -> m Term
 eval t = eval1 t >>= maybe (return t) eval
 
 eval1 :: MonadThrowPlus m => Term -> m (Maybe Term)
-eval1 (App (Abs p _ t2) t1) = return <$> reduce p t1 t2
-eval1 (App t1 t2) = flip App t2 <$$> eval1 t1
-eval1 (Tuple ts) = Tuple <$$> evalTuple1 ts
-eval1 (Ann t ty) = maybe t (flip Ann ty) <-$> eval1 t
-eval1 (Case t as) = eval1 t >>= maybe result next
-  where
-    next   = liftJust . flip Case as
-    result = return . getAlt $ foldMap (Alt . f) as
-    f      = uncurry $ flip reduce t
-eval1 (Fold ty t) = Fold ty <$$> eval1 t
+eval1 (App (Abs p _ t2) t1)     = return <$> reduce p t1 t2
+eval1 (App t1 t2)               = flip App t2 <$$> eval1 t1
+eval1 (Tuple ts)                = Tuple <$$> evalTuple1 ts
+eval1 (Ann t ty)                = maybe t (flip Ann ty) <-$> eval1 t
+eval1 (Case t as)               = evalCase1 t as
+eval1 (Fold ty t)               = Fold ty <$$> eval1 t
 eval1 (Unfold ty1 (Fold ty2 t)) = maybe t (Unfold ty1 . Fold ty2) <-$> eval1 t
-eval1 (Unfold ty t) = Unfold ty <$$> eval1 t
-eval1 _ = return Nothing
+eval1 (Unfold ty t)             = Unfold ty <$$> eval1 t
+eval1 _                         = return Nothing
 
 -- | @evalTuple1 ts@ applies 'eval1' to the first term of @ts@ that is not the
 -- normal form.
 evalTuple1 :: MonadThrowPlus m => [Term] -> m (Maybe [Term])
 evalTuple1 [] = return Nothing
 evalTuple1 (t : ts) = eval1 t >>= maybe ((t :) <$$> evalTuple1 ts) (liftJust . (: ts))
+
+evalCase1 :: MonadThrowPlus m => Term -> NonEmpty.NonEmpty (E.Pattern, Term) -> m (Maybe Term)
+evalCase1 t as = eval1 t >>= maybe result next
+  where
+    next   = liftJust . flip Case as
+    result = return . getAlt $ foldMap (Alt . f) as
+    f      = uncurry $ flip reduce t
 
 liftJust :: MonadThrow m => a -> m (Maybe a)
 liftJust = return . Just
