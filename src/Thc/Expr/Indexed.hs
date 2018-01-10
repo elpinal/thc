@@ -279,14 +279,14 @@ eval1 :: MonadThrowPlus m => Term -> m (Maybe Term)
 eval1 (App (Abs p _ t2) t1) = return <$> reduce p t1 t2
 eval1 (App t1 t2) = flip App t2 <$$> eval1 t1
 eval1 (Tuple ts) = Tuple <$$> evalTuple1 ts
-eval1 (Ann t ty) = return . maybe t (flip Ann ty) <$> eval1 t
+eval1 (Ann t ty) = maybe t (flip Ann ty) <-$> eval1 t
 eval1 (Case t as) = eval1 t >>= maybe result next
   where
-    next   = return . Just . flip Case as
-    result = fmap return . getAlt $ foldMap (Alt . f) as
+    next   = liftJust . flip Case as
+    result = return . getAlt $ foldMap (Alt . f) as
     f      = uncurry $ flip reduce t
 eval1 (Fold ty t) = Fold ty <$$> eval1 t
-eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) <$> eval1 t
+eval1 (Unfold ty1 (Fold ty2 t)) = maybe t (Unfold ty1 . Fold ty2) <-$> eval1 t
 eval1 (Unfold ty t) = Unfold ty <$$> eval1 t
 eval1 _ = return Nothing
 
@@ -301,6 +301,9 @@ liftJust = return . Just
 
 (<$$>) :: (Functor f, Functor f') => (a -> b) -> f (f' a) -> f (f' b)
 (<$$>) = fmap . fmap
+
+(<-$>) :: (Functor f, Monad m) => (a -> b) -> f a -> f (m b)
+(<-$>) f = fmap $ return . f
 
 class (MonadThrow m, MonadPlus m) => MonadThrowPlus m where
   mthrowM :: Exception e => e -> m a
