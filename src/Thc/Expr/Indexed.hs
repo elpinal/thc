@@ -278,17 +278,7 @@ eval t = eval1 t >>= maybe (return t) eval
 eval1 :: MonadThrowPlus m => Term -> m (Maybe Term)
 eval1 (App (Abs p _ t2) t1) = return <$> reduce p t1 t2
 eval1 (App t1 t2) = fmap (flip App t2) <$> eval1 t1
-eval1 (Tuple ts) = fmap Tuple <$> f ts
-  where
-    f :: MonadThrowPlus m => [Term] -> m (Maybe [Term])
-    f [] = return Nothing
-    f (t : ts) = eval1 t >>= maybe (qq t ts) (g ts)
-
-    qq :: MonadThrowPlus m => Term -> [Term] -> m (Maybe [Term])
-    qq t ts = fmap (t :) <$> f ts
-
-    g :: MonadThrow m => [Term] -> Term -> m (Maybe [Term])
-    g ts = return . return . (: ts)
+eval1 (Tuple ts) = fmap Tuple <$> evalTuple1 ts
 eval1 (Ann t ty) = return . maybe t (flip Ann ty) <$> eval1 t
 eval1 (Case t as) = eval1 t >>= maybe result next
   where
@@ -299,6 +289,15 @@ eval1 (Fold ty t) = fmap (Fold ty) <$> eval1 t
 eval1 (Unfold ty1 (Fold ty2 t)) = return . maybe t (Unfold ty1 . Fold ty2) <$> eval1 t
 eval1 (Unfold ty t) = fmap (Unfold ty) <$> eval1 t
 eval1 _ = return Nothing
+
+-- | @evalTuple1 ts@ applies 'eval1' to the first term of @ts@ that is not the
+-- normal form.
+evalTuple1 :: MonadThrowPlus m => [Term] -> m (Maybe [Term])
+evalTuple1 [] = return Nothing
+evalTuple1 (t : ts) = eval1 t >>= maybe (fmap (t :) <$> evalTuple1 ts) (liftJust . (: ts))
+
+liftJust :: MonadThrow m => a -> m (Maybe a)
+liftJust = return . Just
 
 class (MonadThrow m, MonadPlus m) => MonadThrowPlus m where
   mthrowM :: Exception e => e -> m a
