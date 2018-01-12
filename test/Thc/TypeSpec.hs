@@ -1,7 +1,7 @@
 module Thc.TypeSpec where
 
 import Test.Hspec
-import Test.QuickCheck
+import Test.QuickCheck hiding (variant)
 
 import Control.Applicative
 
@@ -12,9 +12,14 @@ instance Arbitrary TypeId where
 
 instance Arbitrary Type where
   arbitrary = oneof $
-    map return [Int] ++
+    map return [Int, Bool, Unit] ++
     [ Id <$> arbitrary
     , liftA2 (:->:) arbitrary arbitrary
+    , liftA3 Var arbitrary arbitrary arbitrary
+    , liftA2 Rec arbitrary arbitrary
+    , fmap Tuple $ replicate <$> arbitrary <*> arbitrary
+    , fmap Record $ replicate <$> arbitrary <*> arbitrary
+    , fmap variant $ replicate <$> arbitrary <*> arbitrary
     ]
 
 spec :: Spec
