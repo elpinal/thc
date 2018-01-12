@@ -1,17 +1,21 @@
 module Thc.Type
   ( Type(..)
+  , TypeId(IdString)
   , variant
   , substTop
   ) where
 
 import Control.Arrow
+import Control.Monad.Trans.State.Lazy
 import qualified Data.Map.Lazy as Map
+import qualified Data.Set as Set
 
 data Type =
     Bool
   | Int
   | Unit
   | Type :->: Type
+  | Id TypeId -- TODO: naming
   | Var String Int Int
   | Rec String Type
   | Tuple [Type]
@@ -20,6 +24,14 @@ data Type =
   deriving Eq
 
 infixr 9 :->:
+
+data TypeId
+  = IdString String
+  | Fresh Int
+  deriving (Eq, Ord)
+
+freshVar :: State Int TypeId
+freshVar = state $ \n -> (Fresh n, n + 1)
 
 -- | @variant xs@ creates a new 'Variant' from @xs@.
 variant :: [(String, Type)] -> Type
@@ -46,6 +58,7 @@ tymap f = walk
     walk c Bool         = Bool
     walk c Int          = Int
     walk c Unit         = Unit
+    walk c (Id i)       = Id i
     walk c (t1 :->: t2) = walk c t1 :->: walk c t2
     walk c (Var i x n)  = f c i x n
     walk c (Rec i t)    = Rec i $ walk (c + 1) t
@@ -59,20 +72,57 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 instance Show Type where
   show = display
 
+class Display a where
+  display :: a -> String
+
 -- | @display ty@ displays @ty@ as a string. The current implementation is
 -- conservative in associativity and comma-separation.
-display :: Type -> String
-display Bool         = "Bool"
-display Int          = "Int"
-display Unit         = "Unit"
-display (t1 :->: t2) = paren $ display t1 ++ " -> " ++ display t2
-display (Var i x n)  = "v" ++ show x
-display (Rec i t)    = paren $ "μ" ++ i ++ "." ++ display t
-display (Tuple ts)   = brack $ foldr (\t s -> display t ++ "," ++ s) "" ts
-display (Record ts)  = brace $ foldr (\(i, t) s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
-display (Variant ts) = angle $ Map.foldrWithKey (\i t s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
+instance Display Type where
+  display Bool         = "Bool"
+  display Int          = "Int"
+  display Unit         = "Unit"
+  display (Id i)       = display i
+  display (t1 :->: t2) = paren $ display t1 ++ " -> " ++ display t2
+  display (Var i x n)  = "v" ++ show x
+  display (Rec i t)    = paren $ "μ" ++ i ++ "." ++ display t
+  display (Tuple ts)   = brack $ foldr (\t s -> display t ++ "," ++ s) "" ts
+  display (Record ts)  = brace $ foldr (\(i, t) s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
+  display (Variant ts) = angle $ Map.foldrWithKey (\i t s -> i ++ "=" ++ display t ++ "," ++ s) "" ts
+
+-- | @display i@ displays @i@ as a string. The current implementation adopts
+-- arbitrary formats.
+instance Display TypeId where
+  display (IdString s) = "!X" ++ s
+  display (Fresh n) = "?X" ++ show n
 
 paren s = "(" ++ s ++ ")"
 brack s = "[" ++ s ++ "]"
 brace s = "{" ++ s ++ "}"
 angle s = "<" ++ s ++ ">"
+
+type Subst = Map.Map TypeId Type
+
+class Types t where
+  apply :: Subst -> t -> t
+  tv :: t -> Set.Set TypeId
+
+instance Types Type where
+  apply s v @ (Id i)   = Map.findWithDefault v i s
+  apply s (t1 :->: t2) = apply s t1 :->: apply s t2
+  apply s (Rec i t)    = Rec i $ apply s t
+  apply s (Tuple ts)   = Tuple $ map (apply s) ts
+  apply s (Record ts)  = Record $ map (second $ apply s) ts
+  apply s (Variant ts) = Variant $ Map.map (apply s) ts
+  apply _ t            = t
+
+  tv (Id i) = Set.singleton i
+  tv (t1 :->: t2) = tv t1 `Set.union` tv t2
+  tv (Rec i t)    = tv t
+  tv (Tuple ts)   = foldMap tv ts
+  tv (Record ts)  = foldMap (tv . snd) ts
+  tv (Variant ts) = foldMap tv ts
+  tv _            = Set.empty
+
+instance Types t => Types [t] where
+  apply = map . apply
+  tv = Set.unions . map tv
