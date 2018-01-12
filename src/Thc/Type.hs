@@ -102,6 +102,12 @@ angle s = "<" ++ s ++ ">"
 
 type Subst = Map.Map TypeId Type
 
+-- |
+-- Composes two @Subst@ from right in series, i.e.
+-- (@apply (a \@\@ b) = apply a . apply b@).
+(@@) :: Subst -> Subst -> Subst
+x @@ y = Map.map (apply x) y `Map.union` x
+
 class Types t where
   apply :: Subst -> t -> t
   tv :: t -> Set.Set TypeId
