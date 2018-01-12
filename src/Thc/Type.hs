@@ -3,9 +3,15 @@ module Thc.Type
   , TypeId(IdString)
   , variant
   , substTop
+  , Subst
+  , Constraints
+  , fromList
+  , unify
+  , Error(..)
   ) where
 
 import Control.Arrow
+import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
 import qualified Data.Map.Lazy as Map
 import qualified Data.Set as Set
@@ -21,7 +27,7 @@ data Type =
   | Tuple [Type]
   | Record [(String, Type)]
   | Variant (Map.Map String Type)
-  deriving Eq
+  deriving (Eq, Ord)
 
 infixr 9 :->:
 
@@ -102,6 +108,9 @@ angle s = "<" ++ s ++ ">"
 
 type Subst = Map.Map TypeId Type
 
+emptySubst :: Subst
+emptySubst = Map.empty
+
 -- |
 -- Composes two @Subst@ from right in series, i.e.
 -- (@apply (a \@\@ b) = apply a . apply b@).
@@ -140,3 +149,37 @@ instance (Ord t, Types t) => Types (Set.Set t) where
 instance (Types t1, Types t2) => Types (t1, t2) where
   apply s = apply s *** apply s
   tv (x, y) = tv x `Set.union` tv y
+
+type Constraints = Set.Set (Type, Type)
+
+fromList :: [(Type, Type)] -> Constraints
+fromList = Set.fromList
+
+data Error
+  = Unify Type Type -- ^ @Unify t1 t2@ indicates that @t1@ and @t2@ does not unify..
+
+-- | @unify cs@ returns the most general unifier on 'Constraints'.
+unify :: Constraints -> Either Error Subst
+unify cs = execStateT (mapM_ f cs) emptySubst
+  where
+    f :: (Type, Type) -> StateT Subst (Either Error) ()
+    f (t1, t2) = do
+      f <- apply <$> get
+      s <- lift $ f t1 `mgu` f t2
+      modify $ (s @@)
+
+-- | @mgu ty1 ty2@ returns the most general unifier on two types.
+mgu :: Type -> Type -> Either Error Subst
+mgu (Id i) t = varBind i t
+mgu t (Id i) = varBind i t
+mgu (tyS1 :->: tyS2) (tyT1 :->: tyT2) = do
+  s <- mgu tyS1 tyT1
+  t <- apply s tyS2 `mgu` apply s tyT2
+  return $ t @@ s
+mgu t1 t2
+  | t1 == t2  = return emptySubst
+  | otherwise = Left $ Unify t1 t2
+
+varBind :: TypeId -> Type -> Either Error Subst
+varBind i1 (Id i2) | i1 == i2 = return emptySubst
+varBind i t = return $ Map.singleton i t
