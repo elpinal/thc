@@ -1,12 +1,18 @@
 module Thc.Type
   ( Type(..)
   , TypeId(IdString)
+  , idString
   , variant
   , substTop
   , Subst
+  , emptySubst
+  , (|->)
+  , (@@)
   , Constraints
   , fromList
   , unify
+  , mgu
+  , varBind
   , Error(..)
   ) where
 
@@ -38,6 +44,9 @@ data TypeId
 
 freshVar :: State Int TypeId
 freshVar = state $ \n -> (Fresh n, n + 1)
+
+idString :: String -> Type
+idString = Id . IdString
 
 -- | @variant xs@ creates a new 'Variant' from @xs@.
 variant :: [(String, Type)] -> Type
@@ -78,6 +87,9 @@ substTop = subst 0 . shift 1 *** id >>> app >>> shift (-1)
 instance Show Type where
   show = display
 
+instance Show TypeId where
+  show = display
+
 class Display a where
   display :: a -> String
 
@@ -110,6 +122,9 @@ type Subst = Map.Map TypeId Type
 
 emptySubst :: Subst
 emptySubst = Map.empty
+
+(|->) :: TypeId -> Type -> Subst
+(|->) = Map.singleton
 
 -- |
 -- Composes two @Subst@ from right in series, i.e.
@@ -157,6 +172,7 @@ fromList = Set.fromList
 
 data Error
   = Unify Type Type -- ^ @Unify t1 t2@ indicates that @t1@ and @t2@ does not unify..
+  deriving (Eq, Show)
 
 -- | @unify cs@ returns the most general unifier on 'Constraints'.
 unify :: Constraints -> Either Error Subst
