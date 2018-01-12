@@ -34,3 +34,10 @@ spec = do
       it "returns a substitution from the type variable to the type" $ property $
         \i -> forAll (suchThat arbitrary (/= Id i)) $ \t ->
           varBind i t === return (i |-> t)
+
+  describe "mgu" $ do
+    context "when given two arrow type" $ do
+      it "returns the most general unifier" $ do
+        mgu (Int :->: idString "X") (Int :->: idString "X")          `shouldBe` return emptySubst
+        mgu (Int :->: idString "X") (idString "X" :->: Int)          `shouldBe` return (IdString "X" |-> Int)
+        mgu (idString "Y" :->: idString "X") (idString "X" :->: Int) `shouldBe` (IdString "Y" |-> Int `merge` IdString "X" |-> Int)
