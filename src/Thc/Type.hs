@@ -131,4 +131,12 @@ instance Types Type where
 
 instance Types t => Types [t] where
   apply = map . apply
-  tv = Set.unions . map tv
+  tv = foldMap tv
+
+instance (Ord t, Types t) => Types (Set.Set t) where
+  apply = Set.map . apply
+  tv = foldMap tv
+
+instance (Types t1, Types t2) => Types (t1, t2) where
+  apply s = apply s *** apply s
+  tv (x, y) = tv x `Set.union` tv y
