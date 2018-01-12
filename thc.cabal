@@ -29,7 +29,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.8.1
                      , QuickCheck
-                     , containers >= 0.5.7.1
+                     , containers >= 0.5.8
                      , safe-exceptions >= 0.1.6.0
                      , transformers >= 0.5.2.0
   default-language:    Haskell2010

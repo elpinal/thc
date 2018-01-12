@@ -8,6 +8,7 @@ module Thc.Type
   , emptySubst
   , (|->)
   , (@@)
+  , merge
   , Constraints
   , fromList
   , unify
@@ -20,6 +21,7 @@ import Control.Arrow
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
 import qualified Data.Map.Lazy as Map
+import Data.Map.Merge.Lazy hiding (merge)
 import qualified Data.Set as Set
 
 data Type =
@@ -132,6 +134,20 @@ emptySubst = Map.empty
 (@@) :: Subst -> Subst -> Subst
 x @@ y = Map.map (apply x) y `Map.union` x
 
+-- |
+-- @merge@ composes two @Subst@ parallel. It is symmetric.
+-- It fails if substitutions conflict.
+merge :: Subst -> Subst -> Either Error Subst
+merge = mergeA
+          preserveMissing
+          preserveMissing $
+          zipWithAMatched . const $
+            \a b -> if a == b
+                      then pure a
+                      else Left $ MergeConflict a b
+
+infixr 6 `merge`
+
 class Types t where
   apply :: Subst -> t -> t
   tv :: t -> Set.Set TypeId
@@ -172,6 +188,7 @@ fromList = Set.fromList
 
 data Error
   = Unify Type Type -- ^ @Unify t1 t2@ indicates that @t1@ and @t2@ does not unify..
+  | MergeConflict Type Type
   deriving (Eq, Show)
 
 -- | @unify cs@ returns the most general unifier on 'Constraints'.
