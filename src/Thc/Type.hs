@@ -121,10 +121,10 @@ instance Types Type where
   apply s (Variant ts) = Variant $ Map.map (apply s) ts
   apply _ t            = t
 
-  tv (Id i) = Set.singleton i
-  tv (t1 :->: t2) = tv t1 `Set.union` tv t2
+  tv (Id i)       = Set.singleton i
+  tv (t1 :->: t2) = tv (t1, t2)
   tv (Rec i t)    = tv t
-  tv (Tuple ts)   = foldMap tv ts
+  tv (Tuple ts)   = tv ts
   tv (Record ts)  = foldMap (tv . snd) ts
   tv (Variant ts) = foldMap tv ts
   tv _            = Set.empty
