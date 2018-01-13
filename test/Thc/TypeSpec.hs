@@ -4,6 +4,7 @@ import Test.Hspec
 import Test.QuickCheck hiding (variant)
 
 import Control.Applicative
+import Control.Monad
 
 import Thc.Type
 
@@ -61,3 +62,34 @@ spec = do
     context "when two types cannot be unified" $ do
       it "returns an error" $ do
         mgu (idString "X" :->: idString "Y") Int `shouldBe` Left (Unify (idString "X" :->: idString "Y") Int)
+
+  describe "unify" $ do
+    it "returns the most general unifier that is the principal solution of a set of constraints" $ do
+      (unify . fromList) []                    `shouldBe` return emptySubst
+      (unify . fromList) [(Int, Int)]          `shouldBe` return emptySubst
+      (unify . fromList) [(idString "X", Int)] `shouldBe` return (IdString "X" |-> Int)
+
+      let l = [(idString "X", Int), (idString "Y", idString "X" :->: idString "X")]
+      (unify . fromList) l `shouldBe` (IdString "X" |-> Int `merge` IdString "Y" |-> (Int :->: Int))
+
+      let l = [(Int :->: Int, idString "X" :->: idString "Y")]
+      (unify . fromList) l `shouldBe` (IdString "X" |-> Int `merge` IdString "Y" |-> Int)
+
+      let l = [ (idString "X" :->: idString "Y", idString "Y" :->: idString "Z")
+              , (idString "Z"                  , idString "U" :->: idString "W")
+              ]
+      let s = let ty = idString "U" :->: idString "W" in
+              foldM merge emptySubst
+                [ IdString "X" |-> ty
+                , IdString "Y" |-> ty
+                , IdString "Z" |-> ty
+                ]
+      (unify . fromList) l `shouldBe` s
+
+      let ty = Int :->: idString "Y"
+      (unify . fromList) [(Int, ty)] `shouldBe` Left (Unify Int ty)
+
+    context "when given recursive constraints" $ do
+      it "treats them as well as ones that has no recursive constraints" $ do
+        let ty = Int :->: idString "Y"
+        (unify . fromList) [(idString "Y", ty)] `shouldBe` return (IdString "Y" |-> ty)
