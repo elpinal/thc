@@ -38,8 +38,9 @@ import Control.Arrow
 import Control.Exception.Safe
 import Control.Monad
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Except
+import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.Writer.Lazy
 import Data.Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Lazy as Map
@@ -487,5 +488,58 @@ getTypeFromContext ctx n
 
 typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT TypeError m T.Type
 typeWithPat ctx ty (p, t) = do
-  ctx' <- ExceptT . return . left BindTypeError $ bindPattern ctx p ty
+  ctx' <- bindPatternE ctx p ty
   typeOf' ctx' t
+
+bindPatternE :: Monad m => Context -> E.Pattern -> T.Type -> ExceptT TypeError m Context
+bindPatternE ctx p ty = ExceptT . return . left BindTypeError $ bindPattern ctx p ty
+
+type Reconstructor m a = ExceptT TypeError (StateT Int m) a
+
+recon :: MonadThrow m => Context -> Term -> Reconstructor m (T.Constraints, T.Type)
+recon ctx (Var _ x _)   = fmap ((,) T.emptyConstr) . lift $ getTypeFromContext ctx x
+recon ctx (Abs p ty t)  = reconAbs ctx p ty t
+recon ctx (App t1 t2)   = reconApp ctx t1 t2
+recon ctx (Lit l)       = return (T.emptyConstr, E.typeOfLiteral l)
+recon ctx (Tuple ts)    = second T.Tuple . foldFst <$> mapM (recon ctx) ts
+recon ctx (Record ts)   = reconRecord ctx ts
+recon ctx (Ann t ty)    = reconAnn ctx t ty
+recon ctx (Tagged i t)  = undefined
+recon ctx (Case t ts)   = undefined
+recon ctx (Fold ty t)   = undefined
+recon ctx (Unfold ty t) = undefined
+
+reconAbs :: MonadThrow m => Context -> E.Pattern -> T.Type -> Term -> Reconstructor m (T.Constraints, T.Type)
+reconAbs ctx p ty t = do
+  ctx' <- bindPatternE ctx p ty
+  (cs, ty') <- recon ctx' t
+  return (cs, ty T.:->: ty')
+
+reconApp :: MonadThrow m => Context -> Term -> Term -> Reconstructor m (T.Constraints, T.Type)
+reconApp ctx t1 t2 = do
+  v <- T.Id <$> lift T.freshVar
+  (cs1, ty1) <- recon ctx t1
+  (cs2, ty2) <- recon ctx t2
+  let c = T.fromList [(ty1, ty2 T.:->: v)]
+  return (mconcat [cs1, cs2, c], v)
+
+foldFst :: Monoid m => [(m, a)] -> (m, [a])
+foldFst xs = foldr f (mempty, []) xs
+  where
+    f (m1, y) (m2, ys) = (m1 `mappend` m2, y : ys)
+
+reconRecord :: MonadThrow m => Context -> [(String, Term)] -> Reconstructor m (T.Constraints, T.Type)
+reconRecord ctx ts = do
+  (xs, cs) <- runWriterT $ mapM f ts
+  return $ (cs, T.Record xs)
+  where
+    f (i, t) = do
+      (cs, ty) <- lift $ recon ctx t
+      tell cs
+      return (i, ty)
+
+reconAnn :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m (T.Constraints, T.Type)
+reconAnn ctx t ty1 = do
+  (cs, ty2) <- recon ctx t
+  let c = T.fromList [(ty1, ty2)]
+  return (cs `mappend` c, ty1)

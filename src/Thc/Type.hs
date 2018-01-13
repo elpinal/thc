@@ -2,6 +2,7 @@ module Thc.Type
   ( Type(..)
   , TypeId(IdString)
   , idString
+  , freshVar
   , variant
   , substTop
   , Subst
@@ -10,6 +11,7 @@ module Thc.Type
   , (@@)
   , merge
   , Constraints
+  , emptyConstr
   , fromList
   , unify
   , mgu
@@ -44,7 +46,7 @@ data TypeId
   | Fresh Int
   deriving (Eq, Ord)
 
-freshVar :: State Int TypeId
+freshVar :: Monad m => StateT Int m TypeId
 freshVar = state $ \n -> (Fresh n, n + 1)
 
 idString :: String -> Type
@@ -182,6 +184,9 @@ instance (Types t1, Types t2) => Types (t1, t2) where
   tv (x, y) = tv x `Set.union` tv y
 
 type Constraints = Set.Set (Type, Type)
+
+emptyConstr :: Constraints
+emptyConstr = Set.empty
 
 fromList :: [(Type, Type)] -> Constraints
 fromList = Set.fromList
