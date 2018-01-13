@@ -504,8 +504,8 @@ recon ctx (Lit l)       = return $ E.typeOfLiteral l
 recon ctx (Tuple ts)    = T.Tuple <$> mapM (recon ctx) ts
 recon ctx (Record ts)   = reconRecord ctx ts
 recon ctx (Ann t ty)    = reconAnn ctx t ty
-recon ctx (Tagged i t)  = undefined
-recon ctx (Case t ts)   = undefined
+recon ctx (Tagged i t)  = undefined -- TODO:
+recon ctx (Case t ts)   = reconCase ctx t ts
 recon ctx (Fold ty t)   = undefined
 recon ctx (Unfold ty t) = undefined
 
@@ -533,3 +533,17 @@ reconAnn ctx t ty1 = do
   ty2 <- recon ctx t
   lift . tell $ T.fromList [(ty1, ty2)]
   return ty1
+
+reconCase :: MonadThrow m => Context -> Term -> NonEmpty.NonEmpty (E.Pattern, Term) -> Reconstructor m T.Type
+reconCase ctx t ts = do
+  v <- T.Id <$> (lift . lift) T.freshVar
+  ty <- recon ctx t
+  xs <- forM ts $ reconWithPat ctx ty
+  lift . tell . T.fromList . NonEmpty.toList $ ((,) ty) <$> xs
+  return v
+
+reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Reconstructor m T.Type
+reconWithPat ctx ty (p, t) = do
+  ctx' <- bindPatternE ctx p ty
+  recon ctx' t
+
