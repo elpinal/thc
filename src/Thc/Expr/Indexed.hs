@@ -430,7 +430,7 @@ typeOf = runExceptT . typeOf' emptyContext
 
 typeOf' :: MonadThrow m => Context -> Term -> ExceptT TypeError m T.Type
 typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
-typeOf' ctx (Abs p ty1 t) = (ty1 T.:->:) <$> typeWithPat ctx ty1 (p, t)
+typeOf' ctx (Abs p ty t) = (ty T.:->:) <$> typeWithPat ctx ty (p, t)
 typeOf' ctx (App t1 t2) = do
   ty1 <- typeOf' ctx t1
   ty2 <- typeOf' ctx t2
