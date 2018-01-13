@@ -506,8 +506,8 @@ recon ctx (Record ts)   = reconRecord ctx ts
 recon ctx (Ann t ty)    = reconAnn ctx t ty
 recon ctx (Tagged i t)  = undefined -- TODO:
 recon ctx (Case t ts)   = reconCase ctx t ts
-recon ctx (Fold ty t)   = undefined
-recon ctx (Unfold ty t) = undefined
+recon ctx (Fold ty t)   = reconFold ctx t ty
+recon ctx (Unfold ty t) = reconUnfold ctx t ty
 
 reconAbs :: MonadThrow m => Context -> E.Pattern -> T.Type -> Term -> Reconstructor m T.Type
 reconAbs ctx p ty t = (ty T.:->:) <$> reconWithPat ctx ty (p, t)
@@ -547,3 +547,22 @@ reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Recons
 reconWithPat ctx ty (p, t) = do
   ctx' <- bindPatternE ctx p ty
   recon ctx' t
+
+reconFold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
+reconFold ctx t = f
+  where
+    f u @ (T.Rec _ ty0) = do
+      ty <- recon ctx t
+      let ty' = T.substTop (u, ty0)
+      lift . tell $ T.fromList [(ty, ty')]
+      return u
+    f ty = throwE $ FoldError ty -- TODO: syntactically disallow.
+
+reconUnfold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
+reconUnfold ctx t = f
+  where
+    f ty' @ (T.Rec _ ty0) = do
+      ty <- typeOf' ctx t
+      lift . tell $ T.fromList [(ty, ty')]
+      return $ T.substTop (ty, ty0)
+    f ty = throwE $ FoldError ty -- TODO: syntactically disallow
