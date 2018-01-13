@@ -510,9 +510,7 @@ recon ctx (Fold ty t)   = undefined
 recon ctx (Unfold ty t) = undefined
 
 reconAbs :: MonadThrow m => Context -> E.Pattern -> T.Type -> Term -> Reconstructor m T.Type
-reconAbs ctx p ty t = do
-  ctx' <- bindPatternE ctx p ty
-  (ty T.:->:) <$> recon ctx' t
+reconAbs ctx p ty t = (ty T.:->:) <$> reconWithPat ctx ty (p, t)
 
 reconApp :: MonadThrow m => Context -> Term -> Term -> Reconstructor m T.Type
 reconApp ctx t1 t2 = do
@@ -546,4 +544,3 @@ reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Recons
 reconWithPat ctx ty (p, t) = do
   ctx' <- bindPatternE ctx p ty
   recon ctx' t
-
