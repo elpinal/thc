@@ -23,6 +23,11 @@ instance Arbitrary Type where
     -- , variant <$> arbitrary
     ]
 
+shouldCommute :: (HasCallStack, Eq b, Show b) => (a -> a -> b) -> a -> a -> b -> Expectation
+shouldCommute f x y z = do
+  f x y `shouldBe` z
+  f y x `shouldBe` z
+
 spec :: Spec
 spec = do
   describe "varBind" $ do
@@ -38,6 +43,6 @@ spec = do
   describe "mgu" $ do
     context "when given two arrow type" $ do
       it "returns the most general unifier" $ do
-        mgu (Int :->: idString "X") (Int :->: idString "X")          `shouldBe` return emptySubst
-        mgu (Int :->: idString "X") (idString "X" :->: Int)          `shouldBe` return (IdString "X" |-> Int)
-        mgu (idString "Y" :->: idString "X") (idString "X" :->: Int) `shouldBe` (IdString "Y" |-> Int `merge` IdString "X" |-> Int)
+        shouldCommute mgu (Int :->: idString "X") (Int :->: idString "X")          $ return emptySubst
+        shouldCommute mgu (Int :->: idString "X") (idString "X" :->: Int)          $ return (IdString "X" |-> Int)
+        shouldCommute mgu (idString "Y" :->: idString "X") (idString "X" :->: Int) $ IdString "Y" |-> Int `merge` IdString "X" |-> Int
