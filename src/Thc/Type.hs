@@ -197,9 +197,9 @@ unify cs = execStateT (mapM_ f cs) emptySubst
   where
     f :: (Type, Type) -> StateT Subst (Either Error) ()
     f (t1, t2) = do
-      f <- apply <$> get
-      s <- lift $ f t1 `mgu` f t2
-      modify $ (s @@)
+      g <- apply <$> get
+      s <- lift $ g t1 `mgu` g t2
+      modify (s @@)
 
 -- | @mgu ty1 ty2@ returns the most general unifier on two types.
 mgu :: Type -> Type -> Either Error Subst
