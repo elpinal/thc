@@ -549,20 +549,15 @@ reconWithPat ctx ty (p, t) = do
   recon ctx' t
 
 reconFold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
-reconFold ctx t = f
-  where
-    f u @ (T.Rec _ ty0) = do
-      ty <- recon ctx t
-      let ty' = T.substTop (u, ty0)
-      lift . tell $ T.fromList [(ty, ty')]
-      return u
-    f ty = throwE $ FoldError ty -- TODO: syntactically disallow.
+reconFold ctx t tyU @ (T.Rec _ ty1) = do
+  ty2 <- recon ctx t
+  lift . tell $ T.fromList [(ty2, T.substTop (tyU, ty1))]
+  return tyU
+reconFold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow.
 
 reconUnfold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
-reconUnfold ctx t = f
-  where
-    f ty' @ (T.Rec _ ty0) = do
-      ty <- typeOf' ctx t
-      lift . tell $ T.fromList [(ty, ty')]
-      return $ T.substTop (ty, ty0)
-    f ty = throwE $ FoldError ty -- TODO: syntactically disallow
+reconUnfold ctx t tyU @ (T.Rec _ ty1) = do
+  ty2 <- typeOf' ctx t
+  lift . tell $ T.fromList [(ty2, tyU)]
+  return $ T.substTop (ty2, ty1)
+reconUnfold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow
