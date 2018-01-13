@@ -557,7 +557,7 @@ reconFold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow.
 
 reconUnfold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
 reconUnfold ctx t tyU @ (T.Rec _ ty1) = do
-  ty2 <- typeOf' ctx t
+  ty2 <- recon ctx t
   lift . tell $ T.fromList [(ty2, tyU)]
   return $ T.substTop (ty2, ty1)
 reconUnfold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow
