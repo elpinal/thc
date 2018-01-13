@@ -512,9 +512,12 @@ recon ctx (Unfold ty t) = undefined
 reconAbs :: MonadThrow m => Context -> E.Pattern -> T.Type -> Term -> Reconstructor m T.Type
 reconAbs ctx p ty t = (ty T.:->:) <$> reconWithPat ctx ty (p, t)
 
+freshVar :: Monad m => Reconstructor m T.Type
+freshVar = T.Id <$> (lift . lift) T.freshVar
+
 reconApp :: MonadThrow m => Context -> Term -> Term -> Reconstructor m T.Type
 reconApp ctx t1 t2 = do
-  v <- T.Id <$> (lift . lift) T.freshVar
+  v <- freshVar
   ty1 <- recon ctx t1
   ty2 <- recon ctx t2
   lift . tell $ T.fromList [(ty1, ty2 T.:->: v)]
@@ -534,7 +537,7 @@ reconAnn ctx t ty1 = do
 
 reconCase :: MonadThrow m => Context -> Term -> NonEmpty.NonEmpty (E.Pattern, Term) -> Reconstructor m T.Type
 reconCase ctx t ts = do
-  v <- T.Id <$> (lift . lift) T.freshVar
+  v <- freshVar
   ty <- recon ctx t
   xs <- forM ts $ reconWithPat ctx ty
   lift . tell . T.fromList . NonEmpty.toList $ ((,) ty) <$> xs
