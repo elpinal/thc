@@ -112,7 +112,7 @@ instance Display Type where
 -- | @display i@ displays @i@ as a string. The current implementation adopts
 -- arbitrary formats.
 instance Display TypeId where
-  display (IdString s) = "!X" ++ s
+  display (IdString s) = "!" ++ s
   display (Fresh n) = "?X" ++ show n
 
 paren s = "(" ++ s ++ ")"
