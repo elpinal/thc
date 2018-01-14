@@ -496,6 +496,9 @@ bindPatternE ctx p ty = ExceptT . return . left BindTypeError $ bindPattern ctx 
 
 type Reconstructor m a = ExceptT TypeError (WriterT T.Constraints (StateT Int m)) a
 
+reconstruct :: MonadThrow m => Term -> m (Either TypeError T.Type, T.Constraints)
+reconstruct = flip evalStateT 0 . runWriterT . runExceptT . recon emptyContext
+
 recon :: MonadThrow m => Context -> Term -> Reconstructor m T.Type
 recon ctx (Var _ x _)   = lift $ getTypeFromContext ctx x
 recon ctx (Abs p ty t)  = reconAbs ctx p ty t
