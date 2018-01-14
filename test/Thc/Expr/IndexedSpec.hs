@@ -93,7 +93,7 @@ spec = do
         principal (abst (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
         principal (abst (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
         principal (abst (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
-        principal (abst unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
+        principal (abst unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit $ T.toScheme T.Int)
 
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
@@ -119,9 +119,9 @@ spec = do
             b = return (q, s)
         principal (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
         principal (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
-        principal (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
-        principal (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
-        principal (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        principal (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q $ T.toScheme ty)
+        principal (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q $ T.toScheme ty)
+        principal (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q $ T.toScheme ty)
 
         let ty = T.variant [("a", T.Int), ("b", T.Unit)]
             q = PVariant "b" $ PVar "x"
@@ -135,10 +135,10 @@ spec = do
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
           let p1 = tuplePat ["x", "y", "z"]
-          principal (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
+          principal (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p1 $ T.toScheme $ T.Tuple [T.Int, T.Bool])
 
           let p = tuplePat ["x"]
-          principal (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p T.Bool)
+          principal (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p $ T.toScheme T.Bool)
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do

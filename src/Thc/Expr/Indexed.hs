@@ -44,6 +44,7 @@ import Control.Monad.Trans.State.Lazy
 import Data.Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Lazy as Map
+import qualified Data.Set as Set
 import Data.Monoid
 
 import qualified Thc.Expr as E
@@ -134,29 +135,32 @@ bindPatternU ctx p = bindPattern1 Binder
 --
 -- >>> bindPattern emptyContext (E.PVar "a") T.Bool
 -- Right [("a",Bool)]
-bindPattern :: Context -> E.Pattern -> T.Type -> Either BindError Context
+bindPattern :: Context -> E.Pattern -> T.Scheme -> Either BindError Context
 bindPattern = bindPattern1 Binder
   { onTuple = f
   , onVariant = g
   , onLiteral = h
   }
     where
-      f ps ty @ (T.Tuple ts)
-        | length ps == length ts = return $ zip ps ts
+      f :: [E.Pattern] -> T.Scheme -> Either BindError [(E.Pattern, T.Scheme)]
+      f ps ty @ (T.Forall _ (T.Tuple ts))
+        | length ps == length ts = return . zip ps $ map T.toScheme ts
         | otherwise              = Left $ PatternMismatch (E.PTuple ps) ty
       f ps ty = Left $ PatternMismatch (E.PTuple ps) ty -- Note that type variables are currently not supported.
 
-      g ctx i p tv @ (T.Variant ts) = do
+      g :: Context -> String -> E.Pattern -> T.Scheme -> Either BindError Context
+      g ctx i p tv @ (T.Forall _ (T.Variant ts)) = do
         ty <- maybe (Left $ PatternMismatch (E.PVariant i p) tv) return $ Map.lookup i ts
-        bindPattern ctx p ty
+        bindPattern ctx p $ T.toScheme ty
       g _ i p ty = Left $ PatternMismatch (E.PVariant i p) ty
 
+      h :: Context -> E.Literal -> T.Scheme -> Either BindError Context
       h ctx l ty
-        | E.typeOfLiteral l == ty = return ctx
-        | otherwise               = Left $ PatternMismatch (E.PLiteral l) ty
+        | T.toScheme (E.typeOfLiteral l) == ty = return ctx
+        | otherwise                            = Left $ PatternMismatch (E.PLiteral l) ty
 
 data BindError
-  = PatternMismatch E.Pattern T.Type
+  = PatternMismatch E.Pattern T.Scheme
   | DuplicateVariables E.Pattern
   deriving (Eq, Show)
 
@@ -199,7 +203,7 @@ dups = snd . flip execState ([], []) . mapM_ f
 
 type Context1 a = [(String, a)]
 
-type Context = Context1 T.Type
+type Context = Context1 T.Scheme
 
 type ContextU = Context1 ()
 
@@ -429,12 +433,12 @@ data TypeError
   | TError T.Error -- TODO: better name
   deriving (Eq, Show)
 
-getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
+getTypeFromContext :: MonadThrow m => Context -> Int -> StateT Int m T.Type
 getTypeFromContext ctx n
-  | length ctx <= n = throw $ WrongIndex ctx n
-  | otherwise       = return . snd $ ctx !! n
+  | length ctx <= n = lift . throw $ WrongIndex ctx n
+  | otherwise       = T.freshInst . snd $ ctx !! n
 
-bindPatternE :: Monad m => Context -> E.Pattern -> T.Type -> ExceptT TypeError m Context
+bindPatternE :: Monad m => Context -> E.Pattern -> T.Scheme -> ExceptT TypeError m Context
 bindPatternE ctx p ty = ExceptT . return . left BindTypeError $ bindPattern ctx p ty
 
 principal :: MonadThrow m => Term -> m (Either TypeError T.Type)
@@ -451,7 +455,7 @@ reconstruct :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type, T.
 reconstruct ctx = flip evalStateT 0 . flip runStateT T.emptySubst . runExceptT . recon ctx
 
 recon :: MonadThrow m => Context -> Term -> Reconstructor m T.Type
-recon ctx (Var _ x _)   = lift $ getTypeFromContext ctx x
+recon ctx (Var _ x _)   = lift . lift $ getTypeFromContext ctx x
 recon ctx (Abs p ty t)  = reconAbs ctx p ty t
 recon ctx (App t1 t2)   = reconApp ctx t1 t2
 recon ctx (Lit l)       = return $ E.typeOfLiteral l
@@ -502,8 +506,11 @@ reconCase ctx t ts = do
 
 reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Reconstructor m T.Type
 reconWithPat ctx ty (p, t) = do
-  ctx' <- bindPatternE ctx p ty
+  ctx' <- bindPatternE ctx p $ T.toScheme ty
   recon ctx' t
+
+freshInst :: Monad m => T.Scheme -> Reconstructor m T.Type
+freshInst = lift . lift . T.freshInst
 
 reconFold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
 reconFold ctx t tyU @ (T.Rec _ ty1) = do
@@ -525,6 +532,11 @@ reconTagged ctx i t ty @ (T.Variant ts) = do
   recon ctx $ Ann t ty'
   return ty
 reconTagged ctx i t ty = error "variant error" -- FIXME
+
+quantify :: Context -> T.Type -> T.Scheme
+quantify ctx ty = T.quantify vs ty
+  where
+    vs = T.tv ty Set.\\ foldMap (T.tv . snd) ctx
 
 unify :: Monad m => T.Constraints -> Reconstructor m ()
 unify = mapM_ f

@@ -47,7 +47,7 @@ spec = do
         let lit12 = int 12
             p = PTuple []
             ty = T.Int
-        compile (abst p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.BindTypeError $ I.PatternMismatch p ty)
+        compile (abst p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.BindTypeError $ I.PatternMismatch p $ T.toScheme ty)
 
         let p = tuplePat ["x", "x"]
             ty = T.Tuple [T.Int, T.Int]
