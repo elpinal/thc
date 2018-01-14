@@ -79,9 +79,13 @@ spec = do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
         principal (bool True)                                                                                     `shouldNotThrowM` T.Bool
+        principal (Abs (PVar "x") Nothing $ Var "x" 0 1)                                                          `shouldNotThrowM` (T.fresh 0 T.:->: T.fresh 0)
         principal (abst (PVar "x") T.Int $ Var "x" 0 1)                                                           `shouldNotThrowM` (T.Int T.:->: T.Int)
         principal (abst (PVar "f") (T.Int T.:->: T.Bool) $ abst (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
         principal (abst (PVar "f") (T.Int T.:->: T.Bool) $ abst (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
+
+        principal (Abs (PVar "x") Nothing $ Var "x" 0 1)             `shouldNotThrowM` (T.fresh 0 T.:->: T.fresh 0)
+        principal (Abs (PVar "x") Nothing (Var "x" 0 1) `App` int 3) `shouldNotThrowM` T.Int
 
         principal (Record [])                   `shouldNotThrowM` (T.Record [])
         principal (Record [("a", Lit $ Int 1)]) `shouldNotThrowM` (T.Record [("a", T.Int)])
