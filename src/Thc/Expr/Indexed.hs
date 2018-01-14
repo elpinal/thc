@@ -543,8 +543,8 @@ secondM :: Monad m => (a -> m b) -> (c, a) -> m (c, b)
 secondM = runKleisli . second . Kleisli
 
 reconAnn :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
-reconAnn ctx t ty1 = do
-  ty2 <- recon ctx t
+reconAnn ctx t ty2 = do
+  ty1 <- recon ctx t
   unify $ T.fromList [(ty1, ty2)]
   return ty1
 
