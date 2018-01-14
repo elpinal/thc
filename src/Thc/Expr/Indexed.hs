@@ -298,6 +298,7 @@ eval1 (Case t as)               = evalCase1 t as
 eval1 (Fold ty t)               = Fold ty <$$> eval1 t
 eval1 (Unfold ty1 (Fold ty2 t)) = maybe t (Unfold ty1 . Fold ty2) <-$> eval1 t
 eval1 (Unfold ty t)             = Unfold ty <$$> eval1 t
+eval1 (Let _ t1 t2)             = liftJust $ substTop (t1, t2)
 eval1 _                         = return Nothing
 
 -- | @evalTuple1 ts@ applies 'eval1' to the first term of @ts@ that is not the
