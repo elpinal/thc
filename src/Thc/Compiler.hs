@@ -47,7 +47,7 @@ compileWithContext ctx t o c = do
     genIndexed = ExceptT . return . first fromEvalError . fromNamed
 
     verifyType :: MonadThrowPlus m => Term -> ExceptT CompileError m T.Type
-    verifyType = ExceptT . fmap (first fromTypeError) . typeOf
+    verifyType = ExceptT . fmap (first fromTypeError) . principal
 
     genTac :: MonadThrowPlus m => Term -> ExceptT CompileError m Tac
     genTac = ExceptT . fmap (fmap fromLit . try' fromLiteral) . eval

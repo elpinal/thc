@@ -54,4 +54,4 @@ spec = do
         compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Eval . I.BindError $ I.DuplicateVariables p)
 
         let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
-        compile (App s s) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type $ I.IllTypedApp (I.Var "x" 0 1) T.Int)
+        compile (App s s) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.TError . T.Unify T.Int $ T.Int T.:->: T.fresh 1)

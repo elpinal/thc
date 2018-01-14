@@ -5,7 +5,6 @@ module Thc.Expr.Indexed
   -- * Terms
     Term(..)
   , fromNamed
-  , typeOf
   , principal
   , eval
 
@@ -394,7 +393,7 @@ evalForPat (E.PLiteral _) t = eval t -- Literals are values and all values are n
 
 throwPatTerm :: MonadThrowPlus m => E.Pattern -> Term -> m a
 throwPatTerm p t = do
-  a <- typeOf t
+  a <- principal t
   mthrowM $ case a of
     Right ty -> WrongPattern p ty
     Left e -> IllTyped t e
@@ -426,71 +425,10 @@ data TypeError
   | TError T.Error -- TODO: better name
   deriving (Eq, Show)
 
-typeOf :: MonadThrow m => Term -> m (Either TypeError T.Type)
-typeOf = runExceptT . typeOf' emptyContext
-
-typeOf' :: MonadThrow m => Context -> Term -> ExceptT TypeError m T.Type
-typeOf' ctx (Var _ x _) = getTypeFromContext ctx x
-typeOf' ctx (Abs p ty t) = (ty T.:->:) <$> typeWithPat ctx ty (p, t)
-typeOf' ctx (App t1 t2) = do
-  ty1 <- typeOf' ctx t1
-  ty2 <- typeOf' ctx t2
-  case ty1 of
-    u1 T.:->: u2 | u1 == ty2 -> return u2
-    _                        -> throwE $ IllTypedApp t1 ty2
-typeOf' ctx (Lit l) = return $ E.typeOfLiteral l
-typeOf' ctx (Tuple ts) = T.Tuple <$> mapM (typeOf' ctx) ts
-typeOf' ctx (Record ts) = T.Record <$> mapM (runKleisli . second . Kleisli $ typeOf' ctx) ts
-typeOf' ctx (Tagged i t) = throwE $ BareVariant i t
-typeOf' ctx (Ann (Tagged i t) ty @ (T.Variant ts)) = do
-  ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
-  typeOf' ctx $ Ann t ty'
-  return ty
-typeOf' ctx (Ann t ty) = typeOf' ctx t >>= assertType ty
-typeOf' ctx (Case t ts) = do
-  ty <- typeOf' ctx t
-  x NonEmpty.:| xs <- forM ts $ typeWithPat ctx ty
-  if and $ map (== x) xs
-    then return x
-    else throwE $ IncompatibleArms ts
-typeOf' ctx (Fold ty t) = typeOfFold ctx t ty
-typeOf' ctx (Unfold ty t) = typeOfUnfold ctx t ty
-
-assertType :: Monad m => T.Type -> T.Type -> ExceptT TypeError m T.Type
-assertType ty1 ty2
-  | ty1 == ty2 = return ty1
-  | otherwise = throwE $ TypeMismatch ty2 ty1
-
-typeOfFold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
-typeOfFold ctx t = f
-  where
-    f u @ (T.Rec _ ty0) = do
-      ty <- typeOf' ctx t
-      let ty' = T.substTop (u, ty0)
-      if ty == ty'
-        then return u
-        else throwE $ TypeMismatch ty ty'
-    f ty = throwE $ FoldError ty
-
-typeOfUnfold :: MonadThrow m => Context -> Term -> T.Type -> ExceptT TypeError m T.Type
-typeOfUnfold ctx t = f
-  where
-    f ty' @ (T.Rec _ ty0) = do
-      ty <- typeOf' ctx t
-      if ty == ty'
-        then return $ T.substTop (ty, ty0)
-        else throwE $ TypeMismatch ty ty'
-    f ty = throwE $ FoldError ty
-
 getTypeFromContext :: MonadThrow m => Context -> Int -> m T.Type
 getTypeFromContext ctx n
   | length ctx <= n = throw $ WrongIndex ctx n
   | otherwise       = return . snd $ ctx !! n
-
-typeWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> ExceptT TypeError m T.Type
-typeWithPat ctx ty (p, t) = do
-  ctx' <- bindPatternE ctx p ty
-  typeOf' ctx' t
 
 bindPatternE :: Monad m => Context -> E.Pattern -> T.Type -> ExceptT TypeError m Context
 bindPatternE ctx p ty = ExceptT . return . left BindTypeError $ bindPattern ctx p ty
