@@ -225,6 +225,10 @@ spec = do
         let t1 = App t $ int 6
         eval t1 `shouldNotThrow` t1
 
+    context "when given a Let expression" $ do
+      it "substitutes" $ do
+        eval (Let "x" (int 4) $ Var "x" 0 1) `shouldNotThrow` int 4
+
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
         eval (Tuple [Lit $ Int 0])                                              `shouldNotThrow` Tuple [Lit $ Int 0]
