@@ -556,7 +556,7 @@ reconCase ctx t ts = do
   v <- freshVar
   ty <- recon ctx t
   xs <- forM ts $ reconWithPat ctx ty
-  lift . tell . T.fromList . NonEmpty.toList $ ((,) ty) <$> xs
+  lift . tell . T.fromList . NonEmpty.toList $ ((,) v) <$> xs
   return v
 
 reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Reconstructor m T.Type
