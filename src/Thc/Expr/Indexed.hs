@@ -68,6 +68,7 @@ data Term =
   | Case Term (NonEmpty.NonEmpty (E.Pattern, Term))
   | Fold T.Type Term
   | Unfold T.Type Term
+  | Let String Term Term
   deriving (Eq, Show)
 
 abst :: E.Pattern -> T.Type -> Term -> Term
@@ -251,6 +252,7 @@ tmap f = walk
     walk c (Case t as)   = Case (walk c t) $ NonEmpty.map (g c) as
     walk c (Fold ty t)   = Fold ty $ walk c t
     walk c (Unfold ty t) = Unfold ty $ walk c t
+    walk c (Let i t1 t2) = Let i (walk c t1) (walk (c + 1) t2)
     walk c l @ (Lit _)   = l
 
     g c = fst &&& app . first (walk . h c)
@@ -467,6 +469,7 @@ recon ctx (Tagged i t)  = throwE $ BareVariant i t -- TODO:
 recon ctx (Case t ts)   = reconCase ctx t ts
 recon ctx (Fold ty t)   = reconFold ctx t ty
 recon ctx (Unfold ty t) = reconUnfold ctx t ty
+recon ctx (Let i t1 t2) = reconLet ctx i t1 t2
 
 reconAbs :: MonadThrow m => Context -> E.Pattern -> Maybe T.Type -> Term -> Reconstructor m T.Type
 reconAbs ctx p tyM t = do
@@ -532,6 +535,13 @@ reconTagged ctx i t ty @ (T.Variant ts) = do
   recon ctx $ Ann t ty'
   return ty
 reconTagged ctx i t ty = error "variant error" -- FIXME
+
+reconLet :: MonadThrow m => Context -> String -> Term -> Term -> ExceptT TypeError (StateT T.Subst (StateT Int m)) T.Type
+reconLet ctx i t1 t2 = do
+  ty1 <- recon ctx t1
+  let sc = quantify ctx ty1
+  let ctx' = addName ctx i sc
+  recon ctx' t2
 
 quantify :: Context -> T.Type -> T.Scheme
 quantify ctx ty = T.quantify vs ty
