@@ -41,7 +41,6 @@ import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.State.Lazy
-import Control.Monad.Trans.Writer.Lazy
 import Data.Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Lazy as Map
@@ -501,15 +500,13 @@ principal = principal' emptyContext
 
 principal' :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type)
 principal' ctx t = do
-  (ty, cs) <- reconstruct ctx t
-  return $ do
-    s <- left TError $ T.unify cs
-    T.apply s <$> ty
+  (ty, s) <- reconstruct ctx t
+  return $ T.apply s <$> ty
 
-type Reconstructor m a = ExceptT TypeError (WriterT T.Constraints (StateT Int m)) a
+type Reconstructor m a = ExceptT TypeError (StateT T.Subst (StateT Int m)) a
 
-reconstruct :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type, T.Constraints)
-reconstruct ctx = flip evalStateT 0 . runWriterT . runExceptT . recon ctx
+reconstruct :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type, T.Subst)
+reconstruct ctx = flip evalStateT 0 . flip runStateT T.emptySubst . runExceptT . recon ctx
 
 recon :: MonadThrow m => Context -> Term -> Reconstructor m T.Type
 recon ctx (Var _ x _)   = lift $ getTypeFromContext ctx x
@@ -536,7 +533,7 @@ reconApp ctx t1 t2 = do
   v <- freshVar
   ty1 <- recon ctx t1
   ty2 <- recon ctx t2
-  lift . tell $ T.fromList [(ty1, ty2 T.:->: v)]
+  unify $ T.fromList [(ty1, ty2 T.:->: v)]
   return v
 
 reconRecord :: MonadThrow m => Context -> [(String, Term)] -> Reconstructor m T.Type
@@ -548,7 +545,7 @@ secondM = runKleisli . second . Kleisli
 reconAnn :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
 reconAnn ctx t ty1 = do
   ty2 <- recon ctx t
-  lift . tell $ T.fromList [(ty1, ty2)]
+  unify $ T.fromList [(ty1, ty2)]
   return ty1
 
 reconCase :: MonadThrow m => Context -> Term -> NonEmpty.NonEmpty (E.Pattern, Term) -> Reconstructor m T.Type
@@ -556,7 +553,7 @@ reconCase ctx t ts = do
   v <- freshVar
   ty <- recon ctx t
   xs <- forM ts $ reconWithPat ctx ty
-  lift . tell . T.fromList . NonEmpty.toList $ ((,) v) <$> xs
+  unify . T.fromList . NonEmpty.toList $ ((,) v) <$> xs
   return v
 
 reconWithPat :: MonadThrow m => Context -> T.Type -> (E.Pattern, Term) -> Reconstructor m T.Type
@@ -567,20 +564,28 @@ reconWithPat ctx ty (p, t) = do
 reconFold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
 reconFold ctx t tyU @ (T.Rec _ ty1) = do
   ty2 <- recon ctx t
-  lift . tell $ T.fromList [(ty2, T.substTop (tyU, ty1))]
+  unify $ T.fromList [(ty2, T.substTop (tyU, ty1))]
   return tyU
 reconFold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow.
 
 reconUnfold :: MonadThrow m => Context -> Term -> T.Type -> Reconstructor m T.Type
 reconUnfold ctx t tyU @ (T.Rec _ ty1) = do
   ty2 <- recon ctx t
-  lift . tell $ T.fromList [(ty2, tyU)]
+  unify $ T.fromList [(ty2, tyU)]
   return $ T.substTop (ty2, ty1)
 reconUnfold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow
 
-reconTagged :: MonadThrow m => Context -> String -> Term -> T.Type -> ExceptT TypeError (WriterT T.Constraints (StateT Int m)) T.Type
+reconTagged :: MonadThrow m => Context -> String -> Term -> T.Type -> Reconstructor m T.Type
 reconTagged ctx i t ty @ (T.Variant ts) = do
   ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
   recon ctx $ Ann t ty'
   return ty
 reconTagged ctx i t ty = error "variant error" -- FIXME
+
+unify :: Monad m => T.Constraints -> Reconstructor m ()
+unify = mapM_ f
+  where
+    f (t1, t2) = do
+      g <- T.apply <$> lift get
+      s <- ExceptT . return . left TError $ g t1 `T.mgu` g t2
+      lift $ modify (s T.@@)
