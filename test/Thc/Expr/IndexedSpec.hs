@@ -106,6 +106,12 @@ spec = do
 
         principal (l $ (Var "f" 0 1 `App` abst (PVar "x") T.Int (Var "x" 0 1)) `App` (Var "f" 0 1 `App` unit)) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Unit)
 
+        let t = abst (PVar "f") (T.idString "X" T.:->: T.idString "X") . abst (PVar "x") (T.idString "X") . Let "g" (Var "f" 1 2)
+        principal (t $ Var "g" 0 3 `App` Var "x" 1 3) `shouldNotThrowM` ((T.fresh 0 T.:->: T.fresh 0) T.:->: T.fresh 0 T.:->: T.fresh 0)
+        principal (t $ Var "g" 0 3 `App` int 0)       `shouldNotThrowM` ((T.Int T.:->: T.Int) T.:->: T.Int T.:->: T.Int)
+
+        principal ((t $ Var "g" 0 3 `App` int 0) `App` abst (PVar "x") T.Bool (bool True) `App` bool False) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Bool)
+
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
           p = tuplePat ["x", "y"]
