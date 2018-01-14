@@ -19,6 +19,10 @@ module Thc.Type
   , mgu
   , varBind
   , Error(..)
+  , Scheme(..)
+  , quantify
+  , toScheme
+  , freshInst
   ) where
 
 import Control.Arrow
@@ -229,8 +233,22 @@ varBind i1 (Id i2) | i1 == i2 = return emptySubst
 varBind i t = return $ Map.singleton i t
 
 data Scheme = Forall [TypeId] Type
+  deriving (Eq, Show)
+
+instance Types Scheme where
+  apply s (Forall is t) = Forall is $ apply s t
+  tv (Forall _ qt) = tv qt
 
 quantify :: Set.Set TypeId -> Type -> Scheme
 quantify vs t = Forall qs t
   where
     qs = Set.toList $ vs `Set.intersection` tv t
+
+toScheme :: Type -> Scheme
+toScheme t = Forall [] t
+
+freshInst :: Monad m => Scheme -> StateT Int m Type
+freshInst (Forall is t) = do
+  vs <- mapM (const $ freshVar) is
+  let s = Map.fromList . zip is $ map Id vs
+  return $ apply s t
