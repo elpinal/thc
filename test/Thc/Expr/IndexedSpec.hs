@@ -95,6 +95,17 @@ spec = do
         principal (abst (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
         principal (abst unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit $ T.toScheme T.Int)
 
+    context "when given a Let" $ do
+      it "causes polymorphism" $ do
+        let l = Let "f" $ Abs (PVar "x") Nothing $ Var "x" 0 1
+        principal (l $ Var "f" 0 1)                                                                              `shouldNotThrowM` (T.fresh 1 T.:->: T.fresh 1)
+        principal (l $ Var "f" 0 1 `App` int 0)                                                                  `shouldNotThrowM` T.Int
+        principal (l $ Var "f" 0 1 `App` bool False)                                                             `shouldNotThrowM` T.Bool
+        principal (l $ Var "f" 0 1 `App` abst (PVar "x") T.Int (Var "x" 0 1))                                    `shouldNotThrowM` (T.Int T.:->: T.Int)
+        principal (l $ (Var "f" 0 1 `App` abst (PVar "x") T.Int (Var "x" 0 1)) `App` (Var "f" 0 1 `App` int 12)) `shouldNotThrowM` T.Int
+
+        principal (l $ (Var "f" 0 1 `App` abst (PVar "x") T.Int (Var "x" 0 1)) `App` (Var "f" 0 1 `App` unit)) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Unit)
+
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
           p = tuplePat ["x", "y"]
