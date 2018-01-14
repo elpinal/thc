@@ -1,8 +1,9 @@
 module Thc.Type
   ( Type(..)
-  , TypeId(IdString)
+  , TypeId(..)
   , idString
   , freshVar
+  , fresh
   , variant
   , substTop
   , Types(..)
@@ -49,6 +50,10 @@ data TypeId
 
 freshVar :: Monad m => StateT Int m TypeId
 freshVar = state $ \n -> (Fresh n, n + 1)
+
+-- | Creates a fresh variable. You may want to use 'freshVar' instead.
+fresh :: Int -> Type
+fresh = Id . Fresh
 
 idString :: String -> Type
 idString = Id . IdString
