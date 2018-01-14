@@ -83,7 +83,7 @@ tymap f = walk
     walk c Bool         = Bool
     walk c Int          = Int
     walk c Unit         = Unit
-    walk c (Id i)       = Id i
+    walk c (Id i)       = Id i -- TODO: Correct?
     walk c (t1 :->: t2) = walk c t1 :->: walk c t2
     walk c (Var i x n)  = f c i x n
     walk c (Rec i t)    = Rec i $ walk (c + 1) t
@@ -227,3 +227,10 @@ mgu t1 t2
 varBind :: TypeId -> Type -> Either Error Subst
 varBind i1 (Id i2) | i1 == i2 = return emptySubst
 varBind i t = return $ Map.singleton i t
+
+data Scheme = Forall [TypeId] Type
+
+quantify :: Set.Set TypeId -> Type -> Scheme
+quantify vs t = Forall qs t
+  where
+    qs = Set.toList $ vs `Set.intersection` tv t
