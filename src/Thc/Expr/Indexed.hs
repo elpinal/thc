@@ -503,8 +503,9 @@ recon ctx (App t1 t2)   = reconApp ctx t1 t2
 recon ctx (Lit l)       = return $ E.typeOfLiteral l
 recon ctx (Tuple ts)    = T.Tuple <$> mapM (recon ctx) ts
 recon ctx (Record ts)   = reconRecord ctx ts
+recon ctx (Ann (Tagged i t) ty) = reconTagged ctx i t ty
 recon ctx (Ann t ty)    = reconAnn ctx t ty
-recon ctx (Tagged i t)  = undefined -- TODO:
+recon ctx (Tagged i t)  = throwE $ BareVariant i t -- TODO:
 recon ctx (Case t ts)   = reconCase ctx t ts
 recon ctx (Fold ty t)   = reconFold ctx t ty
 recon ctx (Unfold ty t) = reconUnfold ctx t ty
@@ -561,3 +562,10 @@ reconUnfold ctx t tyU @ (T.Rec _ ty1) = do
   lift . tell $ T.fromList [(ty2, tyU)]
   return $ T.substTop (ty2, ty1)
 reconUnfold _ _ ty = throwE $ FoldError ty -- TODO: syntactically disallow
+
+reconTagged :: MonadThrow m => Context -> String -> Term -> T.Type -> ExceptT TypeError (WriterT T.Constraints (StateT Int m)) T.Type
+reconTagged ctx i t ty @ (T.Variant ts) = do
+  ty' <- ExceptT . return . maybe (Left $ VariantError i t ts) return $ Map.lookup i ts
+  recon ctx $ Ann t ty'
+  return ty
+reconTagged ctx i t ty = error "variant error" -- FIXME
