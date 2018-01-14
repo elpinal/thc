@@ -26,33 +26,33 @@ spec :: Spec
 spec = do
   describe "fromNamed" $ do
     it "converts a named term to unnamed one" $ do
-      let x = E.Abs (PVar "f") T.Bool $
+      let x = E.abst (PVar "f") T.Bool $
                 E.App
                   (E.Var "f") $
-                  E.Abs (PVar "g") T.Bool $
+                  E.abst (PVar "g") T.Bool $
                     E.App
                       (E.Var "g") $
                       int 44
 
-      let y = Abs (PVar "f") T.Bool $
+      let y = abst (PVar "f") T.Bool $
                 App
                   (Var "f" 0 1) $
-                  Abs (PVar "g") T.Bool $
+                  abst (PVar "g") T.Bool $
                     App
                       (Var "g" 0 2) $
                       Lit (Int 44)
 
-      fromNamed x                                                              `shouldBe` return y
-      fromNamed (E.Abs (PVar "x") T.Bool $ E.Var "x")                          `shouldBe` return (Abs (PVar "x") T.Bool $ Var "x" 0 1)
-      fromNamed (E.Abs (PVar "a") T.Int $ E.Abs (PVar "b") T.Bool $ E.Var "a") `shouldBe` return (Abs (PVar "a") T.Int $ Abs (PVar "b") T.Bool $ Var "a" 1 2)
+      fromNamed x                                                                `shouldBe` return y
+      fromNamed (E.abst (PVar "x") T.Bool $ E.Var "x")                           `shouldBe` return (abst (PVar "x") T.Bool $ Var "x" 0 1)
+      fromNamed (E.abst (PVar "a") T.Int $ E.abst (PVar "b") T.Bool $ E.Var "a") `shouldBe` return (abst (PVar "a") T.Int $ abst (PVar "b") T.Bool $ Var "a" 1 2)
 
       let p = PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]
           ty = (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]])
-      fromNamed (E.Abs p ty $ E.Var "b") `shouldBe` return (Abs p ty $ Var "b" 2 4)
+      fromNamed (E.abst p ty $ E.Var "b") `shouldBe` return (abst p ty $ Var "b" 2 4)
 
-      fromNamed (E.Record [])                                    `shouldBe` return (Record [])
-      fromNamed (E.Record [("", int 1)])                         `shouldBe` return (Record [("", int 1)])
-      fromNamed (E.Record [("x", E.Abs (PVar "_") T.Unit unit)]) `shouldBe` return (Record [("x", Abs (PVar "_") T.Unit $ Lit Unit)])
+      fromNamed (E.Record [])                                     `shouldBe` return (Record [])
+      fromNamed (E.Record [("", int 1)])                          `shouldBe` return (Record [("", int 1)])
+      fromNamed (E.Record [("x", E.abst (PVar "_") T.Unit unit)]) `shouldBe` return (Record [("x", abst (PVar "_") T.Unit $ Lit Unit)])
 
       let t1 = int 78
           t2 = int 78
@@ -64,8 +64,8 @@ spec = do
 
     context "when given duplicated variables in a tuple pattern" $
       it "returns an error" $ do
-        fromNamed (E.Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldBe` return (Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
-        fromNamed (E.Abs (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldSatisfy` isLeft
+        fromNamed (E.abst (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldBe` return (abst (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Lit $ Int 0)
+        fromNamed (E.abst (tuplePat ["a", "a"]) (T.Tuple [T.Int, T.Int]) $ int 0) `shouldSatisfy` isLeft
 
     context "when given unbound idendifiers" $
       it "returns an error" $ do
@@ -73,23 +73,23 @@ spec = do
 
     context "when given a lambda abstraction whose parameter does not match the annotated type" $
       it "does not check the typing error" $ do
-        fromNamed (E.Abs (tuplePat ["nn"]) T.Int $ E.Var "nn") `shouldBe` return (Abs (tuplePat ["nn"]) T.Int $ Var "nn" 0 1)
+        fromNamed (E.abst (tuplePat ["nn"]) T.Int $ E.Var "nn") `shouldBe` return (abst (tuplePat ["nn"]) T.Int $ Var "nn" 0 1)
 
   describe "principal" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        principal (bool True)                                                                                   `shouldNotThrowM` T.Bool
-        principal (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrowM` (T.Int T.:->: T.Int)
-        principal (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
-        principal (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
+        principal (bool True)                                                                                     `shouldNotThrowM` T.Bool
+        principal (abst (PVar "x") T.Int $ Var "x" 0 1)                                                           `shouldNotThrowM` (T.Int T.:->: T.Int)
+        principal (abst (PVar "f") (T.Int T.:->: T.Bool) $ abst (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
+        principal (abst (PVar "f") (T.Int T.:->: T.Bool) $ abst (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
         principal (Record [])                   `shouldNotThrowM` (T.Record [])
         principal (Record [("a", Lit $ Int 1)]) `shouldNotThrowM` (T.Record [("a", T.Int)])
 
-        principal (Abs (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
-        principal (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
-        principal (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
-        principal (Abs unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
+        principal (abst (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
+        principal (abst (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
+        principal (abst (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
+        principal (abst unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
 
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
@@ -164,8 +164,8 @@ spec = do
 
     context "when given a non-typable term" $ do
       it "returns an error" $ do
-        principal (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Bool)
-        principal (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Left (TError $ T.Unify T.Int $ T.Int T.:->: T.fresh 0)
+        principal (abst (PVar "f") (T.Int T.:->: T.Int) $ abst (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Bool)
+        principal (abst (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                         `shouldNotThrow` Left (TError $ T.Unify T.Int $ T.Int T.:->: T.fresh 0)
 
     context "when given an Fold term" $ do
       it "returns the type of the term" $ do
@@ -196,7 +196,7 @@ spec = do
       it "evaluates it" $ do
         let p = int 0
         let ty = T.Int
-        let t = Abs p ty unit
+        let t = abst p ty unit
         eval t               `shouldNotThrow` t
         eval (t `App` int 0) `shouldNotThrow` unit
 
@@ -206,20 +206,20 @@ spec = do
 
     context "when given a tuple" $ do
       it "evaluates terms in tuples" $ do
-        eval (Tuple [Lit $ Int 0])                                             `shouldNotThrow` Tuple [Lit $ Int 0]
-        eval (Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1])                      `shouldNotThrow` Tuple [Abs (PVar "x") T.Int $ Var "x" 0 1]
-        eval (Tuple [App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldNotThrow` Tuple [Lit $ Int 12]
+        eval (Tuple [Lit $ Int 0])                                              `shouldNotThrow` Tuple [Lit $ Int 0]
+        eval (Tuple [abst (PVar "x") T.Int $ Var "x" 0 1])                      `shouldNotThrow` Tuple [abst (PVar "x") T.Int $ Var "x" 0 1]
+        eval (Tuple [App (abst (PVar "x") T.Int $ Var "x" 0 1) (Lit $ Int 12)]) `shouldNotThrow` Tuple [Lit $ Int 12]
 
     context "when given a tuple as the pattern in a lambda abstraction" $ do
       it "evaluates it binding each variable to a item" $ do
-        let swap = Abs (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 0 2, Var "a" 1 2]
+        let swap = abst (tuplePat ["a", "b"]) (T.Tuple [T.Int, T.Int]) $ Tuple [Var "b" 0 2, Var "a" 1 2]
         eval (App swap $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldNotThrow` Tuple [Lit $ Int 128, Lit $ Int 0]
 
-        let idTuple = Abs (PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
+        let idTuple = abst (PVar "abc") (T.Tuple [T.Int, T.Int]) $ Var "abc" 0 1
         eval (App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128])            `shouldNotThrow` Tuple [Lit $ Int 0, Lit $ Int 128]
         eval (App swap $ App idTuple $ Tuple [Lit $ Int 0, Lit $ Int 128]) `shouldNotThrow` Tuple [Lit $ Int 128, Lit $ Int 0]
 
-        let fstsnd = Abs (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
+        let fstsnd = abst (PTuple [tuplePat ["a", "b"], tuplePat ["c", "d"]]) (T.Tuple [T.Tuple [T.Int, T.Int], T.Tuple [T.Int, T.Int]]) $ Var "b" 2 4
         eval (App fstsnd $ Tuple [Tuple [Lit $ Int 8, Lit $ Int 16], Tuple [Lit $ Int 32, Lit $ Int 64]]) `shouldNotThrow` Lit (Int 16)
 
     context "when given annotated values" $ do
@@ -228,7 +228,7 @@ spec = do
         -- Assumes a term well typed. Even if the annotation is wrong, it is ignored.
         eval (Ann (int 12) T.Bool) `shouldNotThrow` int 12
 
-        let t = Abs (PVar "x") T.Bool $ int 0
+        let t = abst (PVar "x") T.Bool $ int 0
         eval (Ann t $ T.Bool T.:->: T.Int) `shouldNotThrow` t
 
     context "when given a case-expression" $ do
@@ -255,10 +255,10 @@ spec = do
         eval (Case tuple $ c) `shouldNotThrow` t
         eval (Case tuple $ d) `shouldNotThrow` t1
 
-        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ c)) `shouldNotThrow` t
+        eval (App (abst (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ c)) `shouldNotThrow` t
 
-        let e = return (p, (Abs (PVar "z") T.Int $ Var "y" 1 3) `App` Var "x" 1 2)
-        eval (App (Abs (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ e)) `shouldNotThrow` t1
+        let e = return (p, (abst (PVar "z") T.Int $ Var "y" 1 3) `App` Var "x" 1 2)
+        eval (App (abst (PVar "x") T.Int $ Var "x" 0 1) (Case tuple $ e)) `shouldNotThrow` t1
 
     context "when given a tagged term" $ do
       let l = int 5
@@ -284,17 +284,17 @@ spec = do
         let t = Fold ty t0
         eval t `shouldNotThrow` t
 
-        let t1 = Fold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        let t1 = Fold ty $ abst (PVar "x") T.Int (Var "x" 0 1) `App` t0
         eval t1 `shouldNotThrow` t
 
-        let t1 = Unfold ty $ Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        let t1 = Unfold ty $ abst (PVar "x") T.Int (Var "x" 0 1) `App` t0
         let t = Unfold ty t0
         eval t1 `shouldNotThrow` t
 
         let t = Unfold ty (Fold ty t0)
         eval t `shouldNotThrow` t0
 
-        let t2 = Abs (PVar "x") T.Int (Var "x" 0 1) `App` t0
+        let t2 = abst (PVar "x") T.Int (Var "x" 0 1) `App` t0
         let t = Unfold ty (Fold ty t2)
         eval t `shouldNotThrow` t0
 
@@ -328,14 +328,14 @@ spec = do
       evalForPat (tuplePat ["a", "b", "c"]) (Tuple [])                                      `shouldNotThrow` Tuple []
       evalForPat (tuplePat ["a", "b", "c"]) (Tuple [Var "a" 0 1])                           `shouldNotThrow` Tuple [Var "a" 0 1]
       evalForPat (tuplePat ["a", "b", "c"]) (Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]) `shouldNotThrow` Tuple [Var "a" 0 1, Var "a" 0 1, Var "a" 0 1]
-      let idTuple = Abs (PVar "t") (T.Tuple [T.Int, T.Int, T.Int]) $ Var "t" 0 1
+      let idTuple = abst (PVar "t") (T.Tuple [T.Int, T.Int, T.Int]) $ Var "t" 0 1
           int12 = Lit $ Int 12
       evalForPat (tuplePat ["a", "b", "c"]) (idTuple `App` Tuple (replicate 3 int12)) `shouldNotThrow` Tuple (replicate 3 int12)
 
       let tuple = Tuple $ map Tuple [map int [12, 28], map int [39, 54]]
           p = PTuple [tuplePat ["c", "d"], tuplePat ["e", "f"]]
-      evalForPat p tuple                                      `shouldNotThrow` tuple
-      evalForPat p (Abs (PVar "x") (T.Int) tuple `App` int 2) `shouldNotThrow` tuple
+      evalForPat p tuple                                       `shouldNotThrow` tuple
+      evalForPat p (abst (PVar "x") (T.Int) tuple `App` int 2) `shouldNotThrow` tuple
 
     context "when the type check has not been done" $ do
       it "throws an exception" $ do
@@ -351,12 +351,12 @@ spec = do
       shift 0 t `shouldBe` t
       shift 1 t `shouldBe` Var "x" 1 2
 
-      let a = Abs (PVar "x") T.Int
+      let a = abst (PVar "x") T.Int
       let t = a $ Var "x" 0 1
       shift 0 t `shouldBe` t
       shift 1 t `shouldBe` a (Var "x" 0 2)
 
-      let a = Abs (tuplePat ["x", "y"]) T.Int
+      let a = abst (tuplePat ["x", "y"]) T.Int
       let t = a $ Var "y" 0 2
       shift 0 t `shouldBe` t
       shift 1 t `shouldBe` a (Var "y" 0 3)

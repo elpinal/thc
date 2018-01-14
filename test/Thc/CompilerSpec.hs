@@ -26,13 +26,13 @@ spec = do
       compile (bool True) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
 
       want <- B.readFile "test/Thc/data/exit81"
-      compile (Abs (PVar "x") T.Int (Var "x") `App` int 81) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
+      compile (abst (PVar "x") T.Int (Var "x") `App` int 81) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
 
       want <- B.readFile "test/Thc/data/exit100"
-      compile (Abs (PVar "x") (T.Unit T.:->: T.Unit) (Var "x" `App` unit) `App` Abs (PVar "y") T.Unit unit) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
+      compile (abst (PVar "x") (T.Unit T.:->: T.Unit) (Var "x" `App` unit) `App` abst (PVar "y") T.Unit unit) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
 
       want <- B.readFile "test/Thc/data/exit100"
-      compile (Abs (PTuple [PVar "x", PVar "y"]) (T.Tuple [T.Int, T.Int]) (Var "y") `App` Tuple [int 200, int 100]) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
+      compile (abst (PTuple [PVar "x", PVar "y"]) (T.Tuple [T.Int, T.Int]) (Var "y") `App` Tuple [int 200, int 100]) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
 
       want <- B.readFile "test/Thc/data/exit178"
       compile (Ann (int 178) T.Int) Code.Darwin Code.Amd64 `shouldNotThrow` Right want
@@ -47,11 +47,11 @@ spec = do
         let lit12 = int 12
             p = PTuple []
             ty = T.Int
-        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.BindTypeError $ I.PatternMismatch p ty)
+        compile (abst p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.BindTypeError $ I.PatternMismatch p ty)
 
         let p = tuplePat ["x", "x"]
             ty = T.Tuple [T.Int, T.Int]
-        compile (Abs p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Eval . I.BindError $ I.DuplicateVariables p)
+        compile (abst p ty lit12) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Eval . I.BindError $ I.DuplicateVariables p)
 
-        let s = Abs (PVar "x") T.Int $ Var "x" `App` Var "x"
+        let s = abst (PVar "x") T.Int $ Var "x" `App` Var "x"
         compile (App s s) Code.Darwin Code.Amd64 `shouldNotThrow` Left (Type . I.TError . T.Unify T.Int $ T.Int T.:->: T.fresh 1)

@@ -4,6 +4,7 @@ module Thc.Expr.Indexed
 
   -- * Terms
     Term(..)
+  , abst
   , fromNamed
   , principal
   , eval
@@ -56,7 +57,7 @@ data Term =
     -- |
     -- Name hint, de Bruijn index, and the surrounding context's length for debug
     Var String Int Int
-  | Abs E.Pattern T.Type Term
+  | Abs E.Pattern (Maybe T.Type) Term
   | App Term Term
   | Lit E.Literal
   | Tuple [Term]
@@ -67,6 +68,9 @@ data Term =
   | Fold T.Type Term
   | Unfold T.Type Term
   deriving (Eq, Show)
+
+abst :: E.Pattern -> T.Type -> Term -> Term
+abst p ty t = Abs p (return ty) t
 
 type NamedTerm = E.Term
 
@@ -460,8 +464,10 @@ recon ctx (Case t ts)   = reconCase ctx t ts
 recon ctx (Fold ty t)   = reconFold ctx t ty
 recon ctx (Unfold ty t) = reconUnfold ctx t ty
 
-reconAbs :: MonadThrow m => Context -> E.Pattern -> T.Type -> Term -> Reconstructor m T.Type
-reconAbs ctx p ty t = (ty T.:->:) <$> reconWithPat ctx ty (p, t)
+reconAbs :: MonadThrow m => Context -> E.Pattern -> Maybe T.Type -> Term -> Reconstructor m T.Type
+reconAbs ctx p tyM t = do
+  ty <- maybe freshVar return tyM
+  (ty T.:->:) <$> reconWithPat ctx ty (p, t)
 
 freshVar :: Monad m => Reconstructor m T.Type
 freshVar = T.Id <$> (lift . lift) T.freshVar

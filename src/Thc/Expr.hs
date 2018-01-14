@@ -1,5 +1,6 @@
 module Thc.Expr
   ( Term(..)
+  , abst
   , Literal(..)
   , Lit(..)
   , typeOfLiteral
@@ -15,7 +16,7 @@ import qualified Thc.Type as T
 
 data Term =
     Var String
-  | Abs Pattern T.Type Term
+  | Abs Pattern (Maybe T.Type) Term
   | App Term Term
   | Lit Literal
   | Tuple [Term]
@@ -23,6 +24,9 @@ data Term =
   | Ann Term T.Type
   | Tagged String Term
   | Case Term (NonEmpty.NonEmpty (Pattern, Term))
+
+abst :: Pattern -> T.Type -> Term -> Term
+abst p ty t = Abs p (return ty) t
 
 data Literal =
     Bool Bool
