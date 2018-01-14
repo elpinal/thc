@@ -123,6 +123,9 @@ fromNamed' ctx (E.Case t as) = Case <$> fromNamed' ctx t <*> mapM f as
       ctx' <- left BindError $ bindPatternU ctx p
       t' <- fromNamed' ctx' t
       return (p, t')
+fromNamed' ctx (E.Let i t1 t2) = do
+  ctx' <- left BindError $ bindPatternU ctx $ E.PVar i
+  Let i <$> fromNamed' ctx t1 <*> fromNamed' ctx' t2
 
 bindPatternU :: ContextU -> E.Pattern -> Either BindError ContextU
 bindPatternU ctx p = bindPattern1 Binder

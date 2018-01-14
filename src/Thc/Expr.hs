@@ -24,6 +24,7 @@ data Term =
   | Ann Term T.Type
   | Tagged String Term
   | Case Term (NonEmpty.NonEmpty (Pattern, Term))
+  | Let String Term Term
 
 abst :: Pattern -> T.Type -> Term -> Term
 abst p ty t = Abs p (return ty) t
