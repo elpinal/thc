@@ -75,121 +75,121 @@ spec = do
       it "does not check the typing error" $ do
         fromNamed (E.Abs (tuplePat ["nn"]) T.Int $ E.Var "nn") `shouldBe` return (Abs (tuplePat ["nn"]) T.Int $ Var "nn" 0 1)
 
-  describe "typeOf" $ do
+  describe "principal" $ do
     context "when given a typable term" $ do
       it "gets the type of the term" $ do
-        typeOf (bool True)                                                                                   `shouldNotThrowM` T.Bool
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrowM` (T.Int T.:->: T.Int)
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
+        principal (bool True)                                                                                   `shouldNotThrowM` T.Bool
+        principal (Abs (PVar "x") T.Int $ Var "x" 0 1)                                                          `shouldNotThrowM` (T.Int T.:->: T.Int)
+        principal (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Bool $ Var "f" 0 1)                  `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Bool T.:->: T.Bool)
+        principal (Abs (PVar "f") (T.Int T.:->: T.Bool) $ Abs (PVar "x") T.Int $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrowM` ((T.Int T.:->: T.Bool) T.:->: T.Int T.:->: T.Bool)
 
-        typeOf (Record [])                   `shouldNotThrowM` (T.Record [])
-        typeOf (Record [("a", Lit $ Int 1)]) `shouldNotThrowM` (T.Record [("a", T.Int)])
+        principal (Record [])                   `shouldNotThrowM` (T.Record [])
+        principal (Record [("a", Lit $ Int 1)]) `shouldNotThrowM` (T.Record [("a", T.Int)])
 
-        typeOf (Abs (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
-        typeOf (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
-        typeOf (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
-        typeOf (Abs unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
+        principal (Abs (int 1) T.Int unit)             `shouldNotThrowM` (T.Int T.:->: T.Unit)
+        principal (Abs (int 1) T.Int unit `App` int 1) `shouldNotThrowM` T.Unit
+        principal (Abs (int 1) T.Int unit `App` int 2) `shouldNotThrowM` T.Unit
+        principal (Abs unit T.Int unit `App` int 2)    `shouldNotThrow` Left (BindTypeError $ PatternMismatch unit T.Int)
 
     context "when given a Case" $ do
       let t = Tuple [int 3, bool False]
           p = tuplePat ["x", "y"]
 
       it "returns the type which is all the arms identically have" $ do
-        typeOf (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrowM` T.Int
-        typeOf (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrowM` T.Bool
+        principal (Case (bool True) $ return (PVar "x", int 12))      `shouldNotThrowM` T.Int
+        principal (Case (bool True) $ return (PVar "x", Var "x" 0 1)) `shouldNotThrowM` T.Bool
 
-        typeOf (Case t $ return (p, Var "x" 1 2)) `shouldNotThrowM` T.Int
-        typeOf (Case t $ return (p, Var "y" 0 2)) `shouldNotThrowM` T.Bool
+        principal (Case t $ return (p, Var "x" 1 2)) `shouldNotThrowM` T.Int
+        principal (Case t $ return (p, Var "y" 0 2)) `shouldNotThrowM` T.Bool
 
         let t = Tagged "a" $ int 88
             p = PVar "x"
             ty = T.variant [("a", T.Int)]
-        typeOf (Case t $ return (p, Var "x" 0 1))          `shouldNotThrow` Left (BareVariant "a" $ int 88)
-        typeOf (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrowM` ty
+        principal (Case t $ return (p, Var "x" 0 1))          `shouldNotThrow` Left (BareVariant "a" $ int 88)
+        principal (Case (Ann t ty) $ return (p, Var "x" 0 1)) `shouldNotThrowM` ty
 
         let p = PVariant "a" $ PVar "x"
             q = PVariant "nolabel" $ PVar "x"
             s = Var "x" 0 1
             a = return (p, s)
             b = return (q, s)
-        typeOf (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
-        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
-        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        principal (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) b)        `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        principal (Case (Ann t ty) $ a <> b) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
+        principal (Case (Ann t ty) $ b <> a) `shouldNotThrow` Left (BindTypeError $ PatternMismatch q ty)
 
         let ty = T.variant [("a", T.Int), ("b", T.Unit)]
             q = PVariant "b" $ PVar "x"
             b = return (q, int 10)
-        typeOf (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) b)        `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) $ a <> b) `shouldNotThrowM` T.Int
-        typeOf (Case (Ann t ty) $ b <> a) `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) a)        `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) $ a <> a) `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) b)        `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) $ a <> b) `shouldNotThrowM` T.Int
+        principal (Case (Ann t ty) $ b <> a) `shouldNotThrowM` T.Int
 
       context "when the patterns are inconsistent" $ do
         it "returns an error" $ do
           let p1 = tuplePat ["x", "y", "z"]
-          typeOf (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
+          principal (Case t $ return (p, Var "y" 0 2) <> return (p1, Var "z" 0 3)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p1 $ T.Tuple [T.Int, T.Bool])
 
           let p = tuplePat ["x"]
-          typeOf (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p T.Bool)
+          principal (Case (bool True) $ return (p, Var "x" 0 1)) `shouldNotThrow` Left (BindTypeError $ PatternMismatch p T.Bool)
 
     context "when given a tagged term to which is not annotated its type" $ do
       it "returns an error" $ do
-        typeOf (Tagged "l" $ int 0) `shouldNotThrow` Left (BareVariant "l" $ int 0)
+        principal (Tagged "l" $ int 0) `shouldNotThrow` Left (BareVariant "l" $ int 0)
 
     context "when given a tagged term with an annotation" $ do
       it "returns the annotated type after verifying the term" $ do
-        typeOf (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Left (VariantError "l" (int 0) Map.empty)
+        principal (Ann (Tagged "l" $ int 0) $ T.variant []) `shouldNotThrow` Left (VariantError "l" (int 0) Map.empty)
 
         let ty = T.variant [("l", T.Int)]
-        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
+        principal (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
 
         let ts = Map.singleton "aaa" T.Int
-        typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (VariantError "l" (int 0) ts)
+        principal (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (VariantError "l" (int 0) ts)
 
         let ts = Map.singleton "l" T.Bool
-        typeOf (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (TypeMismatch T.Int T.Bool)
+        principal (Ann (Tagged "l" $ int 0) $ T.Variant ts) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Bool)
 
         let ty = T.variant [("l", T.Int), ("x", T.Unit)]
-        typeOf (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
+        principal (Ann (Tagged "l" $ int 0) ty) `shouldNotThrowM` ty
 
     context "when given annotations" $ do
       it "tests that the type of a term is equal to the annotated type" $ do
         let l = Lit $ Bool False
-        typeOf (Ann l T.Bool) `shouldNotThrowM` T.Bool
-        typeOf (Ann l T.Int)  `shouldNotThrow` Left (TypeMismatch T.Bool T.Int)
+        principal (Ann l T.Bool) `shouldNotThrowM` T.Bool
+        principal (Ann l T.Int)  `shouldNotThrow` Left (TError $ T.Unify T.Bool T.Int)
 
     context "when given a non-typable term" $ do
       it "returns an error" $ do
-        typeOf (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (IllTypedApp (Var "f" 1 2) T.Bool)
-        typeOf (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Left (IllTypedApp (Var "x" 0 1) T.Int)
+        principal (Abs (PVar "f") (T.Int T.:->: T.Int) $ Abs (PVar "x") T.Bool $ Var "f" 1 2 `App` Var "x" 0 2) `shouldNotThrow` Left (TError $ T.Unify T.Int T.Bool)
+        principal (Abs (PVar "x") T.Int $ Var "x" 0 1 `App` Var "x" 0 1)                                        `shouldNotThrow` Left (TError $ T.Unify T.Int $ T.Int T.:->: T.fresh 0)
 
     context "when given an Fold term" $ do
       it "returns the type of the term" $ do
         let ty = T.Rec "X" T.Int
-        typeOf (Fold ty $ int 3) `shouldNotThrowM` ty
+        principal (Fold ty $ int 3) `shouldNotThrowM` ty
 
         let ty = T.Rec "X" $ T.Var "X" 0 1
-        typeOf (Fold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+        principal (Fold ty $ int 3) `shouldNotThrow` Left (TError $ T.Unify T.Int ty)
 
     context "when given an Unfold term" $ do
       it "returns the type of the term" $ do
         let ty = T.Rec "X" T.Int
-        typeOf (Unfold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+        principal (Unfold ty $ int 3) `shouldNotThrow` Left (TError $ T.Unify T.Int ty)
 
         let ty = T.Rec "X" $ T.Var "X" 0 1
-        typeOf (Unfold ty $ int 3) `shouldNotThrow` Left (TypeMismatch T.Int ty)
+        principal (Unfold ty $ int 3) `shouldNotThrow` Left (TError $ T.Unify T.Int ty)
 
         let intlist a = T.variant [("nil", T.Unit), ("cons", T.Tuple [T.Int, a])]
         let ty        = T.Rec "X" $ intlist $ T.Var "X" 0 1
         let ilbody    = intlist ty
         let t         = Ann (Tagged "nil" unit) ilbody
-        typeOf t                       `shouldNotThrowM` ilbody
-        typeOf (Fold ty t)             `shouldNotThrowM` ty
-        typeOf (Unfold ty $ Fold ty t) `shouldNotThrowM` ilbody
+        principal t                       `shouldNotThrowM` ilbody
+        principal (Fold ty t)             `shouldNotThrowM` ty
+        principal (Unfold ty $ Fold ty t) `shouldNotThrowM` ilbody
 
   describe "eval" $ do
     context "when given a literal pattern" $ do
