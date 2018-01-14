@@ -6,6 +6,7 @@ module Thc.Expr.Indexed
     Term(..)
   , fromNamed
   , typeOf
+  , principal
   , eval
 
   -- * Literals
@@ -423,6 +424,7 @@ data TypeError
   | TypeMismatch T.Type T.Type
   | IncompatibleArms (NonEmpty.NonEmpty (E.Pattern, Term))
   | FoldError T.Type
+  | TError T.Error -- TODO: better name
   deriving (Eq, Show)
 
 typeOf :: MonadThrow m => Term -> m (Either TypeError T.Type)
@@ -494,10 +496,20 @@ typeWithPat ctx ty (p, t) = do
 bindPatternE :: Monad m => Context -> E.Pattern -> T.Type -> ExceptT TypeError m Context
 bindPatternE ctx p ty = ExceptT . return . left BindTypeError $ bindPattern ctx p ty
 
+principal :: MonadThrow m => Term -> m (Either TypeError T.Type)
+principal = principal' emptyContext
+
+principal' :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type)
+principal' ctx t = do
+  (ty, cs) <- reconstruct ctx t
+  return $ do
+    s <- left TError $ T.unify cs
+    T.apply s <$> ty
+
 type Reconstructor m a = ExceptT TypeError (WriterT T.Constraints (StateT Int m)) a
 
-reconstruct :: MonadThrow m => Term -> m (Either TypeError T.Type, T.Constraints)
-reconstruct = flip evalStateT 0 . runWriterT . runExceptT . recon emptyContext
+reconstruct :: MonadThrow m => Context -> Term -> m (Either TypeError T.Type, T.Constraints)
+reconstruct ctx = flip evalStateT 0 . runWriterT . runExceptT . recon ctx
 
 recon :: MonadThrow m => Context -> Term -> Reconstructor m T.Type
 recon ctx (Var _ x _)   = lift $ getTypeFromContext ctx x

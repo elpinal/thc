@@ -5,6 +5,7 @@ module Thc.Type
   , freshVar
   , variant
   , substTop
+  , Types(..)
   , Subst
   , emptySubst
   , (|->)
